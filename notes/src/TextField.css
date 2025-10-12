@@ -26,6 +26,11 @@
   display: flex;
   gap: 8px;
   justify-content: start;
+  /* Keep toolbar content from forcing the container wider than its parent.
+     Prevent wrapping and allow horizontal scrolling if needed. */
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
   border-radius: 20px 20px 0 0;
 }
 
@@ -39,6 +44,13 @@
   color: #909090;
   font-weight: 500;
   transition: all 0.3s ease;
+  /* Prevent buttons from growing and force a single-line label with ellipsis
+     so long option text doesn't push the toolbar out of its bounds. */
+  flex: 0 0 auto;
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .toolbar button:hover {
