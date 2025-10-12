@@ -2,8 +2,8 @@ import React from "react";
 
 const Feed = () => {
   return (
-    <div style={{ padding: 16 }}>
-      <p>Feed content will be shown here. (Placeholder)</p>
+    <div style={{ padding: 16, color: "#cacacaff" }}>
+      <p>Coming Soon</p>
     </div>
   );
 };

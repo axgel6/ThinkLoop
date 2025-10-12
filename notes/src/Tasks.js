@@ -2,8 +2,8 @@ import React from "react";
 
 const Tasks = () => {
   return (
-    <div style={{ padding: 16 }}>
-      <p>Tasks will go here. (Placeholder)</p>
+    <div style={{ padding: 16, color: "#cacacaff" }}>
+      <p>Coming Soon</p>
     </div>
   );
 };
