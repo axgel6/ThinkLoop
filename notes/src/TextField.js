@@ -1,14 +1,20 @@
 import React, { useState, useRef, useEffect } from "react";
 import "./TextField.css";
 
-const TextField = ({ value: initialValue = "", onChange, onRemove }) => {
+const TextField = ({ value: initialValue = "", onChange, onRemove, title = "", onTitleChange }) => {
   const [value, setValue] = useState(initialValue);
+  const [noteTitle, setNoteTitle] = useState(title);
   const editorRef = useRef(null);
 
   // Update content when parent changes it
   useEffect(() => {
     setValue(initialValue);
   }, [initialValue]);
+
+  // keep local title in sync with parent
+  useEffect(() => {
+    setNoteTitle(title);
+  }, [title]);
 
   // Reflect state to contenteditable div
   useEffect(() => {
@@ -31,13 +37,14 @@ const TextField = ({ value: initialValue = "", onChange, onRemove }) => {
     handleInput();
   };
 
+  const handleTitleChange = (e) => {
+    const t = e.target.value;
+    setNoteTitle(t);
+    if (onTitleChange) onTitleChange(t);
+  };
+
   return (
     <div className="text-field">
-      {onRemove && (
-        <button className="remove-btn" onClick={onRemove} aria-label="Remove note">
-          Remove
-        </button>
-      )}
       <div className="toolbar">
         <button onClick={() => handleFormat("bold")}>
           <b>B</b>
@@ -68,6 +75,22 @@ const TextField = ({ value: initialValue = "", onChange, onRemove }) => {
         aria-label="Note editor"
         placeholder="Write your note..."
       />
+
+      {/* Bottom mini-bar with editable title and remove button */}
+      <div className="note-footer">
+        <input
+          className="note-title-input"
+          value={noteTitle}
+          onChange={handleTitleChange}
+          placeholder="Untitled"
+          aria-label="Note title"
+        />
+        {onRemove && (
+          <button className="remove-btn" onClick={onRemove} aria-label="Remove note">
+            Remove
+          </button>
+        )}
+      </div>
     </div>
   );
 };

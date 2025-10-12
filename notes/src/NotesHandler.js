@@ -11,17 +11,17 @@ const NotesHandler = () => {
       if (!raw) return [{ id: Date.now(), content: "" }];
       const parsed = JSON.parse(raw);
       if (!Array.isArray(parsed) || parsed.length === 0) {
-        return [{ id: Date.now(), content: "" }];
+        return [{ id: Date.now(), content: "", title: "" }];
       }
       // normalize entries to ensure id and content exist
-      return parsed.map((n) => ({ id: n.id ?? Date.now(), content: n.content ?? "" }));
+      return parsed.map((n) => ({ id: n.id ?? Date.now(), content: n.content ?? "", title: n.title ?? "" }));
     } catch (e) {
       return [{ id: Date.now(), content: "" }];
     }
   });
 
   const handleNewNote = () => {
-    setNotes((prev) => [...prev, { id: Date.now(), content: "" }]);
+    setNotes((prev) => [...prev, { id: Date.now(), content: "", title: "" }]);
   };
 
   const handleRemove = (id) => {
@@ -30,6 +30,10 @@ const NotesHandler = () => {
 
   const updateNoteContent = (id, content) => {
     setNotes((prev) => prev.map((n) => (n.id === id ? { ...n, content } : n)));
+  };
+
+  const updateNoteTitle = (id, title) => {
+    setNotes((prev) => prev.map((n) => (n.id === id ? { ...n, title } : n)));
   };
 
   // persist notes to localStorage whenever they change
@@ -48,7 +52,9 @@ const NotesHandler = () => {
         <div key={n.id} className="note-item">
           <TextField
             value={n.content}
+            title={n.title}
             onChange={(val) => updateNoteContent(n.id, val)}
+            onTitleChange={(t) => updateNoteTitle(n.id, t)}
             onRemove={() => handleRemove(n.id)}
           />
         </div>

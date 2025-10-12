@@ -8,10 +8,40 @@
   margin-bottom: 12px;
 }
 
+.note-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  border-top: 1px solid rgba(255,255,255,0.04);
+  background: rgba(0,0,0,0.06);
+  border-radius: 0 0 12px 12px;
+  margin-top: 8px;
+}
+
+.note-title {
+  color: #dcdcdc;
+  font-size: 13px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 75%;
+}
+
+.note-title-input {
+  background: transparent;
+  border: none;
+  color: #dcdcdc;
+  font-size: 13px;
+  max-width: 75%;
+  outline: none;
+}
+
+.note-title-input::placeholder{
+  color: #9a9a9a;
+}
+
 .remove-btn {
-  position: absolute;
-  top: 8px;
-  right: 8px;
   background: transparent;
   color: #ff8a8a;
   border: 1px solid rgba(255, 138, 138, 0.12);
