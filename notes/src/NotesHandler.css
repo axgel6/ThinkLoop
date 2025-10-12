@@ -1,0 +1,59 @@
+/* Apply bottom padding to the TextField component wrapper */
+.text-field {
+    margin-bottom: 25px;
+}
+
+.note-item {
+  position: relative;
+  margin-bottom: 12px;
+}
+
+.remove-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: transparent;
+  color: #ff8a8a;
+  border: 1px solid rgba(255, 138, 138, 0.12);
+  padding: 6px 10px;
+  border-radius: 12px;
+  cursor: pointer;
+}
+
+.remove-btn:hover {
+  background: rgba(255, 138, 138, 0.06);
+}
+
+
+
+
+#new-note-btn {
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.06),
+    rgba(255, 255, 255, 0.02)
+  );
+  color: white;
+  border-radius: 25px;
+  width: fit-content;
+  height: 28px;
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 6px 14px rgba(2, 6, 23, 0.45);
+  transition: transform 120ms ease, box-shadow 120ms ease, background 120ms ease;
+  margin: 10px auto 0;
+}
+
+#new-note-btn:hover {
+  box-shadow: 0 10px 20px rgba(2, 6, 23, 0.6);
+  background: linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03));
+  cursor: pointer;
+}
+
+#new-note-btn:focus {
+  outline: 2px solid rgba(187, 187, 187, 0.14);
+  outline-offset: 3px;
+}

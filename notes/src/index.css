@@ -12,6 +12,8 @@ body {
   background-color: black;
   padding-left: 40px;
   padding-right: 55px;
+  /* Ensure content can be scrolled above the fixed bottom navbar */
+  padding-bottom: 140px;
 }
 
 code,

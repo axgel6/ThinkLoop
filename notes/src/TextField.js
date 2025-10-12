@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import "./TextField.css";
 
-const TextField = ({ value: initialValue = "", onChange }) => {
+const TextField = ({ value: initialValue = "", onChange, onRemove }) => {
   const [value, setValue] = useState(initialValue);
   const editorRef = useRef(null);
 
@@ -33,6 +33,11 @@ const TextField = ({ value: initialValue = "", onChange }) => {
 
   return (
     <div className="text-field">
+      {onRemove && (
+        <button className="remove-btn" onClick={onRemove} aria-label="Remove note">
+          Remove
+        </button>
+      )}
       <div className="toolbar">
         <button onClick={() => handleFormat("bold")}>
           <b>B</b>

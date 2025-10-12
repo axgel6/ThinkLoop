@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import Navbar from "./Navbar";
-import TextField from "./TextField";
 import Feed from "./Feed";
 import Tasks from "./Tasks";
+import NotesHandler from "./NotesHandler";
 
 function App() {
   const [activeTab, setActiveTab] = useState("notes");
@@ -12,7 +12,7 @@ function App() {
     <div className="App">
       <h1 id="title">{titles[activeTab]}</h1>
 
-      {activeTab === "notes" && <TextField />}
+      {activeTab === "notes" && <NotesHandler />}
       {activeTab === "tasks" && <Tasks />}
       {activeTab === "feed" && <Feed />}
 
