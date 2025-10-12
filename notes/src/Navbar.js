@@ -18,7 +18,7 @@ const Navbar = ({ activeTab = "notes", onChangeTab = () => {} }) => {
     const navRect = nav.getBoundingClientRect();
     const buttonRect = activeButton.getBoundingClientRect();
 
-    const left = buttonRect.left - navRect.left - 3; // Shift 3px left to center
+    const left = buttonRect.left - navRect.left - 1; // Shift 1px left to center
     const width = buttonRect.width;
 
     // Only trigger moving state if position actually changed
@@ -75,6 +75,16 @@ const Navbar = ({ activeTab = "notes", onChangeTab = () => {} }) => {
         <li>
           <button
             className={activeTab === "notes" ? "active" : ""}
+            onMouseEnter={() => {
+              if (activeTab === "notes" && bubbleRef.current) {
+                bubbleRef.current.classList.add("hovering");
+              }
+            }}
+            onMouseLeave={() => {
+              if (bubbleRef.current) {
+                bubbleRef.current.classList.remove("hovering");
+              }
+            }}
             onClick={() => onChangeTab("notes")}
             aria-pressed={activeTab === "notes"}
           >
@@ -84,6 +94,16 @@ const Navbar = ({ activeTab = "notes", onChangeTab = () => {} }) => {
         <li>
           <button
             className={activeTab === "tasks" ? "active" : ""}
+            onMouseEnter={() => {
+              if (activeTab === "tasks" && bubbleRef.current) {
+                bubbleRef.current.classList.add("hovering");
+              }
+            }}
+            onMouseLeave={() => {
+              if (bubbleRef.current) {
+                bubbleRef.current.classList.remove("hovering");
+              }
+            }}
             onClick={() => onChangeTab("tasks")}
             aria-pressed={activeTab === "tasks"}
           >
@@ -93,6 +113,16 @@ const Navbar = ({ activeTab = "notes", onChangeTab = () => {} }) => {
         <li>
           <button
             className={activeTab === "feed" ? "active" : ""}
+            onMouseEnter={() => {
+              if (activeTab === "feed" && bubbleRef.current) {
+                bubbleRef.current.classList.add("hovering");
+              }
+            }}
+            onMouseLeave={() => {
+              if (bubbleRef.current) {
+                bubbleRef.current.classList.remove("hovering");
+              }
+            }}
             onClick={() => onChangeTab("feed")}
             aria-pressed={activeTab === "feed"}
           >
