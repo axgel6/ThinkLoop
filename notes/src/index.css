@@ -1,0 +1,28 @@
+@import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600;700&display=swap");
+
+body {
+  margin: 0;
+  font-family: "JetBrains Mono", -apple-system, BlinkMacSystemFont, "Segoe UI",
+    Roboto, "Helvetica Neue", Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+
+  background-color: black;
+  padding-left: 40px;
+  padding-right: 55px;
+}
+
+code,
+pre {
+  font-family: "JetBrains Mono", Menlo, Monaco, Consolas, "Courier New",
+    monospace;
+}
+
+#title {
+  color: white;
+  text-align: left;
+  padding: 10px;
+  font-size: 2em;
+}

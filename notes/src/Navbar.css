@@ -1,0 +1,75 @@
+.navbar {
+  position: fixed;
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  justify-content: center;
+  z-index: 1000;
+  pointer-events: none;
+  width: auto;
+  max-width: calc(100% - 24px);
+}
+
+.navbar ul {
+  pointer-events: auto;
+}
+
+.navbar ul {
+  list-style-type: none;
+  margin: 0;
+  padding: 8px 20px;
+  overflow: visible;
+  -webkit-backdrop-filter: blur(2px);
+  backdrop-filter: blur(2px);
+  background: rgba(20, 20, 20, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.6);
+  border-radius: 50px;
+  display: flex;
+  align-items: center;
+  width: fit-content;
+  z-index: 2;
+}
+
+.navbar li {
+  display: inline-block;
+}
+
+.navbar li button {
+  font-size: 14px;
+  display: block;
+  color: #909090;
+  text-align: center;
+  padding: 8px 16px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-weight: 500;
+  font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco,
+    "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  letter-spacing: 0.2px;
+  transition: all 0.18s ease;
+  border-radius: 25px;
+}
+
+.navbar li button:hover {
+  background: rgba(255, 255, 255, 0.04);
+  color: #e0e0e0;
+  transform: scale(1.05);
+}
+
+.navbar li button.active {
+  background: rgba(255, 255, 255, 0.06);
+  color: #ffffff;
+  transform: none;
+}
+
+.nav-logo {
+  margin-right: 12px;
+  color: #ffffff;
+  font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco,
+    "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-weight: 600;
+  letter-spacing: 0.4px;
+}

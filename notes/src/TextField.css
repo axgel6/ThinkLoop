@@ -1,0 +1,80 @@
+.text-field {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  background: rgba(20, 20, 20, 0.9);
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.6);
+  display: flex;
+  flex-direction: column;
+  max-height: 600px;
+  width: 100%;
+  color: #e0e0e0;
+  transition: all 0.3s ease;
+}
+
+.text-field:hover {
+  transform: scale(1.01);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
+}
+
+/* Toolbar */
+.toolbar {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(30, 30, 30, 0.6);
+  padding: 8px 10px;
+  display: flex;
+  gap: 8px;
+  justify-content: start;
+  border-radius: 20px 20px 0 0;
+}
+
+.toolbar button {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  padding: 6px 10px;
+  border-radius: 25px;
+  font-size: 14px;
+  color: #909090;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.toolbar button:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #e0e0e0;
+  transform: scale(1.1);
+}
+
+/* Editor area */
+.editor {
+  padding: 14px;
+  min-height: 180px;
+  overflow-y: auto;
+  outline: none;
+  font-family: system-ui, sans-serif;
+  font-size: 15px;
+  line-height: 1.6;
+  border-radius: 0 0 20px 20px;
+  color: #f0f0f0;
+}
+
+.editor:empty:before {
+  content: attr(placeholder);
+  color: #777;
+}
+
+/* Scrollbar styling */
+.editor::-webkit-scrollbar {
+  width: 8px;
+}
+
+.editor::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+}
+
+.editor::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
