@@ -169,6 +169,15 @@ pre {
   --panel-bg-solid: #ebe4d6;
 }
 
+.theme-brown {
+  --bg: #2b1b12;
+  --fg: #efe6dd;
+  --muted: #b99a85;
+  --panel-bg: rgba(60, 40, 30, 0.6);
+  --panel-border: rgba(179, 128, 95, 0.25);
+  --panel-bg-solid: #3a2418;
+}
+
 .theme-purple {
   --bg: #ceb4ff;
   --fg: #2d1b4e;

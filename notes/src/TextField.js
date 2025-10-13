@@ -25,6 +25,7 @@ const TextField = ({
   const THEME_OPTIONS = [
     { id: "default", label: "Match Theme" },
     { id: "dark", label: "Dark" },
+    { id: "brown", label: "Brown" },
     { id: "blue", label: "Blue" },
     { id: "gray", label: "Gray" },
     { id: "cream", label: "Cream" },
@@ -99,6 +100,14 @@ const TextField = ({
       "--panel-bg": "rgba(220, 235, 220, 0.7)",
       "--panel-border": "rgba(107, 142, 107, 0.25)",
       "--panel-bg-solid": "#d8ead8",
+    },
+    brown: {
+      "--bg": "#2b1b12",
+      "--fg": "#efe6dd",
+      "--muted": "#b99a85",
+      "--panel-bg": "rgba(60, 40, 30, 0.6)",
+      "--panel-border": "rgba(179, 128, 95, 0.25)",
+      "--panel-bg-solid": "#3a2418",
     },
   };
 

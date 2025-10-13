@@ -5,6 +5,7 @@ import "./settings-page.css";
 
 const COLOR_OPTIONS = [
   { id: "one", label: "Black" },
+  { id: "nine", label: "Brown" },
   { id: "two", label: "Blue" },
   { id: "three", label: "Gray" },
   { id: "four", label: "Cream" },
@@ -53,7 +54,8 @@ const Settings = () => {
         "theme-purple",
         "theme-pink",
         "theme-skyblue",
-        "theme-sage"
+        "theme-sage",
+        "theme-brown"
       );
       if (val === "one") root.classList.add("theme-dark");
       else if (val === "two") root.classList.add("theme-blue");
@@ -63,6 +65,7 @@ const Settings = () => {
       else if (val === "six") root.classList.add("theme-pink");
       else if (val === "seven") root.classList.add("theme-skyblue");
       else if (val === "eight") root.classList.add("theme-sage");
+      else if (val === "nine") root.classList.add("theme-brown");
     } catch (e) {
       /* ignore */
     }

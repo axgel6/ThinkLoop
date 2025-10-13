@@ -59,9 +59,10 @@
     rgba(255, 255, 255, 0.075)
   );
   border: 1px solid rgba(255, 255, 255, 0.18);
-  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.4),
-    0 4px 12px rgba(255, 255, 255, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.1);
+  /* Stronger dark drop-shadow so option text stands out against translucent backdrop */
+  box-shadow: 0 20px 70px rgba(0, 0, 0, 0.7), 0 6px 18px rgba(0, 0, 0, 0.45),
+    0 4px 12px rgba(255, 255, 255, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 -1px 0 rgba(0, 0, 0, 0.08);
   border-radius: 20px;
   margin: 0;
   padding: 8px;
@@ -70,6 +71,10 @@
   z-index: 10050; /* ensure the dropdown appears above most UI */
   -webkit-backdrop-filter: blur(10px) saturate(180%);
   backdrop-filter: blur(10px) saturate(180%);
+  /* Make long lists scrollable */
+  max-height: 260px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   animation: dropdownSlideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -86,11 +91,13 @@
 
 .custom-select-option {
   padding: 10px 14px;
-  color: var(--fg, #ffffff);
+  color: #ffffff;
   border-radius: 14px;
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   font-weight: 500;
+  /* subtle dark text shadow to improve contrast on glassy backgrounds */
+  text-shadow: 0 0px 7px rgba(0, 0, 0, 0.751);
 }
 
 .custom-select-option.highlight,
@@ -102,4 +109,16 @@
   );
   transform: scale(1.02);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+/* Scrollbar styling for dropdown list */
+.custom-select-list::-webkit-scrollbar {
+  width: 8px;
+}
+.custom-select-list::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+}
+.custom-select-list::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.14);
 }
