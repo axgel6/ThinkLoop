@@ -1,4 +1,4 @@
-.tasklist {
+.task-list {
   border: 1px solid var(--panel-border, rgba(255, 255, 255, 0.08));
   border-radius: 20px;
   background: var(--panel-bg-solid, rgba(20, 20, 20, 0.9));
@@ -7,8 +7,13 @@
   box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.24);
   padding: 24px;
   margin-bottom: 16px;
-  transition: all 0.3s ease;
+  transition: all 0.1s ease;
   overflow: visible;
   position: relative;
   z-index: 1;
+}
+
+.task-list:hover {
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.486);
+  border-color: rgba(255, 255, 255, 0.12);
 }

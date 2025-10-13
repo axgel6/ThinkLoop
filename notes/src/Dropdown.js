@@ -1,12 +1,20 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useLayoutEffect } from "react";
+import { createPortal } from "react-dom";
 import "./Dropdown.css";
 
 // Generic accessible dropdown component
 // props: options: [{id,label}], value, onChange
-const Dropdown = ({ options = [], value = "", onChange = () => {}, placeholder = "Select" }) => {
+const Dropdown = ({
+  options = [],
+  value = "",
+  onChange = () => {},
+  placeholder = "Select",
+}) => {
   const [open, setOpen] = useState(false);
   const [highlight, setHighlight] = useState(-1);
   const ref = useRef(null);
+  const menuRef = useRef(null);
+  const [menuRect, setMenuRect] = useState(null);
 
   useEffect(() => {
     if (!open) setHighlight(-1);
@@ -35,13 +43,28 @@ const Dropdown = ({ options = [], value = "", onChange = () => {}, placeholder =
 
   useEffect(() => {
     const onDoc = (e) => {
-      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
+      if (
+        (ref.current && ref.current.contains(e.target)) ||
+        (menuRef.current && menuRef.current.contains(e.target))
+      ) {
+        return;
+      }
+      setOpen(false);
     };
     document.addEventListener("mousedown", onDoc);
     return () => document.removeEventListener("mousedown", onDoc);
   }, []);
 
-  const selectedLabel = options.find((o) => o.id === value)?.label || placeholder;
+  // Measure button rect when opening so the portal menu can be positioned
+  useLayoutEffect(() => {
+    if (open && ref.current) {
+      const r = ref.current.getBoundingClientRect();
+      setMenuRect(r);
+    }
+  }, [open]);
+
+  const selectedLabel =
+    options.find((o) => o.id === value)?.label || placeholder;
 
   return (
     <div className="custom-select" ref={ref}>
@@ -56,25 +79,46 @@ const Dropdown = ({ options = [], value = "", onChange = () => {}, placeholder =
         <span className="chev">▾</span>
       </button>
 
-      {open && (
-        <ul role="listbox" className="custom-select-list">
-          {options.map((o, idx) => (
-            <li
-              key={o.id}
-              role="option"
-              aria-selected={o.id === value}
-              className={"custom-select-option " + (idx === highlight ? "highlight" : "")}
-              onMouseEnter={() => setHighlight(idx)}
-              onClick={() => {
-                onChange(o.id);
-                setOpen(false);
-              }}
-            >
-              {o.label}
-            </li>
-          ))}
-        </ul>
-      )}
+      {open &&
+        // Render the list in a portal so it can float above other stacking contexts
+        createPortal(
+          <ul
+            role="listbox"
+            ref={menuRef}
+            className="custom-select-list"
+            style={
+              menuRect
+                ? {
+                    position: "fixed",
+                    top: menuRect.bottom + 10,
+                    left: menuRect.left,
+                    minWidth: Math.max(menuRect.width, 180),
+                    zIndex: 10050,
+                  }
+                : { position: "fixed", zIndex: 10050 }
+            }
+          >
+            {options.map((o, idx) => (
+              <li
+                key={o.id}
+                role="option"
+                aria-selected={o.id === value}
+                className={
+                  "custom-select-option " +
+                  (idx === highlight ? "highlight" : "")
+                }
+                onMouseEnter={() => setHighlight(idx)}
+                onClick={() => {
+                  onChange(o.id);
+                  setOpen(false);
+                }}
+              >
+                {o.label}
+              </li>
+            ))}
+          </ul>,
+          document.body
+        )}
     </div>
   );
 };

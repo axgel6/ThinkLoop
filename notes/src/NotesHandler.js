@@ -1,9 +1,55 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import TextField from "./TextField";
 import "./NotesHandler.css";
 import Button from "./Button";
 
 const NotesHandler = () => {
+  // Small memoized item to avoid recreating per-note handler props each render
+  const NoteItem = React.memo(function NoteItem({
+    note,
+    updateNoteContent,
+    updateNoteTitle,
+    updateNoteFont,
+    updateNoteTheme,
+    handleRemove,
+  }) {
+    const onChange = useCallback(
+      (val) => updateNoteContent(note.id, val),
+      [note.id, updateNoteContent]
+    );
+    const onTitleChange = useCallback(
+      (t) => updateNoteTitle(note.id, t),
+      [note.id, updateNoteTitle]
+    );
+    const onFontChange = useCallback(
+      (f) => updateNoteFont(note.id, f),
+      [note.id, updateNoteFont]
+    );
+    const onThemeChange = useCallback(
+      (th) => updateNoteTheme(note.id, th),
+      [note.id, updateNoteTheme]
+    );
+    const onRemove = useCallback(
+      () => handleRemove(note.id),
+      [note.id, handleRemove]
+    );
+
+    return (
+      <div className="note-item">
+        <TextField
+          value={note.content}
+          title={note.title}
+          font={note.font}
+          theme={note.theme}
+          onChange={onChange}
+          onTitleChange={onTitleChange}
+          onFontChange={onFontChange}
+          onThemeChange={onThemeChange}
+          onRemove={onRemove}
+        />
+      </div>
+    );
+  });
   // Load notes from localStorage (each note: { id, content }).
   // If nothing is stored, start with empty array to show empty state.
   const [notes, setNotes] = useState(() => {
@@ -15,27 +61,51 @@ const NotesHandler = () => {
         return [];
       }
       // normalize entries to ensure id and content exist
-      return parsed.map((n) => ({ id: n.id ?? Date.now(), content: n.content ?? "", title: n.title ?? "" }));
+      return parsed.map((n) => ({
+        id: n.id ?? Date.now(),
+        content: n.content ?? "",
+        title: n.title ?? "",
+        // default per-note font & theme if missing
+        font: n.font ?? "inter",
+        theme: n.theme ?? "default",
+      }));
     } catch (e) {
       return [];
     }
   });
 
-  const handleNewNote = () => {
-    setNotes((prev) => [...prev, { id: Date.now(), content: "", title: "" }]);
-  };
+  const handleNewNote = useCallback(() => {
+    setNotes((prev) => [
+      ...prev,
+      {
+        id: Date.now(),
+        content: "",
+        title: "",
+        font: "inter",
+        theme: "default",
+      },
+    ]);
+  }, []);
 
-  const handleRemove = (id) => {
+  const handleRemove = useCallback((id) => {
     setNotes((prev) => prev.filter((n) => n.id !== id));
-  };
+  }, []);
 
-  const updateNoteContent = (id, content) => {
+  const updateNoteContent = useCallback((id, content) => {
     setNotes((prev) => prev.map((n) => (n.id === id ? { ...n, content } : n)));
-  };
+  }, []);
 
-  const updateNoteTitle = (id, title) => {
+  const updateNoteTitle = useCallback((id, title) => {
     setNotes((prev) => prev.map((n) => (n.id === id ? { ...n, title } : n)));
-  };
+  }, []);
+
+  const updateNoteFont = useCallback((id, font) => {
+    setNotes((prev) => prev.map((n) => (n.id === id ? { ...n, font } : n)));
+  }, []);
+
+  const updateNoteTheme = useCallback((id, theme) => {
+    setNotes((prev) => prev.map((n) => (n.id === id ? { ...n, theme } : n)));
+  }, []);
 
   // persist notes to localStorage whenever they change
   useEffect(() => {
@@ -52,19 +122,21 @@ const NotesHandler = () => {
       {notes.length === 0 ? (
         <div className="empty-state">
           <p>No notes yet</p>
-          <p className="empty-state-subtitle">Click "New Note" below to begin</p>
+          <p className="empty-state-subtitle">
+            Click "New Note" below to begin
+          </p>
         </div>
       ) : (
         notes.map((n) => (
-          <div key={n.id} className="note-item">
-            <TextField
-              value={n.content}
-              title={n.title}
-              onChange={(val) => updateNoteContent(n.id, val)}
-              onTitleChange={(t) => updateNoteTitle(n.id, t)}
-              onRemove={() => handleRemove(n.id)}
-            />
-          </div>
+          <NoteItem
+            key={n.id}
+            note={n}
+            updateNoteContent={updateNoteContent}
+            updateNoteTitle={updateNoteTitle}
+            updateNoteFont={updateNoteFont}
+            updateNoteTheme={updateNoteTheme}
+            handleRemove={handleRemove}
+          />
         ))
       )}
 

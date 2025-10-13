@@ -4,20 +4,20 @@
   background: var(--panel-bg-solid, rgba(20, 20, 20, 0.9));
   -webkit-backdrop-filter: blur(4px);
   backdrop-filter: blur(4px);
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.24);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.188);
   display: flex;
   flex-direction: column;
   max-height: 600px;
   width: 100%;
   color: var(--fg, #e0e0e0);
-  transition: all 0.3s ease;
+  transition: all 0.1s ease;
   position: relative;
-  z-index: 1;
+  z-index: auto; /* allow child dropdown to escape stacking constraints */
 }
 
 .text-field:hover {
-  transform: scale(1.01);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.486);
+  transform: scale(1.001);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.385);
 }
 
 /* Toolbar */
@@ -29,9 +29,11 @@
   gap: 8px;
   justify-content: start;
   /* Keep toolbar content from forcing the container wider than its parent.
-     Prevent wrapping and allow horizontal scrolling if needed. */
+    Prevent wrapping and allow horizontal scrolling if needed. Allow vertical
+    overflow to be visible so dropdown lists can escape the toolbar bounds. */
   flex-wrap: nowrap;
   overflow-x: auto;
+  overflow-y: visible;
   -webkit-overflow-scrolling: touch;
   border-radius: 20px 20px 0 0;
 }
@@ -45,7 +47,7 @@
   font-size: 14px;
   color: var(--muted, #909090);
   font-weight: 500;
-  transition: all 0.3s ease;
+  transition: all 0.1s ease;
   /* Prevent buttons from growing and force a single-line label with ellipsis
      so long option text doesn't push the toolbar out of its bounds. */
   flex: 0 0 auto;
@@ -57,8 +59,133 @@
 
 .toolbar button:hover {
   background: rgba(255, 255, 255, 0.08);
+  border-color: #92929245;
+  border-width: 1px;
+  border-style: solid;
   color: var(--fg, #e0e0e0);
   transform: scale(1.1);
+}
+
+/* Font picker (checklist) */
+.font-picker {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: 0; /* keep the picker inline with the other buttons */
+  padding-left: 6px;
+  padding-right: 6px;
+  z-index: 2; /* toolbar-level element */
+  position: relative;
+}
+
+/* Make the Dropdown look like other toolbar buttons when used inside the toolbar */
+.font-picker .custom-select-button {
+  background: transparent;
+  border: none;
+  padding: 6px 10px;
+  border-radius: 25px;
+  font-size: 14px;
+  color: var(--muted, #909090);
+  font-weight: 500;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.font-picker .custom-select-button:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--fg, #e0e0e0);
+  transform: scale(1.05);
+}
+
+.font-picker .custom-select-button .chev {
+  opacity: 0.7;
+  margin-left: 6px;
+}
+
+/* Theme picker next to font picker in the toolbar */
+.theme-picker {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 6px;
+}
+
+.theme-picker .custom-select-button {
+  background: transparent;
+  border: none;
+  padding: 6px 10px;
+  border-radius: 25px;
+  font-size: 14px;
+  color: var(--muted, #909090);
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.theme-picker .custom-select-button:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--fg, #e0e0e0);
+}
+
+.font-picker-title {
+  font-size: 12px;
+  color: var(--muted, #9a9a9a);
+  font-weight: 600;
+  margin-right: 4px;
+}
+
+.font-options {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.font-option {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  user-select: none;
+  color: var(--muted, #bdbdbd);
+  font-size: 13px;
+}
+
+.font-option input[type="radio"] {
+  width: 14px;
+  height: 14px;
+}
+
+.font-label {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+/* Samples using the same font stacks as index.css so users can preview */
+.sample-mono {
+  font-family: "JetBrains Mono", Menlo, Monaco, Consolas, "Courier New",
+    monospace;
+}
+.sample-professional {
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, sans-serif;
+}
+.sample-paper {
+  font-family: "Merriweather", Georgia, "Times New Roman", serif;
+}
+.sample-handwritten {
+  font-family: "Patrick Hand", -apple-system, BlinkMacSystemFont, "Segoe UI",
+    Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+/* Ensure dropdown list renders above card/container overlays when opened */
+.text-field .custom-select-list {
+  z-index: 10050; /* much higher than common UI elements */
+}
+.sample-inter {
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, sans-serif;
 }
 
 /* Editor area */

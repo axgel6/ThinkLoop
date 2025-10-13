@@ -69,6 +69,25 @@ const Navbar = ({ activeTab = "notes", onChangeTab = () => {} }) => {
       bubble.removeEventListener("transitionend", handleTransitionEnd);
   }, []);
 
+  // Listen for font changes and force an immediate bubble reposition
+  useEffect(() => {
+    const onFontChange = () => {
+      const bubble = bubbleRef.current;
+      if (!bubble) return;
+      // temporarily disable transitions
+      bubble.classList.add("no-transition");
+      // recompute position and apply (will be instant)
+      requestAnimationFrame(() => {
+        updateBubblePosition();
+        // allow the browser to paint then remove the no-transition class
+        requestAnimationFrame(() => bubble.classList.remove("no-transition"));
+      });
+    };
+
+    window.addEventListener("fontchange", onFontChange);
+    return () => window.removeEventListener("fontchange", onFontChange);
+  }, []);
+
   return (
     <nav className="navbar">
       <ul className="nav-links" ref={navRef}>

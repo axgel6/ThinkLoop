@@ -23,8 +23,7 @@
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   -webkit-backdrop-filter: blur(12px) saturate(180%);
   backdrop-filter: blur(12px) saturate(180%);
-  box-shadow: 
-    0 8px 32px 0 rgba(0, 0, 0, 0.151),
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.151),
     inset 0 1px 0 0 rgba(255, 255, 255, 0.15);
 }
 
@@ -36,8 +35,7 @@
   );
   border-color: rgba(255, 255, 255, 0.25);
   transform: scale(1.05);
-  box-shadow: 
-    0 12px 40px 0 rgba(0, 0, 0, 0.45),
+  box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.45),
     inset 0 1px 0 0 rgba(255, 255, 255, 0.2);
 }
 
@@ -57,21 +55,19 @@
   left: 0;
   background: linear-gradient(
     135deg,
-    rgba(255, 255, 255, 0),
+    rgba(176, 176, 176, 0.513),
     rgba(255, 255, 255, 0.075)
   );
   border: 1px solid rgba(255, 255, 255, 0.18);
-  box-shadow: 
-    0 16px 48px rgba(0, 0, 0, 0.4),
-    0 4px 12px rgba(0, 0, 0, 0.2),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.4),
+    0 4px 12px rgba(255, 255, 255, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1),
     inset 0 -1px 0 rgba(0, 0, 0, 0.1);
   border-radius: 20px;
   margin: 0;
   padding: 8px;
   list-style: none;
   min-width: 180px;
-  z-index: 100;
+  z-index: 10050; /* ensure the dropdown appears above most UI */
   -webkit-backdrop-filter: blur(10px) saturate(180%);
   backdrop-filter: blur(10px) saturate(180%);
   animation: dropdownSlideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);

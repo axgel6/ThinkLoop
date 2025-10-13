@@ -1,4 +1,5 @@
 @import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Merriweather:ital,wght@0,400;0,700;1,400&family=Patrick+Hand&display=swap");
 
 body {
   margin: 0;
@@ -18,7 +19,93 @@ body {
   padding-bottom: 100px;
 }
 
-body { background-color: black; color: #e0e0e0; }
+body {
+  background-color: black;
+  color: #e0e0e0;
+}
+
+/* Font theme utility classes
+   Apply to the body when the class is present on the root (html/documentElement)
+   This ensures body-level font-family is overridden when we add the class to html. */
+:root.font-mono body,
+.font-mono body {
+  font-family: "JetBrains Mono", Menlo, Monaco, Consolas, "Courier New",
+    monospace;
+}
+
+:root.font-inter body,
+.font-inter body {
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    Arial, sans-serif;
+}
+
+:root.font-paper body,
+.font-paper body {
+  font-family: "Merriweather", Georgia, "Times New Roman", serif;
+}
+
+:root.font-handwritten body,
+.font-handwritten body {
+  font-family: "Patrick Hand", -apple-system, BlinkMacSystemFont, "Segoe UI",
+    Roboto, Arial, sans-serif;
+}
+
+/* Apply font theme to UI chrome (navbar, toolbar buttons, titles, and note title input)
+   These selectors intentionally avoid the .editor content area so note text is not affected. */
+:root.font-mono .navbar,
+:root.font-mono .navbar button,
+:root.font-mono .toolbar button,
+:root.font-mono #title,
+:root.font-mono .note-title-input,
+.font-mono .navbar,
+.font-mono .navbar button,
+.font-mono .toolbar button,
+.font-mono #title,
+.font-mono .note-title-input {
+  font-family: "JetBrains Mono", Menlo, Monaco, Consolas, "Courier New",
+    monospace;
+}
+
+:root.font-inter .navbar,
+:root.font-inter .navbar button,
+:root.font-inter .toolbar button,
+:root.font-inter #title,
+:root.font-inter .note-title-input,
+.font-inter .navbar,
+.font-inter .navbar button,
+.font-inter .toolbar button,
+.font-inter #title,
+.font-inter .note-title-input {
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    Arial, sans-serif;
+}
+
+:root.font-paper .navbar,
+:root.font-paper .navbar button,
+:root.font-paper .toolbar button,
+:root.font-paper #title,
+:root.font-paper .note-title-input,
+.font-paper .navbar,
+.font-paper .navbar button,
+.font-paper .toolbar button,
+.font-paper #title,
+.font-paper .note-title-input {
+  font-family: "Merriweather", Georgia, "Times New Roman", serif;
+}
+
+:root.font-handwritten .navbar,
+:root.font-handwritten .navbar button,
+:root.font-handwritten .toolbar button,
+:root.font-handwritten #title,
+:root.font-handwritten .note-title-input,
+.font-handwritten .navbar,
+.font-handwritten .navbar button,
+.font-handwritten .toolbar button,
+.font-handwritten #title,
+.font-handwritten .note-title-input {
+  font-family: "Patrick Hand", -apple-system, BlinkMacSystemFont, "Segoe UI",
+    Roboto, Arial, sans-serif;
+}
 
 code,
 pre {
@@ -123,4 +210,3 @@ body {
   background-color: var(--bg);
   color: var(--fg);
 }
-
