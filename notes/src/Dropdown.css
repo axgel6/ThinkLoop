@@ -68,6 +68,7 @@
   padding: 8px;
   list-style: none;
   min-width: 180px;
+  max-width: calc(100vw - 32px); /* keep list within viewport with some gutter */
   z-index: 10050; /* ensure the dropdown appears above most UI */
   -webkit-backdrop-filter: blur(10px) saturate(180%);
   backdrop-filter: blur(10px) saturate(180%);

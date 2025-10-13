@@ -11,6 +11,10 @@
   overflow: visible;
   position: relative;
   z-index: 1;
+  /* Prevent container overflow on small screens */
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .settings-toggles:hover {
@@ -28,6 +32,34 @@
   align-items: center;
   gap: 12px;
   margin-bottom: 12px;
+  /* Allow items to wrap to new lines to avoid horizontal overflow */
+  flex-wrap: wrap;
+}
+
+/* Ensure flex children can shrink and not overflow their container */
+.settings-section .controls-row > * {
+  min-width: 0;
+}
+
+/* Responsive adjustments for small screens */
+@media (max-width: 640px) {
+  .settings-section .controls-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .settings-section .controls-row label {
+    margin: 0; /* remove left/right margins when stacked */
+  }
+
+  /* Make dropdowns take full width when stacked */
+  .settings-section .controls-row .custom-select,
+  .settings-section .controls-row .custom-select-button {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
 }
 
 /* Spacing for checklist / grouped items */
