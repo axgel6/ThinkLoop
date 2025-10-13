@@ -60,12 +60,16 @@ const Settings = () => {
 
         <div className="settings-section">
           <h2>User Account</h2>
+            <label style={{ marginRight: 8 }}>Coming Soon</label>
+
         </div>
 
         <hr className="settings-divider" />
 
         <div className="settings-section">
           <h2>Export</h2>
+            <label style={{ marginRight: 8 }}>Coming Soon</label>
+
         </div>
 
         <hr className="settings-divider" />
