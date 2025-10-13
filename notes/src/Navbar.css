@@ -18,7 +18,7 @@
 .navbar ul {
   list-style-type: none;
   margin: 0;
-  padding: 8px 20px;
+  padding: 6px 16px;
   overflow: visible;
   -webkit-backdrop-filter: blur(3px) saturate(180%);
   backdrop-filter: blur(3px) saturate(180%);
@@ -41,11 +41,11 @@
 }
 
 .navbar li button {
-  font-size: 14px;
+  font-size: 13px;
   display: block;
   color: var(--muted, #909090);
   text-align: center;
-  padding: 8px 16px;
+  padding: 6px 14px;
   background: transparent;
   border: none;
   cursor: pointer;
@@ -65,14 +65,14 @@
 
 .navbar li button.active {
   color: var(--fg, #ffffff);
-  font-size: 18px;
+  font-size: 16px;
 }
 
 /* Moving bubble background for active tab */
 .nav-bubble {
   position: absolute;
-  top: 8px;
-  height: calc(100% - 16px);
+  top: 6px;
+  height: calc(100% - 12px);
   background-color: rgba(0, 0, 0, 0.24);
   border-radius: 25px;
   transform: scale(1.2);

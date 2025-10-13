@@ -4,7 +4,7 @@ import Button from "./Button";
 import "./settings-page.css";
 
 const OPTIONS = [
-  { id: "one", label: "Dark (Default)" },
+  { id: "one", label: "Black Mono" },
   { id: "two", label: "Blue" },
   { id: "three", label: "Gray" },
   { id: "four", label: "Cream" },

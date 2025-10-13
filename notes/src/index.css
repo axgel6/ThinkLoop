@@ -11,7 +11,7 @@ body {
 
   background-color: black;
   /* Page side padding (kept equal left/right). Change this value to adjust gutters. */
-  --side-padding: 48px;
+  --side-padding: 14px;
   padding-left: var(--side-padding);
   padding-right: var(--side-padding);
   /* Ensure content can be scrolled above the fixed bottom navbar */
@@ -43,7 +43,7 @@ pre {
   --muted: #9a9a9a;
   --panel-bg: rgba(30, 30, 30, 0.6);
   --panel-border: rgba(255, 255, 255, 0.08);
-  --panel-bg-solid: rgba(20, 20, 20, 0.9);
+  --panel-bg-solid: rgb(20, 20, 20);
 }
 
 .theme-dark {
@@ -52,7 +52,7 @@ pre {
   --muted: #9a9a9a;
   --panel-bg: rgba(30, 30, 30, 0.6);
   --panel-border: rgba(255, 255, 255, 0.08);
-  --panel-bg-solid: rgba(20, 20, 20, 0.9);
+  --panel-bg-solid: rgb(20, 20, 20);
 }
 
 .theme-blue {

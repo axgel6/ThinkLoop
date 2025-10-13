@@ -9,6 +9,8 @@
   margin-bottom: 16px;
   transition: all 0.3s ease;
   overflow: visible;
+  position: relative;
+  z-index: 1;
 }
 
 .settings-toggles:hover {
