@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import Navbar from "./Navbar";
 import Feed from "./Feed";
-import Tasks from "./Tasks";
+import Tasks from "./Tasks"; 
 import NotesHandler from "./NotesHandler";
 import Settings from "./settings-page";
 import NotFound from "./NotFound";

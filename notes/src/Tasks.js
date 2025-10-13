@@ -1,9 +1,12 @@
 import React from "react";
+import Checklist from "./Checklist";
+
 
 const Tasks = () => {
   return (
     <div style={{ padding: 16 }}>
-      <p>Coming Soon</p>
+      <Checklist />
+
     </div>
   );
 };
