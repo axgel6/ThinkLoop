@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import TextField from "./TextField";
 import "./NotesHandler.css";
+import Button from "./Button";
 
 const NotesHandler = () => {
   // Load notes from localStorage (each note: { id, content }).
@@ -60,9 +61,11 @@ const NotesHandler = () => {
         </div>
       ))}
 
-      <button id="new-note-btn" onClick={handleNewNote}>
-        New Note
-      </button>
+      <div style={{ textAlign: "center", marginTop: 8 }}>
+        <Button className="primary" onClick={handleNewNote}>
+          New Note
+        </Button>
+      </div>
     </>
   );
 };

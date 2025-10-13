@@ -1,7 +1,7 @@
 .text-field {
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--panel-border, rgba(255, 255, 255, 0.08));
   border-radius: 20px;
-  background: rgba(20, 20, 20, 0.9);
+  background: var(--panel-bg-solid, rgba(20, 20, 20, 0.9));
   -webkit-backdrop-filter: blur(4px);
   backdrop-filter: blur(4px);
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.6);
@@ -9,7 +9,7 @@
   flex-direction: column;
   max-height: 600px;
   width: 100%;
-  color: #e0e0e0;
+  color: var(--fg, #e0e0e0);
   transition: all 0.3s ease;
 }
 
@@ -20,8 +20,8 @@
 
 /* Toolbar */
 .toolbar {
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(30, 30, 30, 0.6);
+  border-bottom: 1px solid var(--panel-border, rgba(255, 255, 255, 0.08));
+  background: var(--panel-bg, rgba(30, 30, 30, 0.6));
   padding: 8px 10px;
   display: flex;
   gap: 8px;
@@ -41,7 +41,7 @@
   padding: 6px 10px;
   border-radius: 25px;
   font-size: 14px;
-  color: #909090;
+  color: var(--muted, #909090);
   font-weight: 500;
   transition: all 0.3s ease;
   /* Prevent buttons from growing and force a single-line label with ellipsis
@@ -55,7 +55,7 @@
 
 .toolbar button:hover {
   background: rgba(255, 255, 255, 0.08);
-  color: #e0e0e0;
+  color: var(--fg, #e0e0e0);
   transform: scale(1.1);
 }
 
@@ -69,12 +69,12 @@
   font-size: 15px;
   line-height: 1.6;
   border-radius: 0 0 20px 20px;
-  color: #f0f0f0;
+  color: var(--fg, #f0f0f0);
 }
 
 .editor:empty:before {
   content: attr(placeholder);
-  color: #777;
+  color: var(--muted, #777);
 }
 
 /* Scrollbar styling */

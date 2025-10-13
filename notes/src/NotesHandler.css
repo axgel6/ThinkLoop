@@ -13,14 +13,14 @@
   align-items: center;
   justify-content: space-between;
   padding: 8px 12px;
-  border-top: 1px solid rgba(255,255,255,0.04);
+  border-top: 1px solid var(--panel-border, rgba(255,255,255,0.04));
   background: rgba(0,0,0,0.06);
   border-radius: 0 0 12px 12px;
   margin-top: 8px;
 }
 
 .note-title {
-  color: #dcdcdc;
+  color: var(--fg, #dcdcdc);
   font-size: 13px;
   white-space: nowrap;
   overflow: hidden;
@@ -31,19 +31,19 @@
 .note-title-input {
   background: transparent;
   border: none;
-  color: #dcdcdc;
+  color: var(--fg, #dcdcdc);
   font-size: 13px;
   max-width: 75%;
   outline: none;
 }
 
 .note-title-input::placeholder{
-  color: #9a9a9a;
+  color: var(--muted, #9a9a9a);
 }
 
 .remove-btn {
-  background: transparent;
-  color: #ff8a8a;
+  background: rgba(119, 0, 0, 0.473);
+  color: #ffb3b3;
   border: 1px solid rgba(255, 138, 138, 0.12);
   padding: 6px 10px;
   border-radius: 12px;
@@ -56,34 +56,3 @@
 
 
 
-
-#new-note-btn {
-  background: linear-gradient(
-    180deg,
-    rgba(255, 255, 255, 0.06),
-    rgba(255, 255, 255, 0.02)
-  );
-  color: white;
-  border-radius: 25px;
-  width: fit-content;
-  height: 28px;
-  padding: 20px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 6px 14px rgba(2, 6, 23, 0.45);
-  transition: transform 120ms ease, box-shadow 120ms ease, background 120ms ease;
-  margin: 10px auto 0;
-}
-
-#new-note-btn:hover {
-  box-shadow: 0 10px 20px rgba(2, 6, 23, 0.6);
-  background: linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03));
-  cursor: pointer;
-}
-
-#new-note-btn:focus {
-  outline: 2px solid rgba(187, 187, 187, 0.14);
-  outline-offset: 3px;
-}

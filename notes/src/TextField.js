@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import "./TextField.css";
+import Button from "./Button";
 
 const TextField = ({ value: initialValue = "", onChange, onRemove, title = "", onTitleChange }) => {
   const [value, setValue] = useState(initialValue);
@@ -86,9 +87,9 @@ const TextField = ({ value: initialValue = "", onChange, onRemove, title = "", o
           aria-label="Note title"
         />
         {onRemove && (
-          <button className="remove-btn" onClick={onRemove} aria-label="Remove note">
+          <Button className="remove-btn" onClick={onRemove} aria-label="Remove note">
             Remove
-          </button>
+          </Button>
         )}
       </div>
     </div>

@@ -1,0 +1,19 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>404 — redirecting</title>
+    <script>
+      // try to redirect to index while preserving path in hash so SPA can parse it
+      (function () {
+        var path = window.location.pathname + window.location.search;
+        var root = '/'; // change if your site is hosted at a subpath
+        window.location.replace(root + '#' + path);
+      })();
+    </script>
+  </head>
+  <body>
+    <p>Page not found. Redirecting...</p>
+    <p><a href="/">Go to home</a></p>
+  </body>
+</html>

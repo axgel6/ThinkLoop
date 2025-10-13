@@ -129,6 +129,25 @@ const Navbar = ({ activeTab = "notes", onChangeTab = () => {} }) => {
             Feed
           </button>
         </li>
+        <li>
+          <button
+            className={activeTab === "settings" ? "active" : ""}
+            onMouseEnter={() => {
+              if (activeTab === "settings" && bubbleRef.current) {
+                bubbleRef.current.classList.add("hovering");
+              }
+            }}
+            onMouseLeave={() => {
+              if (bubbleRef.current) {
+                bubbleRef.current.classList.remove("hovering");
+              }
+            }}
+            onClick={() => onChangeTab("settings")}
+            aria-pressed={activeTab === "settings"}
+          >
+            Settings
+          </button>
+        </li>
       </ul>
     </nav>
   );
