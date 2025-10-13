@@ -32,7 +32,7 @@
   background: transparent;
   border: none;
   color: var(--fg, #dcdcdc);
-  font-size: 13px;
+  font-size: 16px;
   max-width: 75%;
   outline: none;
 }

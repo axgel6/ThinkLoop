@@ -68,7 +68,7 @@
   overflow-y: auto;
   outline: none;
   font-family: system-ui, sans-serif;
-  font-size: 15px;
+  font-size: 16px;
   line-height: 1.6;
   border-radius: 0 0 20px 20px;
   color: var(--fg, #f0f0f0);
