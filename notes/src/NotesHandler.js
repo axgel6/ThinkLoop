@@ -5,19 +5,19 @@ import Button from "./Button";
 
 const NotesHandler = () => {
   // Load notes from localStorage (each note: { id, content }).
-  // If nothing is stored, start with one blank note.
+  // If nothing is stored, start with empty array to show empty state.
   const [notes, setNotes] = useState(() => {
     try {
       const raw = localStorage.getItem("notes");
-      if (!raw) return [{ id: Date.now(), content: "" }];
+      if (!raw) return [];
       const parsed = JSON.parse(raw);
       if (!Array.isArray(parsed) || parsed.length === 0) {
-        return [{ id: Date.now(), content: "", title: "" }];
+        return [];
       }
       // normalize entries to ensure id and content exist
       return parsed.map((n) => ({ id: n.id ?? Date.now(), content: n.content ?? "", title: n.title ?? "" }));
     } catch (e) {
-      return [{ id: Date.now(), content: "" }];
+      return [];
     }
   });
 
@@ -49,17 +49,24 @@ const NotesHandler = () => {
 
   return (
     <>
-      {notes.map((n) => (
-        <div key={n.id} className="note-item">
-          <TextField
-            value={n.content}
-            title={n.title}
-            onChange={(val) => updateNoteContent(n.id, val)}
-            onTitleChange={(t) => updateNoteTitle(n.id, t)}
-            onRemove={() => handleRemove(n.id)}
-          />
+      {notes.length === 0 ? (
+        <div className="empty-state">
+          <p>No notes yet</p>
+          <p className="empty-state-subtitle">Click "New Note" below to begin</p>
         </div>
-      ))}
+      ) : (
+        notes.map((n) => (
+          <div key={n.id} className="note-item">
+            <TextField
+              value={n.content}
+              title={n.title}
+              onChange={(val) => updateNoteContent(n.id, val)}
+              onTitleChange={(t) => updateNoteTitle(n.id, t)}
+              onRemove={() => handleRemove(n.id)}
+            />
+          </div>
+        ))
+      )}
 
       <div style={{ textAlign: "center", marginTop: 8 }}>
         <Button className="primary" onClick={handleNewNote}>

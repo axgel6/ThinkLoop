@@ -34,7 +34,10 @@ const Navbar = ({ activeTab = "notes", onChangeTab = () => {} }) => {
   };
 
   useEffect(() => {
-    updateBubblePosition();
+    // Use requestAnimationFrame to ensure DOM is ready
+    requestAnimationFrame(() => {
+      updateBubblePosition();
+    });
     const handleResize = () => updateBubblePosition();
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
@@ -42,7 +45,10 @@ const Navbar = ({ activeTab = "notes", onChangeTab = () => {} }) => {
   }, []);
 
   useEffect(() => {
-    updateBubblePosition();
+    // Use requestAnimationFrame to ensure DOM is ready when activeTab changes
+    requestAnimationFrame(() => {
+      updateBubblePosition();
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab]);
 

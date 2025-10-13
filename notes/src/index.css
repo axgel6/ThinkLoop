@@ -91,6 +91,33 @@ pre {
   --panel-bg-solid: #e6dcff;
 }
 
+.theme-pink {
+  --bg: #ffe5f0;
+  --fg: #4a1e35;
+  --muted: #c75a8a;
+  --panel-bg: rgba(255, 220, 240, 0.7);
+  --panel-border: rgba(199, 90, 138, 0.25);
+  --panel-bg-solid: #ffd6e8;
+}
+
+.theme-skyblue {
+  --bg: #e3f2fd;
+  --fg: #1e3a5f;
+  --muted: #4a90c7;
+  --panel-bg: rgba(220, 240, 255, 0.7);
+  --panel-border: rgba(74, 144, 199, 0.25);
+  --panel-bg-solid: #d1e9ff;
+}
+
+.theme-sage {
+  --bg: #e8f3e8;
+  --fg: #2d4a2d;
+  --muted: #6b8e6b;
+  --panel-bg: rgba(220, 235, 220, 0.7);
+  --panel-border: rgba(107, 142, 107, 0.25);
+  --panel-bg-solid: #d8ead8;
+}
+
 /* Apply the variables to the page background/text so they're used site-wide */
 body {
   background-color: var(--bg);

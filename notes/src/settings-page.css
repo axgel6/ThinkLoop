@@ -1,0 +1,54 @@
+.settings-toggles {
+  border: 1px solid var(--panel-border, rgba(255, 255, 255, 0.08));
+  border-radius: 20px;
+  background: var(--panel-bg-solid, rgba(20, 20, 20, 0.9));
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.24);
+  padding: 24px;
+  margin-bottom: 16px;
+  transition: all 0.3s ease;
+  overflow: visible;
+}
+
+.settings-toggles:hover {
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.486);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.settings-section {
+  padding: 8px 0;
+}
+
+.settings-section:first-child {
+  padding-top: 0;
+}
+
+.settings-section:last-child {
+  padding-bottom: 0;
+}
+
+.settings-section h2 {
+  color: var(--fg, #e0e0e0);
+  margin-top: 0;
+  margin-bottom: 12px;
+  font-size: 1.3em;
+  font-weight: 600;
+}
+
+.settings-section label {
+  color: var(--fg, #e0e0e0);
+}
+
+.settings-divider {
+  border: none;
+  height: 1px;
+  background: linear-gradient(
+    to right,
+    transparent,
+    var(--panel-border, rgba(255, 255, 255, 0.15)),
+    transparent
+  );
+  margin: 24px 0;
+  opacity: 0.6;
+}

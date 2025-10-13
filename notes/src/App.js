@@ -7,21 +7,40 @@ import Settings from "./settings-page";
 import NotFound from "./NotFound";
 
 function App() {
-  const [activeTab, setActiveTab] = useState("notes");
+  // Initialize activeTab from localStorage or default to "notes"
+  const [activeTab, setActiveTab] = useState(() => {
+    try {
+      return localStorage.getItem("activeTab") || "notes";
+    } catch (e) {
+      return "notes";
+    }
+  });
   const titles = { notes: "Notes", tasks: "Tasks", feed: "Feed", settings: "Settings"  };
+
+  // Save activeTab to localStorage whenever it changes
+  useEffect(() => {
+    try {
+      localStorage.setItem("activeTab", activeTab);
+    } catch (e) {
+      // ignore
+    }
+  }, [activeTab]);
 
   // Initialize theme on app startup and listen for changes
   useEffect(() => {
     const applyTheme = () => {
       const savedTheme = localStorage.getItem("settings:selected") || "one";
       const root = document.documentElement;
-      root.classList.remove("theme-dark", "theme-blue", "theme-gray", "theme-cream", "theme-purple");
+      root.classList.remove("theme-dark", "theme-blue", "theme-gray", "theme-cream", "theme-purple", "theme-pink", "theme-skyblue", "theme-sage");
       
       if (savedTheme === "one") root.classList.add("theme-dark");
       else if (savedTheme === "two") root.classList.add("theme-blue");
       else if (savedTheme === "three") root.classList.add("theme-gray");
       else if (savedTheme === "four") root.classList.add("theme-cream");
       else if (savedTheme === "five") root.classList.add("theme-purple");
+      else if (savedTheme === "six") root.classList.add("theme-pink");
+      else if (savedTheme === "seven") root.classList.add("theme-skyblue");
+      else if (savedTheme === "eight") root.classList.add("theme-sage");
     };
 
     // Apply theme on mount
