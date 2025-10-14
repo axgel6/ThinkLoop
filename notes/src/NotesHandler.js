@@ -3,53 +3,56 @@ import TextField from "./TextField";
 import "./NotesHandler.css";
 import Button from "./Button";
 
-const NotesHandler = () => {
-  // Small memoized item to avoid recreating per-note handler props each render
-  const NoteItem = React.memo(function NoteItem({
-    note,
-    updateNoteContent,
-    updateNoteTitle,
-    updateNoteFont,
-    updateNoteTheme,
-    handleRemove,
-  }) {
-    const onChange = useCallback(
-      (val) => updateNoteContent(note.id, val),
-      [note.id, updateNoteContent]
-    );
-    const onTitleChange = useCallback(
-      (t) => updateNoteTitle(note.id, t),
-      [note.id, updateNoteTitle]
-    );
-    const onFontChange = useCallback(
-      (f) => updateNoteFont(note.id, f),
-      [note.id, updateNoteFont]
-    );
-    const onThemeChange = useCallback(
-      (th) => updateNoteTheme(note.id, th),
-      [note.id, updateNoteTheme]
-    );
-    const onRemove = useCallback(
-      () => handleRemove(note.id),
-      [note.id, handleRemove]
-    );
+// Stable NoteItem component defined outside the parent to avoid remounts on each render.
+// Defining a memoized component inside a parent recreates its type every render,
+// causing React to unmount/remount children (losing focus in editors).
+const NoteItem = React.memo(function NoteItem({
+  note,
+  updateNoteContent,
+  updateNoteTitle,
+  updateNoteFont,
+  updateNoteTheme,
+  handleRemove,
+}) {
+  const onChange = useCallback(
+    (val) => updateNoteContent(note.id, val),
+    [note.id, updateNoteContent]
+  );
+  const onTitleChange = useCallback(
+    (t) => updateNoteTitle(note.id, t),
+    [note.id, updateNoteTitle]
+  );
+  const onFontChange = useCallback(
+    (f) => updateNoteFont(note.id, f),
+    [note.id, updateNoteFont]
+  );
+  const onThemeChange = useCallback(
+    (th) => updateNoteTheme(note.id, th),
+    [note.id, updateNoteTheme]
+  );
+  const onRemove = useCallback(
+    () => handleRemove(note.id),
+    [note.id, handleRemove]
+  );
 
-    return (
-      <div className="note-item">
-        <TextField
-          value={note.content}
-          title={note.title}
-          font={note.font}
-          theme={note.theme}
-          onChange={onChange}
-          onTitleChange={onTitleChange}
-          onFontChange={onFontChange}
-          onThemeChange={onThemeChange}
-          onRemove={onRemove}
-        />
-      </div>
-    );
-  });
+  return (
+    <div className="note-item">
+      <TextField
+        value={note.content}
+        title={note.title}
+        font={note.font}
+        theme={note.theme}
+        onChange={onChange}
+        onTitleChange={onTitleChange}
+        onFontChange={onFontChange}
+        onThemeChange={onThemeChange}
+        onRemove={onRemove}
+      />
+    </div>
+  );
+});
+
+const NotesHandler = () => {
   // Load notes from localStorage (each note: { id, content }).
   // If nothing is stored, start with empty array to show empty state.
   const [notes, setNotes] = useState(() => {

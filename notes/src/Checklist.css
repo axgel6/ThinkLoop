@@ -1,19 +1,303 @@
-.task-list {
-  border: 1px solid var(--panel-border, rgba(255, 255, 255, 0.08));
-  border-radius: 20px;
-  background: var(--panel-bg-solid, rgba(20, 20, 20, 0.9));
-  -webkit-backdrop-filter: blur(4px);
-  backdrop-filter: blur(4px);
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.24);
-  padding: 24px;
-  margin-bottom: 16px;
-  transition: all 0.1s ease;
-  overflow: visible;
-  position: relative;
-  z-index: 1;
+/* Tasks Page Container */
+.tasklist {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
 }
 
-.task-list:hover {
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.486);
-  border-color: rgba(255, 255, 255, 0.12);
+/* Header Section */
+.checklist-header {
+  text-align: center;
+  margin-bottom: 32px;
+  animation: fadeInDown 0.5s ease-out;
+}
+
+.checklist-header h2 {
+  font-size: 2em;
+  margin: 0 0 8px 0;
+  color: var(--fg, #dcdcdc);
+  font-weight: 600;
+}
+
+.muted {
+  color: var(--muted, #9a9a9a);
+  font-size: 0.9em;
+  margin: 0;
+}
+
+/* Add Task Form */
+.checklist-add {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 24px;
+  animation: fadeInUp 0.5s ease-out 0.1s backwards;
+}
+
+.checklist-input {
+  flex: 1;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.05),
+    rgba(255, 255, 255, 0.02)
+  );
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 16px;
+  padding: 12px 18px;
+  color: var(--fg, #ffffff);
+  font-size: 14px;
+  outline: none;
+  transition: all 0.2s ease;
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+
+.checklist-input::placeholder {
+  color: var(--muted, #9a9a9a);
+}
+
+.checklist-input:focus {
+  border-color: rgba(255, 255, 255, 0.25);
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.08),
+    rgba(255, 255, 255, 0.04)
+  );
+  box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.2);
+}
+
+/* Task List */
+.checklist-items {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.checklist-items .empty {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--muted, #9a9a9a);
+  border: 1px solid var(--panel-border, rgba(255, 255, 255, 0.08));
+  border-radius: 20px;
+  background: rgba(0, 0, 0, 0.2);
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
+  font-size: 1.1em;
+  animation: fadeIn 0.5s ease-out;
+}
+
+/* Individual Task Item */
+.checklist-item {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.05),
+    rgba(255, 255, 255, 0.02)
+  );
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.15);
+  padding: 16px 20px;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  animation: slideIn 0.4s ease-out backwards;
+  animation-delay: calc(var(--item-index, 0) * 0.05s);
+}
+
+.checklist-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px 0 rgba(0, 0, 0, 0.25);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.checklist-item.completed {
+  background: linear-gradient(
+    135deg,
+    rgba(0, 255, 0, 0.05),
+    rgba(0, 255, 0, 0.02)
+  );
+  border-color: rgba(0, 255, 0, 0.15);
+  opacity: 0.7;
+}
+
+.checklist-item.completed:hover {
+  opacity: 0.9;
+}
+
+/* Label and Checkbox Container */
+.checklist-label {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  flex: 1;
+  user-select: none;
+}
+
+/* Hide default checkbox */
+.checklist-label input[type="checkbox"] {
+  position: absolute;
+  opacity: 0;
+  cursor: pointer;
+  height: 0;
+  width: 0;
+}
+
+/* Custom Checkbox */
+.custom-checkbox {
+  position: relative;
+  width: 24px;
+  height: 24px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 8px;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.05),
+    rgba(255, 255, 255, 0.02)
+  );
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  flex-shrink: 0;
+}
+
+.checklist-label:hover .custom-checkbox {
+  border-color: rgba(255, 255, 255, 0.5);
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.1),
+    rgba(255, 255, 255, 0.05)
+  );
+}
+
+/* Checkmark */
+.custom-checkbox::after {
+  content: "";
+  position: absolute;
+  display: none;
+  left: 7px;
+  top: 3px;
+  width: 6px;
+  height: 12px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+/* Show checkmark when checked */
+.checklist-label input[type="checkbox"]:checked ~ .custom-checkbox::after {
+  display: block;
+  animation: checkmark 0.3s ease-out;
+}
+
+.checklist-label input[type="checkbox"]:checked ~ .custom-checkbox {
+  background: linear-gradient(
+    135deg,
+    rgba(0, 255, 100, 0.5),
+    rgba(0, 200, 80, 0.4)
+  );
+  border-color: rgba(0, 255, 100, 0.6);
+  box-shadow: 0 0 12px rgba(0, 255, 100, 0.3);
+}
+
+/* Task Text */
+.checklist-label .text {
+  color: var(--fg, #dcdcdc);
+  font-size: 15px;
+  transition: all 0.3s ease;
+  flex: 1;
+}
+
+.checklist-item.completed .text {
+  text-decoration: line-through;
+  color: var(--muted, #9a9a9a);
+}
+
+/* Remove Button */
+.remove-task-btn {
+  background: rgba(150, 0, 0, 0.3);
+  color: #ffb3b3;
+  border: 1px solid rgba(255, 138, 138, 0.2);
+  border-radius: 8px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 16px;
+  flex-shrink: 0;
+  opacity: 0;
+}
+
+.checklist-item:hover .remove-task-btn {
+  opacity: 1;
+}
+
+.remove-task-btn:hover {
+  background: rgba(223, 0, 0, 0.5);
+  border-color: rgba(255, 138, 138, 0.4);
+  transform: scale(1.1) rotate(90deg);
+  box-shadow: 0 4px 12px rgba(223, 0, 0, 0.3);
+}
+
+.remove-task-btn:active {
+  transform: scale(0.95) rotate(90deg);
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes checkmark {
+  0% {
+    transform: rotate(45deg) scale(0);
+  }
+  50% {
+    transform: rotate(45deg) scale(1.2);
+  }
+  100% {
+    transform: rotate(45deg) scale(1);
+  }
 }
