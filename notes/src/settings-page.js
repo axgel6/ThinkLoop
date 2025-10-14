@@ -17,6 +17,25 @@ const COLOR_OPTIONS = [
 ];
 
 const Settings = () => {
+  // Safely stringify JSON for export: escape characters/sequences that can
+  // cause issues if the JSON is later embedded in HTML or a <script> tag.
+  // This prevents JSON injection by neutralizing </script>, U+2028/U+2029,
+  // and HTML comment openers.
+  const safeJSONStringify = (obj) =>
+    JSON.stringify(
+      obj,
+      (k, v) => {
+        if (typeof v === "string") {
+          return v
+            .replace(/\u2028/g, "\\u2028")
+            .replace(/\u2029/g, "\\u2029")
+            .replace(/<\/script/gi, "<\\/script")
+            .replace(/<!--/g, "<\\!--");
+        }
+        return v;
+      },
+      2
+    );
   const [val, setVal] = React.useState(() => {
     try {
       return localStorage.getItem("settings:selected") ?? COLOR_OPTIONS[0].id;
@@ -147,10 +166,37 @@ const Settings = () => {
               onClick={() => {
                 try {
                   const raw = localStorage.getItem("notes");
-                  const data = raw ? JSON.parse(raw) : [];
+                  const stored = raw ? JSON.parse(raw) : [];
+                  // Convert numeric timestamps to the user's local date/time string
+                  // so exported JSON shows the correct day/time in the user's timezone.
+                  const dateOpts = {
+                    year: "numeric",
+                    month: "2-digit",
+                    day: "2-digit",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                    second: "2-digit",
+                  };
+                  const data = stored.map((n) => ({
+                    ...n,
+                    createdAt:
+                      typeof n.createdAt === "number"
+                        ? new Date(n.createdAt).toLocaleString(
+                            undefined,
+                            dateOpts
+                          )
+                        : n.createdAt,
+                    lastModified:
+                      typeof n.lastModified === "number"
+                        ? new Date(n.lastModified).toLocaleString(
+                            undefined,
+                            dateOpts
+                          )
+                        : n.lastModified,
+                  }));
                   const ts = new Date().toISOString().replace(/[:.]/g, "-");
                   const filename = `notes-${ts}.json`;
-                  const blob = new Blob([JSON.stringify(data, null, 2)], {
+                  const blob = new Blob([safeJSONStringify(data)], {
                     type: "application/json",
                   });
                   const url = URL.createObjectURL(blob);
@@ -173,10 +219,35 @@ const Settings = () => {
               onClick={() => {
                 try {
                   const raw = localStorage.getItem("checklist:items");
-                  const data = raw ? JSON.parse(raw) : [];
+                  const stored = raw ? JSON.parse(raw) : [];
+                  const dateOpts = {
+                    year: "numeric",
+                    month: "2-digit",
+                    day: "2-digit",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                    second: "2-digit",
+                  };
+                  const data = stored.map((i) => ({
+                    ...i,
+                    createdAt:
+                      typeof i.createdAt === "number"
+                        ? new Date(i.createdAt).toLocaleString(
+                            undefined,
+                            dateOpts
+                          )
+                        : i.createdAt,
+                    completedAt:
+                      typeof i.completedAt === "number"
+                        ? new Date(i.completedAt).toLocaleString(
+                            undefined,
+                            dateOpts
+                          )
+                        : i.completedAt,
+                  }));
                   const ts = new Date().toISOString().replace(/[:.]/g, "-");
                   const filename = `tasks-${ts}.json`;
-                  const blob = new Blob([JSON.stringify(data, null, 2)], {
+                  const blob = new Blob([safeJSONStringify(data)], {
                     type: "application/json",
                   });
                   const url = URL.createObjectURL(blob);

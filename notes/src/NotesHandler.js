@@ -73,21 +73,31 @@ const NotesHandler = () => {
         return [];
       }
       // normalize entries to ensure id, content, timestamps and fontSize exist
-      return parsed.map((n) => ({
-        id: n.id ?? Date.now(),
-        content: n.content ?? "",
-        title: n.title ?? "",
-        // default per-note font & theme if missing
-        font: n.font ?? "inter",
-        // default font size in pixels
-        fontSize: n.fontSize ?? 16,
-        theme: n.theme ?? "default",
-        // timestamps: createdAt and lastModified (backwards-compatible with older saved notes)
-        createdAt:
-          n.createdAt ?? n.createdAt === 0 ? n.createdAt : n.id ?? Date.now(),
-        lastModified:
-          n.lastModified ?? n.updatedAt ?? n.createdAt ?? Date.now(),
-      }));
+      return parsed.map((n) => {
+        // compute a reliable createdAt (prefer explicit createdAt, then id, then now)
+        const createdAt =
+          n && n.createdAt !== undefined && n.createdAt !== null
+            ? n.createdAt
+            : n?.id ?? Date.now();
+        // compute lastModified (prefer explicit, then updatedAt, then createdAt, then now)
+        const lastModified =
+          n && n.lastModified !== undefined && n.lastModified !== null
+            ? n.lastModified
+            : n?.updatedAt ?? createdAt ?? Date.now();
+
+        return {
+          id: n.id ?? Date.now(),
+          content: n.content ?? "",
+          title: n.title ?? "",
+          // default per-note font & theme if missing
+          font: n.font ?? "inter",
+          // default font size in pixels
+          fontSize: n.fontSize ?? 16,
+          theme: n.theme ?? "default",
+          createdAt,
+          lastModified,
+        };
+      });
     } catch (e) {
       return [];
     }
