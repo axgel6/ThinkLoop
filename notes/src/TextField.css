@@ -28,26 +28,94 @@
   display: flex;
   gap: 8px;
   justify-content: start;
-  /* Keep toolbar content from forcing the container wider than its parent.
-    Prevent wrapping and allow horizontal scrolling if needed. Allow vertical
-    overflow to be visible so dropdown lists can escape the toolbar bounds. */
+  border-radius: 20px 20px 0 0;
+  position: relative; /* contain absolute pinned actions */
+  /* modest right padding so the scrollable area can scroll under the pinned actions */
+  padding-right: 48px; /* room for pinned actions */
+}
+
+.toolbar-scroll {
+  display: flex;
+  gap: 8px;
+  /* allow horizontal scrolling with no wrapping */
   flex-wrap: nowrap;
   overflow-x: auto;
-  overflow-y: visible;
-  -webkit-overflow-scrolling: touch;
-  border-radius: 20px 20px 0 0;
+  overflow-y: hidden;
+  white-space: nowrap;
+  -webkit-overflow-scrolling: touch; /* momentum scrolling on iOS */
+  touch-action: pan-x; /* prefer horizontal pan gestures */
+  overscroll-behavior-x: contain; /* prevent scroll chaining to the page */
+  width: 100%;
+  /* modest right padding so items can scroll under the pinned actions */
+  padding-right: 48px;
+}
+
+/* Add an invisible spacer at the end of the scroll area so users can scroll
+   far enough to reveal items hidden beneath the pinned actions. This ensures
+   touch scrolling can reveal the full width of toolbar content. */
+.toolbar-scroll::after {
+  content: "";
+  display: inline-block;
+  width: 48px;
+  height: 1px;
+}
+
+/* Right-side pinned actions container (keeps buttons same size; glyphs scaled)
+   This container stays visible while the rest of the toolbar can scroll. */
+.toolbar-actions {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 40; /* allow dropdowns (z-index 10050) to appear above actions */
+}
+
+/* Let clicks pass through the actions container except the actual buttons.
+   This prevents the container from blocking dropdowns under it (theme picker). */
+.toolbar-actions {
+  pointer-events: none;
+}
+.toolbar-actions > * {
+  pointer-events: auto; /* enable interaction for direct children (buttons) */
+}
+
+/* Make only the ASCII glyph larger so buttons maintain original dimensions */
+/* glyph class removed; buttons will show text labels now */
+
+/* Blurred frosted background behind the undo/redo buttons */
+.toolbar-actions .undo-btn,
+.toolbar-actions .redo-btn {
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 12px;
+  padding: 6px 8px; /* keep overall button size similar to others */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  color: var(--muted, #bdbdbd);
+}
+
+.toolbar-actions .undo-btn:hover,
+.toolbar-actions .redo-btn:hover {
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--fg, #e0e0e0);
 }
 
 .toolbar button {
-  border: none;
-  background: transparent;
+  border: 1px solid var(--panel-border, rgba(255, 255, 255, 0.08));
+  background: var(--panel-bg, rgba(30, 30, 30, 0.6));
   cursor: pointer;
   padding: 6px 10px;
-  border-radius: 25px;
+  border-radius: 20px;
   font-size: 14px;
   color: var(--muted, #909090);
   font-weight: 500;
-  transition: all 0.1s ease;
+  transition: all 0.12s ease;
   /* Prevent buttons from growing and force a single-line label with ellipsis
      so long option text doesn't push the toolbar out of its bounds. */
   flex: 0 0 auto;
@@ -58,12 +126,10 @@
 }
 
 .toolbar button:hover {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: #92929245;
-  border-width: 1px;
-  border-style: solid;
+  background: rgba(255, 255, 255, 0.04);
+  border-color: var(--panel-border, rgba(255, 255, 255, 0.12));
   color: var(--fg, #e0e0e0);
-  transform: scale(1.1);
+  transform: scale(1.04);
 }
 
 /* Font picker (checklist) */
@@ -81,10 +147,12 @@
 /* Make the Dropdown look like other toolbar buttons when used inside the toolbar */
 .font-picker .custom-select-button,
 .theme-picker .custom-select-button {
-  background: transparent;
-  border: none;
+  /* Make toolbar dropdown buttons look like other toolbar buttons and
+     ensure their outline (border) uses the note/site theme color so it's visible */
+  background: var(--panel-bg, rgba(30, 30, 30, 0.6));
+  border: 1px solid var(--panel-border, rgba(255, 255, 255, 0.08));
   padding: 6px 10px;
-  border-radius: 25px;
+  border-radius: 20px;
   font-size: 14px;
   color: var(--muted, #909090);
   font-weight: 500;
@@ -102,10 +170,10 @@
 }
 
 .font-size-picker .custom-select-button {
-  background: transparent;
-  border: none;
+  background: var(--panel-bg, rgba(30, 30, 30, 0.6));
+  border: 1px solid var(--panel-border, rgba(255, 255, 255, 0.08));
   padding: 6px 10px;
-  border-radius: 25px;
+  border-radius: 20px;
   font-size: 14px;
   color: var(--muted, #909090);
   font-weight: 500;
@@ -126,6 +194,20 @@
   background: rgba(255, 255, 255, 0.06);
   color: var(--fg, #e0e0e0);
   transform: scale(1.05);
+}
+
+/* On small screens leave even more right padding so the toolbar can scroll further
+   and dropdowns under the pinned actions stay reachable */
+@media (max-width: 640px) {
+  .toolbar {
+    padding-right: 70px;
+  }
+  .toolbar-scroll {
+    padding-right: 70px;
+  }
+  .toolbar-scroll::after {
+    width: 70px;
+  }
 }
 
 .font-picker .custom-select-button .chev {
@@ -226,6 +308,8 @@
 /* Ensure dropdown list renders above card/container overlays when opened */
 .text-field .custom-select-list {
   z-index: 10050; /* much higher than common UI elements */
+  /* use the note's outline color for dropdown border when inside a note */
+  border: 1px solid var(--panel-border, rgba(255, 255, 255, 0.08));
 }
 
 /* Editor area */

@@ -149,6 +149,106 @@ body {
     Roboto, Arial, sans-serif;
 }
 
+:root.font-lora .navbar,
+:root.font-lora .navbar button,
+:root.font-lora .toolbar button,
+:root.font-lora #title,
+:root.font-lora .note-title-input,
+.font-lora .navbar,
+.font-lora .navbar button,
+.font-lora .toolbar button,
+.font-lora #title,
+.font-lora .note-title-input {
+  font-family: "Lora", Georgia, "Times New Roman", serif;
+}
+
+:root.font-poppins .navbar,
+:root.font-poppins .navbar button,
+:root.font-poppins .toolbar button,
+:root.font-poppins #title,
+:root.font-poppins .note-title-input,
+.font-poppins .navbar,
+.font-poppins .navbar button,
+.font-poppins .toolbar button,
+.font-poppins #title,
+.font-poppins .note-title-input {
+  font-family: "Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    Arial, sans-serif;
+}
+
+:root.font-cormorant .navbar,
+:root.font-cormorant .navbar button,
+:root.font-cormorant .toolbar button,
+:root.font-cormorant #title,
+:root.font-cormorant .note-title-input,
+.font-cormorant .navbar,
+.font-cormorant .navbar button,
+.font-cormorant .toolbar button,
+.font-cormorant #title,
+.font-cormorant .note-title-input {
+  font-family: "Cormorant Garamond", Georgia, "Times New Roman", serif;
+}
+
+:root.font-space .navbar,
+:root.font-space .navbar button,
+:root.font-space .toolbar button,
+:root.font-space #title,
+:root.font-space .note-title-input,
+.font-space .navbar,
+.font-space .navbar button,
+.font-space .toolbar button,
+.font-space #title,
+.font-space .note-title-input {
+  font-family: "Space Grotesk", -apple-system, BlinkMacSystemFont, "Segoe UI",
+    Roboto, Arial, sans-serif;
+}
+
+:root.font-orbitron .navbar,
+:root.font-orbitron .navbar button,
+:root.font-orbitron .toolbar button,
+:root.font-orbitron #title,
+:root.font-orbitron .note-title-input,
+.font-orbitron .navbar,
+.font-orbitron .navbar button,
+.font-orbitron .toolbar button,
+.font-orbitron #title,
+.font-orbitron .note-title-input {
+  font-family: "Orbitron", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    Arial, sans-serif;
+}
+
+:root.font-amatic .navbar,
+:root.font-amatic .navbar button,
+:root.font-amatic .toolbar button,
+:root.font-amatic #title,
+:root.font-amatic .note-title-input,
+.font-amatic .navbar,
+.font-amatic .navbar button,
+.font-amatic .toolbar button,
+.font-amatic #title,
+.font-amatic .note-title-input {
+  font-family: "Amatic SC", cursive;
+}
+
+:root.font-greatvibes .navbar,
+:root.font-greatvibes .navbar button,
+:root.font-greatvibes .toolbar button,
+:root.font-greatvibes #title,
+:root.font-greatvibes .note-title-input,
+.font-greatvibes .navbar,
+.font-greatvibes .navbar button,
+.font-greatvibes .toolbar button,
+.font-greatvibes #title,
+.font-greatvibes .note-title-input {
+  font-family: "Great Vibes", cursive;
+}
+
+/* Site-wide button outline: use theme panel border for non-note buttons */
+body :not(.text-field) button,
+.navbar button {
+  border: 1px solid var(--panel-border, rgba(255, 255, 255, 0.08));
+}
+
 code,
 pre {
   font-family: "JetBrains Mono", Menlo, Monaco, Consolas, "Courier New",

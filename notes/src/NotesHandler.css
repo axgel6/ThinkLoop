@@ -10,15 +10,17 @@
 }
 
 .note-footer {
-  display: flex;
+  /* Use grid so center label can stay centered while side items truncate */
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  justify-content: space-between;
+  gap: 12px;
   padding: 8px 12px;
   border-top: 1px solid var(--panel-border, rgba(255, 255, 255, 0.04));
   background: rgba(0, 0, 0, 0.06);
   border-radius: 0 0 12px 12px;
   margin-top: 8px;
-  position: relative; /* allow absolute centering of the middle label */
+  position: relative;
 }
 
 .note-title {
@@ -27,7 +29,7 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 75%;
+  max-width: 100%;
 }
 
 .note-title-input {
@@ -35,9 +37,12 @@
   border: none;
   color: var(--fg, #dcdcdc);
   font-size: 16px;
-  max-width: 75%;
+  max-width: 100%;
   outline: none;
   font-weight: bold;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .note-title-input::placeholder {
@@ -65,16 +70,15 @@
 
 /* Centered last-modified label in the footer */
 .note-last-modified {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
+  /* center column in grid; keep centered without overlapping side content */
+  grid-column: 2 / 3;
+  justify-self: center;
   color: var(--muted, #9a9a9a);
   font-size: 12px;
   text-align: center;
   pointer-events: none; /* let clicks pass through to title/controls */
   padding: 0 8px;
-  max-width: 60%;
+  max-width: 100%;
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
@@ -84,6 +88,15 @@
 .note-title-input {
   padding-right: 8px;
   padding-left: 0px;
+}
+
+/* Place title on the left column and remove button on the right column */
+.note-footer > .note-title-input {
+  grid-column: 1 / 2;
+}
+.note-footer > .remove-btn {
+  grid-column: 3 / 4;
+  justify-self: end;
 }
 
 .empty-state {

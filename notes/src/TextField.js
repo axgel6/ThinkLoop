@@ -24,7 +24,6 @@ const TextField = ({
   onFontChange,
   onThemeChange,
   // optional timestamps passed from parent note object
-  createdAt,
   lastModified,
   // optional per-note fontSize (pixels) and change handler
   fontSize,
@@ -72,6 +71,107 @@ const TextField = ({
   // Default per-note theme is 'default' which uses global variables
   const [noteTheme, setNoteTheme] = useState(themeProp ?? "default");
   const editorRef = useRef(null);
+  // Undo/redo stacks for editor content (HTML strings)
+  const undoStackRef = useRef([]);
+  const redoStackRef = useRef([]);
+  const lastSnapshotTimeRef = useRef(Date.now());
+  const lastSnapshotTextRef = useRef(
+    String(initialValue || "").replace(/<[^>]+>/g, "")
+  );
+
+  // Undo/redo stacks for the title (plain strings)
+  const titleUndoStackRef = useRef([]);
+  const titleRedoStackRef = useRef([]);
+  const lastTitleSnapshotTimeRef = useRef(Date.now());
+  const SNAPSHOT_INTERVAL = 1200; // ms
+  const STACK_LIMIT = 50;
+
+  // track last focused area ('title'|'editor'|'other')
+  const lastFocusRef = useRef("other");
+
+  const lastEditorRangeRef = useRef(null);
+  const lastTitleSelRef = useRef({ start: null, end: null });
+
+  // Stable refs for keyboard handler
+  const undoRef = useRef(null);
+  const redoRef = useRef(null);
+
+  useEffect(() => {
+    const onFocusIn = (e) => {
+      const t = e.target;
+      if (t && t.classList && t.classList.contains("note-title-input")) {
+        lastFocusRef.current = "title";
+      } else if (editorRef.current && editorRef.current.contains(t)) {
+        lastFocusRef.current = "editor";
+      } else {
+        lastFocusRef.current = "other";
+      }
+    };
+
+    const onSelectionChange = () => {
+      try {
+        const sel = window.getSelection();
+        if (!sel) return;
+        const active = document.activeElement;
+        if (
+          active &&
+          active.classList &&
+          active.classList.contains("note-title-input")
+        ) {
+          // update last title selection
+          const titleInput = active;
+          lastTitleSelRef.current = {
+            start: titleInput.selectionStart,
+            end: titleInput.selectionEnd,
+          };
+        } else if (
+          editorRef.current &&
+          sel.rangeCount > 0 &&
+          editorRef.current.contains(sel.anchorNode)
+        ) {
+          // store a clone of the range inside editor
+          lastEditorRangeRef.current = sel.getRangeAt(0).cloneRange();
+        }
+      } catch (err) {
+        // ignore
+      }
+    };
+
+    document.addEventListener("focusin", onFocusIn);
+    document.addEventListener("selectionchange", onSelectionChange);
+    return () => {
+      document.removeEventListener("focusin", onFocusIn);
+      document.removeEventListener("selectionchange", onSelectionChange);
+    };
+  }, []);
+
+  // Selection helpers to preserve caret when applying undo/redo.
+  const saveEditorSelection = () => {
+    try {
+      const sel = window.getSelection();
+      if (!sel || sel.rangeCount === 0) return null;
+      const range = sel.getRangeAt(0);
+      if (
+        !editorRef.current ||
+        !editorRef.current.contains(range.commonAncestorContainer)
+      )
+        return null;
+      return range.cloneRange();
+    } catch (e) {
+      return null;
+    }
+  };
+
+  const restoreEditorSelection = (range) => {
+    try {
+      if (!range) return;
+      const sel = window.getSelection();
+      sel.removeAllRanges();
+      sel.addRange(range);
+    } catch (e) {
+      // ignore if failing to restore
+    }
+  };
 
   const THEME_OPTIONS = [
     { id: "default", label: "Match Theme" },
@@ -181,7 +281,7 @@ const TextField = ({
       setNoteFontSize(fontSize);
     if (themeProp !== undefined && themeProp !== noteTheme)
       setNoteTheme(themeProp);
-  }, [fontProp, themeProp, noteFont, noteTheme]);
+  }, [fontProp, themeProp, fontSize, noteFont, noteTheme, noteFontSize]);
 
   // Reflect state to contenteditable div
   useEffect(() => {
@@ -193,6 +293,27 @@ const TextField = ({
   // Handle content changes
   const handleInput = () => {
     const newValue = editorRef.current.innerHTML;
+
+    // plain text for word/space detection
+    const newText = (editorRef.current.innerText || "").replace(/\u00A0/g, " ");
+    const nowTs = Date.now();
+
+    // create a new snapshot when user types a whitespace (new word) or enough time elapsed
+    const prevSnapshotText = lastSnapshotTextRef.current || "";
+    const typedNewCharIsSpace =
+      newText.length > prevSnapshotText.length && /\s$/.test(newText);
+    const timeExceeded =
+      nowTs - lastSnapshotTimeRef.current > SNAPSHOT_INTERVAL;
+
+    if (typedNewCharIsSpace || timeExceeded) {
+      const u = undoStackRef.current;
+      u.push(value);
+      if (u.length > STACK_LIMIT) u.shift();
+      redoStackRef.current = [];
+      lastSnapshotTimeRef.current = nowTs;
+      lastSnapshotTextRef.current = newText;
+    }
+
     setValue(newValue);
     if (onChange) onChange(newValue);
   };
@@ -206,9 +327,143 @@ const TextField = ({
 
   const handleTitleChange = (e) => {
     const t = e.target.value;
+    const nowTs = Date.now();
+
+    const timeExceeded =
+      nowTs - lastTitleSnapshotTimeRef.current > SNAPSHOT_INTERVAL;
+    const typedNewCharIsSpace = t.length > noteTitle.length && /\s$/.test(t);
+
+    if (typedNewCharIsSpace || timeExceeded) {
+      const tu = titleUndoStackRef.current;
+      tu.push(noteTitle);
+      if (tu.length > STACK_LIMIT) tu.shift();
+      titleRedoStackRef.current = [];
+      lastTitleSnapshotTimeRef.current = nowTs;
+    }
+
     setNoteTitle(t);
     if (onTitleChange) onTitleChange(t);
   };
+
+  // Undo/Redo handlers
+  const undo = (forTitle = false) => {
+    if (forTitle) {
+      const u = titleUndoStackRef.current;
+      if (u.length === 0) return;
+      const prev = u.pop();
+      const tr = titleRedoStackRef.current;
+      tr.push(noteTitle);
+      if (tr.length > STACK_LIMIT) tr.shift();
+      // save/restore cursor for title
+      const titleInput = document.querySelector(".note-title-input");
+      // preserve focus and selection that we tracked earlier
+      const lastSel = lastTitleSelRef.current;
+      setNoteTitle(prev);
+      if (onTitleChange) onTitleChange(prev);
+      setTimeout(() => {
+        if (titleInput) {
+          titleInput.focus();
+          if (lastSel && lastSel.start != null && lastSel.end != null) {
+            titleInput.setSelectionRange(lastSel.start, lastSel.end);
+          }
+        }
+      }, 0);
+      lastTitleSnapshotTimeRef.current = Date.now();
+      return;
+    }
+
+    const u = undoStackRef.current;
+    if (u.length === 0) return;
+    const prevHTML = u.pop();
+    const rr = redoStackRef.current;
+    rr.push(value);
+    if (rr.length > STACK_LIMIT) rr.shift();
+    // save editor selection
+    const savedRange = saveEditorSelection();
+    setValue(prevHTML);
+    if (editorRef.current) editorRef.current.innerHTML = prevHTML;
+    if (onChange) onChange(prevHTML);
+    lastSnapshotTextRef.current =
+      (editorRef.current && (editorRef.current.innerText || "")) || "";
+    lastSnapshotTimeRef.current = Date.now();
+    // try to restore selection; fall back to lastEditorRangeRef
+    setTimeout(
+      () => restoreEditorSelection(savedRange || lastEditorRangeRef.current),
+      0
+    );
+  };
+
+  const redo = (forTitle = false) => {
+    if (forTitle) {
+      const r = titleRedoStackRef.current;
+      if (r.length === 0) return;
+      const next = r.pop();
+      const tu = titleUndoStackRef.current;
+      tu.push(noteTitle);
+      if (tu.length > STACK_LIMIT) tu.shift();
+      const titleInput = document.querySelector(".note-title-input");
+      const lastSel = lastTitleSelRef.current;
+      setNoteTitle(next);
+      if (onTitleChange) onTitleChange(next);
+      setTimeout(() => {
+        if (titleInput) {
+          titleInput.focus();
+          if (lastSel && lastSel.start != null && lastSel.end != null) {
+            titleInput.setSelectionRange(lastSel.start, lastSel.end);
+          }
+        }
+      }, 0);
+      lastTitleSnapshotTimeRef.current = Date.now();
+      return;
+    }
+
+    const r = redoStackRef.current;
+    if (r.length === 0) return;
+    const nextHTML = r.pop();
+    const uu = undoStackRef.current;
+    uu.push(value);
+    if (uu.length > STACK_LIMIT) uu.shift();
+    const savedRange = saveEditorSelection();
+    setValue(nextHTML);
+    if (editorRef.current) editorRef.current.innerHTML = nextHTML;
+    if (onChange) onChange(nextHTML);
+    lastSnapshotTextRef.current =
+      (editorRef.current && (editorRef.current.innerText || "")) || "";
+    lastSnapshotTimeRef.current = Date.now();
+    setTimeout(
+      () => restoreEditorSelection(savedRange || lastEditorRangeRef.current),
+      0
+    );
+  };
+
+  // expose stable refs for use in event listeners (avoid adding functions to effect deps)
+  undoRef.current = undo;
+  redoRef.current = redo;
+
+  // Keyboard shortcuts (Cmd/Ctrl+Z, Cmd/Ctrl+Shift+Z or Ctrl+Y)
+  useEffect(() => {
+    const onKeyDown = (e) => {
+      const meta = e.metaKey || e.ctrlKey;
+      if (!meta) return;
+      const active = document.activeElement;
+      const inTitle =
+        active &&
+        active.classList &&
+        active.classList.contains("note-title-input");
+
+      if (e.key === "z" || e.key === "Z") {
+        e.preventDefault();
+        if (e.shiftKey) redoRef.current && redoRef.current(inTitle);
+        else undoRef.current && undoRef.current(inTitle);
+      } else if (e.key === "y" || e.key === "Y") {
+        e.preventDefault();
+        redoRef.current && redoRef.current(inTitle);
+      }
+    };
+
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, []);
 
   // Note: we now call onFontChange/onThemeChange directly from the dropdown
   // handlers to avoid extra effect-driven notifications which caused shuffling.
@@ -219,60 +474,95 @@ const TextField = ({
   return (
     <div className="text-field" style={themeVars}>
       <div className="toolbar">
-        <button onClick={() => handleFormat("bold")}>
-          <b>B</b>
-        </button>
-        <button onClick={() => handleFormat("italic")}>
-          <i>I</i>
-        </button>
-        <button onClick={() => handleFormat("underline")}>
-          <u>U</u>
-        </button>
-        <button onClick={() => handleFormat("insertUnorderedList")}>
-          Bullet List
-        </button>
-        <button onClick={() => handleFormat("insertOrderedList")}>
-          Numbered List
-        </button>
-        <button onClick={() => handleFormat("formatBlock", "H1")}>
-          Heading
-        </button>
-        {/* Per-note font selector using shared Dropdown component */}
-        <div className="font-picker">
-          {/* Local options and labels: mono, inter, paper, handwritten */}
-          {/** Options ids match global theme keys used elsewhere **/}
-          {/** Dropdown will call setNoteFont with the id string **/}
-          <Dropdown
-            options={FONT_OPTIONS}
-            value={noteFont}
-            onChange={(v) => {
-              setNoteFont(v);
-              if (onFontChange) onFontChange(v);
-            }}
-          />
+        <div className="toolbar-scroll">
+          <button onClick={() => handleFormat("bold")}>
+            <b>B</b>
+          </button>
+          <button onClick={() => handleFormat("italic")}>
+            <i>I</i>
+          </button>
+          <button onClick={() => handleFormat("underline")}>
+            <u>U</u>
+          </button>
+          <button onClick={() => handleFormat("insertUnorderedList")}>
+            Bullet List
+          </button>
+          <button onClick={() => handleFormat("insertOrderedList")}>
+            Numbered List
+          </button>
+          <button onClick={() => handleFormat("formatBlock", "H1")}>
+            Heading
+          </button>
+          {/* Per-note font selector using shared Dropdown component */}
+          <div className="font-picker">
+            {/* Local options and labels: mono, inter, paper, handwritten */}
+            {/** Options ids match global theme keys used elsewhere **/}
+            {/** Dropdown will call setNoteFont with the id string **/}
+            <Dropdown
+              options={FONT_OPTIONS}
+              value={noteFont}
+              onChange={(v) => {
+                setNoteFont(v);
+                if (onFontChange) onFontChange(v);
+              }}
+            />
+          </div>
+          {/* Per-note font-size selector */}
+          <div className="font-size-picker">
+            <Dropdown
+              options={FONT_SIZE_OPTIONS}
+              value={noteFontSize}
+              onChange={(v) => {
+                const size = Number(v);
+                setNoteFontSize(size);
+                if (onFontSizeChange) onFontSizeChange(size);
+              }}
+            />
+          </div>
+          {/* Per-note theme selector */}
+          <div className="theme-picker">
+            <Dropdown
+              options={THEME_OPTIONS}
+              value={noteTheme}
+              onChange={(v) => {
+                setNoteTheme(v);
+                if (onThemeChange) onThemeChange(v);
+              }}
+            />
+          </div>
         </div>
-        {/* Per-note font-size selector */}
-        <div className="font-size-picker">
-          <Dropdown
-            options={FONT_SIZE_OPTIONS}
-            value={noteFontSize}
-            onChange={(v) => {
-              const size = Number(v);
-              setNoteFontSize(size);
-              if (onFontSizeChange) onFontSizeChange(size);
+        {/* pinned right-side actions (outside scroll area so they stay put) */}
+        <div className="toolbar-actions">
+          <Button
+            className="undo-btn"
+            onClick={() => {
+              const active = document.activeElement;
+              const inTitle =
+                active &&
+                active.classList &&
+                active.classList.contains("note-title-input");
+              undo(inTitle);
             }}
-          />
-        </div>
-        {/* Per-note theme selector */}
-        <div className="theme-picker">
-          <Dropdown
-            options={THEME_OPTIONS}
-            value={noteTheme}
-            onChange={(v) => {
-              setNoteTheme(v);
-              if (onThemeChange) onThemeChange(v);
+            aria-label="Undo"
+            title="Undo (⌘Z)"
+          >
+            Undo
+          </Button>
+          <Button
+            className="redo-btn"
+            onClick={() => {
+              const active = document.activeElement;
+              const inTitle =
+                active &&
+                active.classList &&
+                active.classList.contains("note-title-input");
+              redo(inTitle);
             }}
-          />
+            aria-label="Redo"
+            title="Redo (⌘⇧Z)"
+          >
+            Redo
+          </Button>
         </div>
       </div>
 
