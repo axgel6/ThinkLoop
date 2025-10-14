@@ -79,7 +79,8 @@
 }
 
 /* Make the Dropdown look like other toolbar buttons when used inside the toolbar */
-.font-picker .custom-select-button {
+.font-picker .custom-select-button,
+.theme-picker .custom-select-button {
   background: transparent;
   border: none;
   padding: 6px 10px;
@@ -93,7 +94,35 @@
   gap: 6px;
 }
 
-.font-picker .custom-select-button:hover {
+/* Font size picker styling to match toolbar buttons */
+.font-size-picker {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 6px;
+}
+
+.font-size-picker .custom-select-button {
+  background: transparent;
+  border: none;
+  padding: 6px 10px;
+  border-radius: 25px;
+  font-size: 14px;
+  color: var(--muted, #909090);
+  font-weight: 500;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.font-size-picker .custom-select-button:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--fg, #e0e0e0);
+  transform: scale(1.05);
+}
+
+.font-picker .custom-select-button:hover,
+.theme-picker .custom-select-button:hover {
   background: rgba(255, 255, 255, 0.06);
   color: var(--fg, #e0e0e0);
   transform: scale(1.05);
@@ -109,22 +138,6 @@
   display: inline-flex;
   align-items: center;
   margin-left: 6px;
-}
-
-.theme-picker .custom-select-button {
-  background: transparent;
-  border: none;
-  padding: 6px 10px;
-  border-radius: 25px;
-  font-size: 14px;
-  color: var(--muted, #909090);
-  font-weight: 500;
-  cursor: pointer;
-}
-
-.theme-picker .custom-select-button:hover {
-  background: rgba(255, 255, 255, 0.06);
-  color: var(--fg, #e0e0e0);
 }
 
 .font-picker-title {
@@ -167,7 +180,7 @@
   font-family: "JetBrains Mono", Menlo, Monaco, Consolas, "Courier New",
     monospace;
 }
-.sample-professional {
+.sample-inter {
   font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
     "Helvetica Neue", Arial, sans-serif;
 }
@@ -179,13 +192,40 @@
     Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
+.sample-slab {
+  font-family: "Roboto Slab", Georgia, "Times New Roman", serif;
+}
+
+.sample-rounded {
+  font-family: "Rubik", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    Arial, sans-serif;
+}
+
+.sample-display {
+  font-family: "Playfair Display", Georgia, "Times New Roman", serif;
+}
+
+.sample-space {
+  font-family: "Space Grotesk", -apple-system, BlinkMacSystemFont, "Segoe UI",
+    Roboto, Arial, sans-serif;
+}
+
+.sample-orbitron {
+  font-family: "Orbitron", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    Arial, sans-serif;
+}
+
+.sample-amatic {
+  font-family: "Amatic SC", cursive;
+}
+
+.sample-greatvibes {
+  font-family: "Great Vibes", cursive;
+}
+
 /* Ensure dropdown list renders above card/container overlays when opened */
 .text-field .custom-select-list {
   z-index: 10050; /* much higher than common UI elements */
-}
-.sample-inter {
-  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-    "Helvetica Neue", Arial, sans-serif;
 }
 
 /* Editor area */

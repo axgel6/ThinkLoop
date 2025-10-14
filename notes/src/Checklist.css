@@ -239,12 +239,14 @@
 .remove-task-btn:hover {
   background: rgba(223, 0, 0, 0.5);
   border-color: rgba(255, 138, 138, 0.4);
-  transform: scale(1.1) rotate(90deg);
+  /* grow slightly on hover (no twisting) */
+  transform: scale(1.12);
   box-shadow: 0 4px 12px rgba(223, 0, 0, 0.3);
 }
 
 .remove-task-btn:active {
-  transform: scale(0.95) rotate(90deg);
+  /* slightly shrink on active press for tactile feedback */
+  transform: scale(0.96);
 }
 
 /* Animations */

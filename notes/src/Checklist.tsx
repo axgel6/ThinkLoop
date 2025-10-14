@@ -61,7 +61,12 @@ const Checklist: React.FC = () => {
     if (!t) return;
     const now = Date.now();
     setItems((prev) => [
-      { id: `${now}-${Math.random().toString(36).slice(2)}`, text: t, completed: false, createdAt: now },
+      {
+        id: `${now}-${Math.random().toString(36).slice(2)}`,
+        text: t,
+        completed: false,
+        createdAt: now,
+      },
       ...prev,
     ]);
     setText("");
@@ -94,9 +99,13 @@ const Checklist: React.FC = () => {
   return (
     <div className="tasklist" role="region" aria-label="Reminders checklist">
       <div className="checklist-header">
-        <h2>Tasks To Be Done</h2>
+        <h2>Hello! Here are your tasks for today</h2>
         <p className="muted">
-          Today is {currentTime.toLocaleDateString()} at {currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+          Today is {currentTime.toLocaleDateString()} at{" "}
+          {currentTime.toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+          })}
         </p>
       </div>
 
@@ -119,13 +128,18 @@ const Checklist: React.FC = () => {
           <li className="empty">No reminders yet</li>
         )}
         {sortedItems.map((item) => (
-          <li key={item.id} className={`checklist-item ${item.completed ? "completed" : ""}`}>
+          <li
+            key={item.id}
+            className={`checklist-item ${item.completed ? "completed" : ""}`}
+          >
             <label className="checklist-label">
               <input
                 type="checkbox"
                 checked={item.completed}
                 onChange={() => toggleItem(item.id)}
-                aria-label={item.completed ? "Mark as not done" : "Mark as done"}
+                aria-label={
+                  item.completed ? "Mark as not done" : "Mark as done"
+                }
               />
               <span className="custom-checkbox"></span>
               <span className="text">{item.text}</span>

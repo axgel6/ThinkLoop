@@ -2,6 +2,16 @@ import React, { useState, useRef, useEffect } from "react";
 import "./TextField.css";
 import Button from "./Button";
 import Dropdown from "./Dropdown";
+import { FONT_MAP, FONT_OPTIONS } from "./fonts";
+
+const FONT_SIZE_OPTIONS = [
+  { id: 14, label: "14px" },
+  { id: 16, label: "16px" },
+  { id: 18, label: "18px" },
+  { id: 20, label: "20px" },
+  { id: 22, label: "22px" },
+  { id: 24, label: "24px" },
+];
 
 const TextField = ({
   value: initialValue = "",
@@ -13,11 +23,52 @@ const TextField = ({
   theme: themeProp,
   onFontChange,
   onThemeChange,
+  // optional timestamps passed from parent note object
+  createdAt,
+  lastModified,
+  // optional per-note fontSize (pixels) and change handler
+  fontSize,
+  onFontSizeChange,
 }) => {
+  // keep a ticking clock to refresh relative-time labels every minute
+  const [now, setNow] = useState(Date.now());
+
+  useEffect(() => {
+    if (!lastModified) return undefined;
+    const id = setInterval(() => setNow(Date.now()), 60000);
+    return () => clearInterval(id);
+  }, [lastModified]);
+
+  const formatRelative = (ts) => {
+    if (!ts) return "";
+    const diffSec = Math.floor((now - ts) / 1000);
+    if (diffSec < 10) return "just now";
+    if (diffSec < 60) return `${diffSec} seconds ago`;
+    if (diffSec < 3600) {
+      const m = Math.floor(diffSec / 60);
+      return m === 1 ? "1 minute ago" : `${m} minutes ago`;
+    }
+    if (diffSec < 86400) {
+      const h = Math.floor(diffSec / 3600);
+      return h === 1 ? "1 hour ago" : `${h} hours ago`;
+    }
+    if (diffSec < 172800) return "yesterday";
+    if (diffSec < 604800) {
+      const d = Math.floor(diffSec / 86400);
+      return `${d} days ago`;
+    }
+    const d = new Date(ts);
+    return `${d.getMonth() + 1}/${d.getDate()}/${d.getFullYear()}`;
+  };
   const [value, setValue] = useState(initialValue);
   const [noteTitle, setNoteTitle] = useState(title);
-  // Default per-note font is Inter
+  // Default per-note font is inter
   const [noteFont, setNoteFont] = useState(fontProp ?? "inter");
+  // per-note font size in pixels
+  const [noteFontSize, setNoteFontSize] = useState(
+    // prefer explicit prop, fallback to 16
+    typeof fontSize !== "undefined" ? fontSize : 16
+  );
   // Default per-note theme is 'default' which uses global variables
   const [noteTheme, setNoteTheme] = useState(themeProp ?? "default");
   const editorRef = useRef(null);
@@ -111,6 +162,8 @@ const TextField = ({
     },
   };
 
+  // Use shared FONT_MAP from ./fonts
+
   // Update content when parent changes it
   useEffect(() => {
     setValue(initialValue);
@@ -121,15 +174,14 @@ const TextField = ({
     setNoteTitle(title);
   }, [title]);
 
-  // sync font/theme props -> local state
+  // sync font/theme props -> local state (combined)
   useEffect(() => {
     if (fontProp !== undefined && fontProp !== noteFont) setNoteFont(fontProp);
-  }, [fontProp, noteFont]);
-
-  useEffect(() => {
+    if (typeof fontSize !== "undefined" && fontSize !== noteFontSize)
+      setNoteFontSize(fontSize);
     if (themeProp !== undefined && themeProp !== noteTheme)
       setNoteTheme(themeProp);
-  }, [themeProp, noteTheme]);
+  }, [fontProp, themeProp, noteFont, noteTheme]);
 
   // Reflect state to contenteditable div
   useEffect(() => {
@@ -187,20 +239,27 @@ const TextField = ({
         </button>
         {/* Per-note font selector using shared Dropdown component */}
         <div className="font-picker">
-          {/* Local options and labels (renamed): Mono, Inter, Merriweather, Patrick Hand */}
+          {/* Local options and labels: mono, inter, paper, handwritten */}
           {/** Options ids match global theme keys used elsewhere **/}
           {/** Dropdown will call setNoteFont with the id string **/}
           <Dropdown
-            options={[
-              { id: "inter", label: "Inter" },
-              { id: "mono", label: "Mono" },
-              { id: "paper", label: "Merriweather" },
-              { id: "handwritten", label: "Patrick Hand" },
-            ]}
+            options={FONT_OPTIONS}
             value={noteFont}
             onChange={(v) => {
               setNoteFont(v);
               if (onFontChange) onFontChange(v);
+            }}
+          />
+        </div>
+        {/* Per-note font-size selector */}
+        <div className="font-size-picker">
+          <Dropdown
+            options={FONT_SIZE_OPTIONS}
+            value={noteFontSize}
+            onChange={(v) => {
+              const size = Number(v);
+              setNoteFontSize(size);
+              if (onFontSizeChange) onFontSizeChange(size);
             }}
           />
         </div>
@@ -226,20 +285,12 @@ const TextField = ({
         aria-label="Note editor"
         placeholder="Write your note..."
         style={{
-          fontFamily:
-            noteFont === "mono"
-              ? '"JetBrains Mono", Menlo, Monaco, Consolas, "Courier New", monospace'
-              : noteFont === "inter"
-              ? '"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif'
-              : noteFont === "paper"
-              ? '"Merriweather", Georgia, "Times New Roman", serif'
-              : noteFont === "handwritten"
-              ? '"Patrick Hand", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif'
-              : undefined,
+          fontFamily: FONT_MAP[noteFont] ?? undefined,
+          fontSize: noteFontSize ? `${noteFontSize}px` : undefined,
         }}
       />
 
-      {/* Bottom mini-bar with editable title and remove button */}
+      {/* Bottom mini-bar with editable title, last-modified label, and remove button */}
       <div className="note-footer">
         <input
           className="note-title-input"
@@ -248,6 +299,19 @@ const TextField = ({
           placeholder="Untitled"
           aria-label="Note title"
         />
+
+        {/* Center: Last modified label (if available) */}
+        <div
+          className="note-last-modified"
+          role="status"
+          aria-live="polite"
+          aria-atomic="true"
+        >
+          {lastModified ? (
+            <span>Last modified: {formatRelative(lastModified)}</span>
+          ) : null}
+        </div>
+
         {onRemove && (
           <Button
             className="remove-btn"

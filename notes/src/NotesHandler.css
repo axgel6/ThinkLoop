@@ -18,6 +18,7 @@
   background: rgba(0, 0, 0, 0.06);
   border-radius: 0 0 12px 12px;
   margin-top: 8px;
+  position: relative; /* allow absolute centering of the middle label */
 }
 
 .note-title {
@@ -50,11 +51,39 @@
   padding: 6px 10px;
   border-radius: 12px;
   cursor: pointer;
+  transition: transform 0.12s ease, background 0.12s ease;
 }
 
 .remove-btn:hover {
   background: rgba(223, 0, 0, 0.473);
-  scale: calc(1.2);
+  transform: scale(1.12);
+}
+
+.remove-btn:active {
+  transform: scale(0.96);
+}
+
+/* Centered last-modified label in the footer */
+.note-last-modified {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  color: var(--muted, #9a9a9a);
+  font-size: 12px;
+  text-align: center;
+  pointer-events: none; /* let clicks pass through to title/controls */
+  padding: 0 8px;
+  max-width: 60%;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* Ensure the title input and remove button have space so the centered label doesn't overlap their content visually */
+.note-title-input {
+  padding-right: 8px;
+  padding-left: 0px;
 }
 
 .empty-state {

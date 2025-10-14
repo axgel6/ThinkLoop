@@ -12,6 +12,7 @@ const NoteItem = React.memo(function NoteItem({
   updateNoteTitle,
   updateNoteFont,
   updateNoteTheme,
+  updateNoteFontSize,
   handleRemove,
 }) {
   const onChange = useCallback(
@@ -25,6 +26,10 @@ const NoteItem = React.memo(function NoteItem({
   const onFontChange = useCallback(
     (f) => updateNoteFont(note.id, f),
     [note.id, updateNoteFont]
+  );
+  const onFontSizeChange = useCallback(
+    (sz) => updateNoteFontSize(note.id, sz),
+    [note.id, updateNoteFontSize]
   );
   const onThemeChange = useCallback(
     (th) => updateNoteTheme(note.id, th),
@@ -41,10 +46,14 @@ const NoteItem = React.memo(function NoteItem({
         value={note.content}
         title={note.title}
         font={note.font}
+        fontSize={note.fontSize}
         theme={note.theme}
+        createdAt={note.createdAt}
+        lastModified={note.lastModified}
         onChange={onChange}
         onTitleChange={onTitleChange}
         onFontChange={onFontChange}
+        onFontSizeChange={onFontSizeChange}
         onThemeChange={onThemeChange}
         onRemove={onRemove}
       />
@@ -63,14 +72,21 @@ const NotesHandler = () => {
       if (!Array.isArray(parsed) || parsed.length === 0) {
         return [];
       }
-      // normalize entries to ensure id and content exist
+      // normalize entries to ensure id, content, timestamps and fontSize exist
       return parsed.map((n) => ({
         id: n.id ?? Date.now(),
         content: n.content ?? "",
         title: n.title ?? "",
         // default per-note font & theme if missing
         font: n.font ?? "inter",
+        // default font size in pixels
+        fontSize: n.fontSize ?? 16,
         theme: n.theme ?? "default",
+        // timestamps: createdAt and lastModified (backwards-compatible with older saved notes)
+        createdAt:
+          n.createdAt ?? n.createdAt === 0 ? n.createdAt : n.id ?? Date.now(),
+        lastModified:
+          n.lastModified ?? n.updatedAt ?? n.createdAt ?? Date.now(),
       }));
     } catch (e) {
       return [];
@@ -85,7 +101,10 @@ const NotesHandler = () => {
         content: "",
         title: "",
         font: "inter",
+        fontSize: 16,
         theme: "default",
+        createdAt: Date.now(),
+        lastModified: Date.now(),
       },
     ]);
   }, []);
@@ -95,19 +114,45 @@ const NotesHandler = () => {
   }, []);
 
   const updateNoteContent = useCallback((id, content) => {
-    setNotes((prev) => prev.map((n) => (n.id === id ? { ...n, content } : n)));
+    setNotes((prev) =>
+      prev.map((n) =>
+        n.id === id ? { ...n, content, lastModified: Date.now() } : n
+      )
+    );
   }, []);
 
   const updateNoteTitle = useCallback((id, title) => {
-    setNotes((prev) => prev.map((n) => (n.id === id ? { ...n, title } : n)));
+    setNotes((prev) =>
+      prev.map((n) =>
+        n.id === id ? { ...n, title, lastModified: Date.now() } : n
+      )
+    );
   }, []);
 
   const updateNoteFont = useCallback((id, font) => {
-    setNotes((prev) => prev.map((n) => (n.id === id ? { ...n, font } : n)));
+    setNotes((prev) =>
+      prev.map((n) =>
+        n.id === id ? { ...n, font, lastModified: Date.now() } : n
+      )
+    );
   }, []);
 
   const updateNoteTheme = useCallback((id, theme) => {
-    setNotes((prev) => prev.map((n) => (n.id === id ? { ...n, theme } : n)));
+    setNotes((prev) =>
+      prev.map((n) =>
+        n.id === id ? { ...n, theme, lastModified: Date.now() } : n
+      )
+    );
+  }, []);
+
+  const updateNoteFontSize = useCallback((id, fontSize) => {
+    setNotes((prev) =>
+      prev.map((n) =>
+        n.id === id
+          ? { ...n, fontSize: Number(fontSize), lastModified: Date.now() }
+          : n
+      )
+    );
   }, []);
 
   // persist notes to localStorage whenever they change
@@ -138,6 +183,7 @@ const NotesHandler = () => {
             updateNoteTitle={updateNoteTitle}
             updateNoteFont={updateNoteFont}
             updateNoteTheme={updateNoteTheme}
+            updateNoteFontSize={updateNoteFontSize}
             handleRemove={handleRemove}
           />
         ))
