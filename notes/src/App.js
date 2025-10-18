@@ -5,6 +5,7 @@ import Tasks from "./Tasks";
 import NotesHandler from "./NotesHandler";
 import Settings from "./settings-page";
 import NotFound from "./NotFound";
+import LoginModal from "./Login";
 
 function App() {
   // Initialize activeTab from localStorage or default to "notes"
@@ -15,7 +16,10 @@ function App() {
       return "notes";
     }
   });
-  const titles = { notes: "Notes", tasks: "Tasks", feed: "Feed", settings: "Settings"  };
+  
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  
+  const titles = { notes: "Notes", tasks: "Tasks", feed: "Feed", settings: "Settings" };
 
   // Save activeTab to localStorage whenever it changes
   useEffect(() => {
@@ -66,9 +70,11 @@ function App() {
   {activeTab === "notes" && <NotesHandler />}
   {activeTab === "tasks" && <Tasks />}
   {activeTab === "feed" && <Feed />}
-  {activeTab === "settings" && <Settings />}
+  {activeTab === "settings" && <Settings onOpenLoginModal={() => setIsLoginModalOpen(true)} />}
   {!["notes", "tasks", "feed", "settings"].includes(activeTab) && <NotFound />}
 
+      <LoginModal isOpen={isLoginModalOpen} onClose={() => setIsLoginModalOpen(false)} />
+      
       <Navbar activeTab={activeTab} onChangeTab={setActiveTab} />
     </div>
   );

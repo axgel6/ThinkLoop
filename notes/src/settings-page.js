@@ -16,7 +16,7 @@ const COLOR_OPTIONS = [
   { id: "eight", label: "Sage Green" },
 ];
 
-const Settings = () => {
+const Settings = ({ onOpenLoginModal }) => {
   // Safely stringify JSON for export: escape characters/sequences that can
   // cause issues if the JSON is later embedded in HTML or a <script> tag.
   // This prevents JSON injection by neutralizing </script>, U+2028/U+2029,
@@ -153,7 +153,9 @@ const Settings = () => {
 
         <div className="settings-section">
           <h2>User Account</h2>
-          <label style={{ marginRight: 8 }}>Coming Soon</label>
+          <Button onClick={() => onOpenLoginModal && onOpenLoginModal()}>
+            Manage Account / Sign In
+          </Button>
         </div>
 
         <hr className="settings-divider" />
