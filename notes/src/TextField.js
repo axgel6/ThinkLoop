@@ -11,6 +11,9 @@ const FONT_SIZE_OPTIONS = [
   { id: 20, label: "20px" },
   { id: 22, label: "22px" },
   { id: 24, label: "24px" },
+  { id: 36, label: "36px" },
+  { id: 48, label: "48px" },
+  { id: 60, label: "60px" },
 ];
 
 const TextField = ({
