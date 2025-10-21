@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import Navbar from "./Navbar";
 import Feed from "./Feed";
-import Tasks from "./Tasks"; 
+import Tasks from "./Tasks";
 import NotesHandler from "./NotesHandler";
 import Settings from "./settings-page";
 import NotFound from "./NotFound";
@@ -16,10 +16,15 @@ function App() {
       return "notes";
     }
   });
-  
+
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
-  
-  const titles = { notes: "Notes", tasks: "Tasks", feed: "Feed", settings: "Settings" };
+
+  const titles = {
+    notes: "Notes",
+    tasks: "Tasks",
+    feed: "Feed",
+    settings: "Settings",
+  };
 
   // Save activeTab to localStorage whenever it changes
   useEffect(() => {
@@ -35,8 +40,17 @@ function App() {
     const applyTheme = () => {
       const savedTheme = localStorage.getItem("settings:selected") || "one";
       const root = document.documentElement;
-      root.classList.remove("theme-dark", "theme-blue", "theme-gray", "theme-cream", "theme-purple", "theme-pink", "theme-skyblue", "theme-sage");
-      
+      root.classList.remove(
+        "theme-dark",
+        "theme-blue",
+        "theme-gray",
+        "theme-cream",
+        "theme-purple",
+        "theme-pink",
+        "theme-skyblue",
+        "theme-sage"
+      );
+
       if (savedTheme === "one") root.classList.add("theme-dark");
       else if (savedTheme === "two") root.classList.add("theme-blue");
       else if (savedTheme === "three") root.classList.add("theme-gray");
@@ -67,14 +81,21 @@ function App() {
     <div className="App">
       <h1 id="title">{"ThinkLoop / " + titles[activeTab]}</h1>
 
-  {activeTab === "notes" && <NotesHandler />}
-  {activeTab === "tasks" && <Tasks />}
-  {activeTab === "feed" && <Feed />}
-  {activeTab === "settings" && <Settings onOpenLoginModal={() => setIsLoginModalOpen(true)} />}
-  {!["notes", "tasks", "feed", "settings"].includes(activeTab) && <NotFound />}
+      {activeTab === "notes" && <NotesHandler />}
+      {activeTab === "tasks" && <Tasks />}
+      {activeTab === "feed" && <Feed />}
+      {activeTab === "settings" && (
+        <Settings onOpenLoginModal={() => setIsLoginModalOpen(true)} />
+      )}
+      {!["notes", "tasks", "feed", "settings"].includes(activeTab) && (
+        <NotFound />
+      )}
 
-      <LoginModal isOpen={isLoginModalOpen} onClose={() => setIsLoginModalOpen(false)} />
-      
+      <LoginModal
+        isOpen={isLoginModalOpen}
+        onClose={() => setIsLoginModalOpen(false)}
+      />
+
       <Navbar activeTab={activeTab} onChangeTab={setActiveTab} />
     </div>
   );

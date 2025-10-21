@@ -13,10 +13,10 @@
   transition: all 0.1s ease;
   position: relative;
   z-index: auto; /* allow child dropdown to escape stacking constraints */
+  animation: slideIn 0.1s ease-out backwards;
 }
 
 .text-field:hover {
-  transform: scale(1.001);
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.385);
 }
 
@@ -129,7 +129,7 @@
   background: rgba(255, 255, 255, 0.04);
   border-color: var(--panel-border, rgba(255, 255, 255, 0.12));
   color: var(--fg, #e0e0e0);
-  transform: scale(1.04);
+  transform: scale(1.01);
 }
 
 /* Font picker (checklist) */
@@ -186,14 +186,14 @@
 .font-size-picker .custom-select-button:hover {
   background: rgba(255, 255, 255, 0.06);
   color: var(--fg, #e0e0e0);
-  transform: scale(1.05);
+  transform: scale(1.01);
 }
 
 .font-picker .custom-select-button:hover,
 .theme-picker .custom-select-button:hover {
   background: rgba(255, 255, 255, 0.06);
   color: var(--fg, #e0e0e0);
-  transform: scale(1.05);
+  transform: scale(1.01);
 }
 
 /* On small screens leave even more right padding so the toolbar can scroll further

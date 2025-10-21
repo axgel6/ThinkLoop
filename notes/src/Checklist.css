@@ -9,7 +9,7 @@
 .checklist-header {
   text-align: center;
   margin-bottom: 32px;
-  animation: fadeInDown 0.5s ease-out;
+  animation: fadeInDown 0.1s ease-out;
 }
 
 .checklist-header h2 {
@@ -30,7 +30,7 @@
   display: flex;
   gap: 12px;
   margin-bottom: 24px;
-  animation: fadeInUp 0.5s ease-out 0.1s backwards;
+  animation: fadeInUp 0.1s ease-out 0.1s backwards;
 }
 
 .checklist-input {
@@ -41,14 +41,15 @@
     rgba(255, 255, 255, 0.02)
   );
   border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 16px;
+  border-radius: 25px;
   padding: 12px 18px;
   color: var(--fg, #ffffff);
   font-size: 14px;
   outline: none;
-  transition: all 0.2s ease;
+  transition: all 0.1s ease;
   -webkit-backdrop-filter: blur(8px);
   backdrop-filter: blur(8px);
+  text-align: center;
 }
 
 .checklist-input::placeholder {
@@ -63,6 +64,14 @@
     rgba(255, 255, 255, 0.04)
   );
   box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.2);
+}
+.checklist-input:hover {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.07),
+    rgba(255, 255, 255, 0.03)
+  );
+  scale: calc(1.02);
 }
 
 /* Task List */
@@ -82,7 +91,7 @@
   -webkit-backdrop-filter: blur(4px);
   backdrop-filter: blur(4px);
   font-size: 1.1em;
-  animation: fadeIn 0.5s ease-out;
+  animation: fadeIn 0.1s ease-out;
 }
 
 /* Individual Task Item */
@@ -102,9 +111,8 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  animation: slideIn 0.4s ease-out backwards;
-  animation-delay: calc(var(--item-index, 0) * 0.05s);
+  transition: all 0.1s cubic-bezier(0.4, 0, 0.2, 1);
+  animation: slideIn 0.1s ease-out backwards;
 }
 
 .checklist-item:hover {
@@ -188,7 +196,7 @@
 /* Show checkmark when checked */
 .checklist-label input[type="checkbox"]:checked ~ .custom-checkbox::after {
   display: block;
-  animation: checkmark 0.3s ease-out;
+  animation: checkmark 0.1s ease-out;
 }
 
 .checklist-label input[type="checkbox"]:checked ~ .custom-checkbox {
@@ -207,6 +215,7 @@
   font-size: 15px;
   transition: all 0.3s ease;
   flex: 1;
+  padding-left: 10px;
 }
 
 .checklist-item.completed .text {

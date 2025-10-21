@@ -201,6 +201,7 @@ const NotesHandler = () => {
 
       <div style={{ textAlign: "center", marginTop: 8 }}>
         <Button className="primary" onClick={handleNewNote}>
+          {" "}
           New Note
         </Button>
       </div>
