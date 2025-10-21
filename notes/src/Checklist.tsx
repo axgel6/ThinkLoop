@@ -115,8 +115,8 @@ const Checklist: React.FC = () => {
           type="text"
           value={text}
           onChange={(e) => setText(e.target.value)}
-          placeholder="Add a reminder and press Enter"
-          aria-label="New reminder"
+          placeholder="What needs to be done?"
+          aria-label="New task"
         />
         <Button type="submit" className="primary" onClick={() => {}}>
           Add
@@ -124,9 +124,7 @@ const Checklist: React.FC = () => {
       </form>
 
       <ul className="checklist-items">
-        {sortedItems.length === 0 && (
-          <li className="empty">No reminders yet</li>
-        )}
+        {sortedItems.length === 0 && <li className="empty">No tasks yet</li>}
         {sortedItems.map((item) => (
           <li
             key={item.id}
