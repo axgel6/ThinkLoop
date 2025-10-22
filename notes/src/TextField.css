@@ -16,10 +16,6 @@
   animation: slideIn 0.1s ease-out backwards;
 }
 
-.text-field:hover {
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.385);
-}
-
 /* Toolbar */
 .toolbar {
   border-bottom: 1px solid var(--panel-border, rgba(255, 255, 255, 0.08));

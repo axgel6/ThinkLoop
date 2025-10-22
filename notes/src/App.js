@@ -26,6 +26,8 @@ function App() {
     settings: "Settings",
   };
 
+  const user = "User"; // Placeholder for user name
+
   // Save activeTab to localStorage whenever it changes
   useEffect(() => {
     try {
@@ -79,8 +81,10 @@ function App() {
 
   return (
     <div className="App">
-      <h1 id="title">{"ThinkLoop / " + titles[activeTab]}</h1>
-
+      <div id="top-bar">
+        <h1 id="title">{"ThinkLoop / " + titles[activeTab]}</h1>
+        <h1 id="user">{"Hello, " + user + "!"}</h1>
+      </div>
       {activeTab === "notes" && <NotesHandler />}
       {activeTab === "tasks" && <Tasks />}
       {activeTab === "feed" && <Feed />}
