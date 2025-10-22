@@ -273,6 +273,11 @@ pre {
   --panel-bg: rgba(30, 30, 30, 0.6);
   --panel-border: rgba(255, 255, 255, 0.08);
   --panel-bg-solid: rgb(20, 20, 20);
+  --glass-bg: linear-gradient(
+    135deg,
+    rgba(0, 0, 0, 0.195),
+    rgba(255, 255, 255, 0.05)
+  );
 }
 
 .theme-dark {
@@ -282,6 +287,11 @@ pre {
   --panel-bg: rgba(30, 30, 30, 0.6);
   --panel-border: rgba(255, 255, 255, 0.08);
   --panel-bg-solid: rgb(20, 20, 20);
+  --glass-bg: linear-gradient(
+    135deg,
+    rgba(0, 0, 0, 0.195),
+    rgba(255, 255, 255, 0.05)
+  );
 }
 
 .theme-blue {
@@ -291,6 +301,11 @@ pre {
   --panel-bg: rgba(20, 60, 120, 0.4);
   --panel-border: rgba(124, 179, 255, 0.3);
   --panel-bg-solid: #1a3a5c;
+  --glass-bg: linear-gradient(
+    135deg,
+    rgba(10, 30, 50, 0.45),
+    rgba(124, 179, 255, 0.06)
+  );
 }
 
 .theme-gray {
@@ -300,6 +315,11 @@ pre {
   --panel-bg: rgba(50, 50, 55, 0.5);
   --panel-border: rgba(180, 180, 190, 0.2);
   --panel-bg-solid: #2d2d32;
+  --glass-bg: linear-gradient(
+    135deg,
+    rgba(40, 40, 45, 0.55),
+    rgba(255, 255, 255, 0.03)
+  );
 }
 
 .theme-cream {
@@ -309,6 +329,11 @@ pre {
   --panel-bg: rgba(235, 220, 200, 0.6);
   --panel-border: rgba(139, 115, 85, 0.25);
   --panel-bg-solid: #ebe4d6;
+  --glass-bg: linear-gradient(
+    135deg,
+    rgba(250, 240, 225, 0.85),
+    rgba(139, 115, 85, 0.05)
+  );
 }
 
 .theme-brown {
@@ -318,6 +343,11 @@ pre {
   --panel-bg: rgba(60, 40, 30, 0.6);
   --panel-border: rgba(179, 128, 95, 0.25);
   --panel-bg-solid: #3a2418;
+  --glass-bg: linear-gradient(
+    135deg,
+    rgba(60, 40, 30, 0.6),
+    rgba(255, 255, 255, 0.02)
+  );
 }
 
 .theme-purple {
@@ -327,15 +357,27 @@ pre {
   --panel-bg: rgba(230, 220, 255, 0.6);
   --panel-border: rgba(124, 92, 186, 0.25);
   --panel-bg-solid: #e6dcff;
+  --glass-bg: linear-gradient(
+    135deg,
+    rgba(110, 80, 170, 0.32),
+    rgba(255, 255, 255, 0.04)
+  );
 }
 
 .theme-pink {
-  --bg: #ffe5f0;
-  --fg: #4a1e35;
-  --muted: #c75a8a;
-  --panel-bg: rgba(255, 220, 240, 0.7);
-  --panel-border: rgba(199, 90, 138, 0.25);
-  --panel-bg-solid: #ffd6e8;
+  /* Softer, more readable pink theme */
+  --bg: #fff1f6; /* slightly off-white pink */
+  --fg: #3a1228; /* deeper foreground for readable contrast */
+  --muted: #b76a93; /* subdued accent */
+  --panel-bg: rgba(255, 240, 245, 0.62); /* gentler pink panel */
+  --panel-border: rgba(150, 100, 130, 0.12); /* softer border */
+  --panel-bg-solid: #ffe6ef;
+  /* Subtle glass gradient tuned to the pink palette */
+  --glass-bg: linear-gradient(
+    135deg,
+    rgba(255, 230, 245, 0.6),
+    rgba(255, 255, 255, 0.02)
+  );
 }
 
 .theme-skyblue {
@@ -345,6 +387,11 @@ pre {
   --panel-bg: rgba(220, 240, 255, 0.7);
   --panel-border: rgba(74, 144, 199, 0.25);
   --panel-bg-solid: #d1e9ff;
+  --glass-bg: linear-gradient(
+    135deg,
+    rgba(200, 230, 250, 0.9),
+    rgba(74, 144, 199, 0.04)
+  );
 }
 
 .theme-sage {
@@ -354,10 +401,20 @@ pre {
   --panel-bg: rgba(220, 235, 220, 0.7);
   --panel-border: rgba(107, 142, 107, 0.25);
   --panel-bg-solid: #d8ead8;
+  --glass-bg: linear-gradient(
+    135deg,
+    rgba(220, 235, 220, 0.9),
+    rgba(107, 142, 107, 0.04)
+  );
 }
 
 /* Apply the variables to the page background/text so they're used site-wide */
 body {
   background-color: var(--bg);
   color: var(--fg);
+}
+
+.login-submit-btn {
+  border-radius: 50px !important;
+  max-width: fit-content;
 }

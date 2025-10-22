@@ -17,11 +17,7 @@
 
 /* Modal Content Container */
 .modal-content {
-  background: linear-gradient(
-    135deg,
-    rgba(0, 0, 0, 0.195),
-    rgba(255, 255, 255, 0.05)
-  );
+  background: var(--glass-bg, #ffffff);
   border: 1px solid rgba(255, 255, 255, 0.18);
   border-radius: 24px;
   padding: 40px;
@@ -42,7 +38,7 @@
   background: rgba(150, 0, 0, 0.3);
   color: #ffb3b3;
   border: 1px solid rgba(255, 138, 138, 0.2);
-  border-radius: 50%;
+  border-radius: 15px;
   width: 36px;
   height: 36px;
   display: flex;
@@ -62,7 +58,7 @@
 /* Modal Title */
 .modal-content h1 {
   margin: 0 0 32px 0;
-  color: var(--fg, #dcdcdc);
+  color: var(--fg--panel-bg-solid, #dcdcdc);
   font-size: 2em;
   font-weight: 600;
   text-align: left;
@@ -82,7 +78,7 @@
 }
 
 .form-group label {
-  color: var(--fg, #dcdcdc);
+  color: var(--muted, #dcdcdc);
   font-size: 14px;
   font-weight: 500;
 }
@@ -125,7 +121,7 @@
     rgba(255, 255, 255, 0.15),
     rgba(255, 255, 255, 0.08)
   );
-  color: var(--fg, #ffffff);
+  color: var(--muted, #ffffff);
   border-radius: 16px;
   padding: 14px 24px;
   border: 1px solid rgba(255, 255, 255, 0.2);
