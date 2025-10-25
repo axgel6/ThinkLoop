@@ -482,6 +482,41 @@ pre {
   );
 }
 
+.theme-ai {
+  --bg: #0b0b1a;
+  --fg: #e9f0ff;
+  --muted: #b5c6ff;
+  --panel-bg: rgba(15, 20, 35, 0.7);
+  --panel-border: rgba(140, 170, 255, 0.25);
+  --panel-bg-solid: linear-gradient(135deg, #11152a, rgba(30, 35, 60, 0.5));
+  --glass-bg: linear-gradient(
+    135deg,
+    rgba(60, 30, 100, 0.7),
+    rgba(20, 30, 60, 0.45)
+  );
+  --ai-bg: radial-gradient(
+      circle at 25% 30%,
+      rgba(82, 125, 254, 0.4),
+      rgba(141, 85, 255, 0.35) 25%,
+      rgba(255, 255, 255, 0.1) 60%,
+      rgba(0, 0, 0, 0.8) 100%
+    ),
+    radial-gradient(
+      circle at 80% 70%,
+      rgba(255, 90, 240, 0.25),
+      rgba(90, 200, 255, 0.25) 30%,
+      rgba(0, 0, 0, 0.85) 100%
+    );
+}
+
+.theme-ai body {
+  background-image: var(--ai-bg);
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-position: center center;
+  background-attachment: fixed;
+}
+
 body {
   background-color: var(--bg);
   color: var(--fg);

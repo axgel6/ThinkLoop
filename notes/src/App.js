@@ -55,7 +55,8 @@ function App() {
         "theme-sunset",
         "theme-burgundy",
         "theme-forestgreen",
-        "theme-gold"
+        "theme-gold",
+        "theme-ai"
       );
 
       if (savedTheme === "one") root.classList.add("theme-dark");
@@ -71,6 +72,7 @@ function App() {
       else if (savedTheme === "eleven") root.classList.add("theme-burgundy");
       else if (savedTheme === "twelve") root.classList.add("theme-forestgreen");
       else if (savedTheme === "thirteen") root.classList.add("theme-gold");
+      else if (savedTheme === "fourteen") root.classList.add("theme-ai");
     };
 
     // Apply theme on mount

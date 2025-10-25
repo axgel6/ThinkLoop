@@ -14,6 +14,9 @@ const FONT_SIZE_OPTIONS = [
   { id: 36, label: "36px" },
   { id: 48, label: "48px" },
   { id: 60, label: "60px" },
+  { id: 72, label: "72px" },
+  { id: 84, label: "84px" },
+  { id: 96, label: "96px" },
 ];
 
 const TextField = ({
@@ -191,6 +194,7 @@ const TextField = ({
     { id: "burgundy", label: "Burgundy" },
     { id: "forestgreen", label: "Forest Green" },
     { id: "gold", label: "Gold" },
+    { id: "ai", label: "Intelligence" },
   ];
 
   const THEME_VARS = {
@@ -324,6 +328,17 @@ const TextField = ({
       "--panel-bg-solid": "#2c1f0c",
       "--glass-bg":
         "linear-gradient(135deg, rgba(255, 204, 102, 0.08), rgba(30, 20, 5, 0.85))",
+    },
+    ai: {
+      "--bg": "#0b0b1a",
+      "--fg": "#e9f0ff",
+      "--muted": "#b5c6ff",
+      "--panel-bg": "rgba(15, 20, 35, 0.7)",
+      "--panel-border": "rgba(140, 170, 255, 0.25)",
+      "--panel-bg-solid":
+        "linear-gradient(135deg, #11152a, rgba(30, 35, 60, 0.5))",
+      "--glass-bg":
+        "linear-gradient(135deg, rgba(60, 30, 100, 0.7), rgba(20, 30, 60, 0.45))",
     },
   };
 

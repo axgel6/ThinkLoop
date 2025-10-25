@@ -18,6 +18,7 @@ const COLOR_OPTIONS = [
   { id: "eleven", label: "Burgundy" },
   { id: "twelve", label: "Forest Green" },
   { id: "thirteen", label: "Golden" },
+  { id: "fourteen", label: "Intelligence" },
 ];
 
 const Settings = ({ onOpenLoginModal }) => {
@@ -76,7 +77,8 @@ const Settings = ({ onOpenLoginModal }) => {
         "theme-sunset",
         "theme-burgundy",
         "theme-forestgreen",
-        "theme-gold"
+        "theme-gold",
+        "theme-ai"
       );
       if (val === "one") root.classList.add("theme-dark");
       else if (val === "two") root.classList.add("theme-blue");
@@ -91,6 +93,7 @@ const Settings = ({ onOpenLoginModal }) => {
       else if (val === "eleven") root.classList.add("theme-burgundy");
       else if (val === "twelve") root.classList.add("theme-forestgreen");
       else if (val === "thirteen") root.classList.add("theme-gold");
+      else if (val === "fourteen") root.classList.add("theme-ai");
     } catch (e) {
       /* ignore */
     }
