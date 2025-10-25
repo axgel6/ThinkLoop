@@ -14,6 +14,8 @@ const COLOR_OPTIONS = [
   { id: "six", label: "Baby Pink" },
   { id: "seven", label: "Sky Blue" },
   { id: "eight", label: "Sage Green" },
+  { id: "nine", label: "Brown" },
+  { id: "ten", label: "Sunset" },
 ];
 
 const Settings = ({ onOpenLoginModal }) => {
@@ -68,7 +70,8 @@ const Settings = ({ onOpenLoginModal }) => {
         "theme-pink",
         "theme-skyblue",
         "theme-sage",
-        "theme-brown"
+        "theme-brown",
+        "theme-sunset"
       );
       if (val === "one") root.classList.add("theme-dark");
       else if (val === "two") root.classList.add("theme-blue");
@@ -79,6 +82,7 @@ const Settings = ({ onOpenLoginModal }) => {
       else if (val === "seven") root.classList.add("theme-skyblue");
       else if (val === "eight") root.classList.add("theme-sage");
       else if (val === "nine") root.classList.add("theme-brown");
+      else if (val === "ten") root.classList.add("theme-sunset");
     } catch (e) {
       /* ignore */
     }
@@ -127,159 +131,164 @@ const Settings = ({ onOpenLoginModal }) => {
   }, [fontVal]);
 
   return (
-    <div style={{ padding: 16 }}>
-      <div className="settings-toggles">
-        <div className="settings-section">
-          <h2>Display & Visuals</h2>
-          <div style={{ marginTop: 12 }} className="controls-row">
-            <label style={{ marginRight: 8 }}>Color Theme:</label>
-            <Dropdown
-              options={COLOR_OPTIONS}
-              value={val}
-              onChange={(v) => setVal(v)}
-            />
-            <label style={{ marginLeft: 12, marginRight: 8 }}>
-              Font Theme:
-            </label>
-            <Dropdown
-              options={FONT_OPTIONS}
-              value={fontVal}
-              onChange={(v) => setFontVal(v)}
-            />
+    console.warn(
+      "User accounts are not implemented yet. All data is stored locally."
+    ),
+    (
+      <div style={{ padding: 16 }}>
+        <div className="settings-toggles">
+          <div className="settings-section">
+            <h2>Display & Visuals</h2>
+            <div style={{ marginTop: 12 }} className="controls-row">
+              <label style={{ marginRight: 8 }}>Color Theme:</label>
+              <Dropdown
+                options={COLOR_OPTIONS}
+                value={val}
+                onChange={(v) => setVal(v)}
+              />
+              <label style={{ marginLeft: 12, marginRight: 8 }}>
+                Font Theme:
+              </label>
+              <Dropdown
+                options={FONT_OPTIONS}
+                value={fontVal}
+                onChange={(v) => setFontVal(v)}
+              />
+            </div>
           </div>
-        </div>
 
-        <hr className="settings-divider" />
+          <hr className="settings-divider" />
 
-        <div className="settings-section">
-          <h2>User Account</h2>
-          <Button onClick={() => onOpenLoginModal && onOpenLoginModal()}>
-            Manage Account / Sign In
-          </Button>
-        </div>
-
-        <hr className="settings-divider" />
-
-        <div className="settings-section">
-          <h2>Export</h2>
-          <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
-            <label style={{ marginRight: 8 }}>Download backups:</label>
-            <Button
-              onClick={() => {
-                try {
-                  const raw = localStorage.getItem("notes");
-                  const stored = raw ? JSON.parse(raw) : [];
-                  // Convert numeric timestamps to the user's local date/time string
-                  // so exported JSON shows the correct day/time in the user's timezone.
-                  const dateOpts = {
-                    year: "numeric",
-                    month: "2-digit",
-                    day: "2-digit",
-                    hour: "2-digit",
-                    minute: "2-digit",
-                    second: "2-digit",
-                  };
-                  const data = stored.map((n) => ({
-                    ...n,
-                    createdAt:
-                      typeof n.createdAt === "number"
-                        ? new Date(n.createdAt).toLocaleString(
-                            undefined,
-                            dateOpts
-                          )
-                        : n.createdAt,
-                    lastModified:
-                      typeof n.lastModified === "number"
-                        ? new Date(n.lastModified).toLocaleString(
-                            undefined,
-                            dateOpts
-                          )
-                        : n.lastModified,
-                  }));
-                  const ts = new Date().toISOString().replace(/[:.]/g, "-");
-                  const filename = `notes-${ts}.json`;
-                  const blob = new Blob([safeJSONStringify(data)], {
-                    type: "application/json",
-                  });
-                  const url = URL.createObjectURL(blob);
-                  const a = document.createElement("a");
-                  a.href = url;
-                  a.download = filename;
-                  document.body.appendChild(a);
-                  a.click();
-                  a.remove();
-                  URL.revokeObjectURL(url);
-                } catch (e) {
-                  console.error("Failed to export notes", e);
-                }
-              }}
-            >
-              Download Notes
-            </Button>
-
-            <Button
-              onClick={() => {
-                try {
-                  const raw = localStorage.getItem("checklist:items");
-                  const stored = raw ? JSON.parse(raw) : [];
-                  const dateOpts = {
-                    year: "numeric",
-                    month: "2-digit",
-                    day: "2-digit",
-                    hour: "2-digit",
-                    minute: "2-digit",
-                    second: "2-digit",
-                  };
-                  const data = stored.map((i) => ({
-                    ...i,
-                    createdAt:
-                      typeof i.createdAt === "number"
-                        ? new Date(i.createdAt).toLocaleString(
-                            undefined,
-                            dateOpts
-                          )
-                        : i.createdAt,
-                    completedAt:
-                      typeof i.completedAt === "number"
-                        ? new Date(i.completedAt).toLocaleString(
-                            undefined,
-                            dateOpts
-                          )
-                        : i.completedAt,
-                  }));
-                  const ts = new Date().toISOString().replace(/[:.]/g, "-");
-                  const filename = `tasks-${ts}.json`;
-                  const blob = new Blob([safeJSONStringify(data)], {
-                    type: "application/json",
-                  });
-                  const url = URL.createObjectURL(blob);
-                  const a = document.createElement("a");
-                  a.href = url;
-                  a.download = filename;
-                  document.body.appendChild(a);
-                  a.click();
-                  a.remove();
-                  URL.revokeObjectURL(url);
-                } catch (e) {
-                  console.error("Failed to export tasks", e);
-                }
-              }}
-            >
-              Download Tasks
+          <div className="settings-section">
+            <h2>User Account</h2>
+            <Button onClick={() => onOpenLoginModal && onOpenLoginModal()}>
+              Manage Account / Sign In
             </Button>
           </div>
-        </div>
 
-        <hr className="settings-divider" />
+          <hr className="settings-divider" />
 
-        <div className="settings-section">
-          <h2>Credits</h2>
-          <Button onClick={() => window.open("https://aynjel.com")}>
-            Created by Angel Gutierrez
-          </Button>
+          <div className="settings-section">
+            <h2>Export</h2>
+            <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+              <label style={{ marginRight: 8 }}>Download backups:</label>
+              <Button
+                onClick={() => {
+                  try {
+                    const raw = localStorage.getItem("notes");
+                    const stored = raw ? JSON.parse(raw) : [];
+                    // Convert numeric timestamps to the user's local date/time string
+                    // so exported JSON shows the correct day/time in the user's timezone.
+                    const dateOpts = {
+                      year: "numeric",
+                      month: "2-digit",
+                      day: "2-digit",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                      second: "2-digit",
+                    };
+                    const data = stored.map((n) => ({
+                      ...n,
+                      createdAt:
+                        typeof n.createdAt === "number"
+                          ? new Date(n.createdAt).toLocaleString(
+                              undefined,
+                              dateOpts
+                            )
+                          : n.createdAt,
+                      lastModified:
+                        typeof n.lastModified === "number"
+                          ? new Date(n.lastModified).toLocaleString(
+                              undefined,
+                              dateOpts
+                            )
+                          : n.lastModified,
+                    }));
+                    const ts = new Date().toISOString().replace(/[:.]/g, "-");
+                    const filename = `notes-${ts}.json`;
+                    const blob = new Blob([safeJSONStringify(data)], {
+                      type: "application/json",
+                    });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement("a");
+                    a.href = url;
+                    a.download = filename;
+                    document.body.appendChild(a);
+                    a.click();
+                    a.remove();
+                    URL.revokeObjectURL(url);
+                  } catch (e) {
+                    console.error("Failed to export notes", e);
+                  }
+                }}
+              >
+                Download Notes
+              </Button>
+
+              <Button
+                onClick={() => {
+                  try {
+                    const raw = localStorage.getItem("checklist:items");
+                    const stored = raw ? JSON.parse(raw) : [];
+                    const dateOpts = {
+                      year: "numeric",
+                      month: "2-digit",
+                      day: "2-digit",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                      second: "2-digit",
+                    };
+                    const data = stored.map((i) => ({
+                      ...i,
+                      createdAt:
+                        typeof i.createdAt === "number"
+                          ? new Date(i.createdAt).toLocaleString(
+                              undefined,
+                              dateOpts
+                            )
+                          : i.createdAt,
+                      completedAt:
+                        typeof i.completedAt === "number"
+                          ? new Date(i.completedAt).toLocaleString(
+                              undefined,
+                              dateOpts
+                            )
+                          : i.completedAt,
+                    }));
+                    const ts = new Date().toISOString().replace(/[:.]/g, "-");
+                    const filename = `tasks-${ts}.json`;
+                    const blob = new Blob([safeJSONStringify(data)], {
+                      type: "application/json",
+                    });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement("a");
+                    a.href = url;
+                    a.download = filename;
+                    document.body.appendChild(a);
+                    a.click();
+                    a.remove();
+                    URL.revokeObjectURL(url);
+                  } catch (e) {
+                    console.error("Failed to export tasks", e);
+                  }
+                }}
+              >
+                Download Tasks
+              </Button>
+            </div>
+          </div>
+
+          <hr className="settings-divider" />
+
+          <div className="settings-section">
+            <h2>Credits</h2>
+            <Button onClick={() => window.open("https://aynjel.com")}>
+              Created by Angel Gutierrez
+            </Button>
+          </div>
         </div>
       </div>
-    </div>
+    )
   );
 };
 
