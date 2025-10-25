@@ -1,5 +1,5 @@
 .text-field {
-  border: 1px solid var(--panel-border, rgba(255, 255, 255, 0.08));
+  border: 3px solid var(--panel-border, rgba(255, 255, 255, 0.08));
   border-radius: 20px;
   background: var(--panel-bg-solid, rgba(20, 20, 20, 0.9));
   -webkit-backdrop-filter: blur(4px);
@@ -110,7 +110,7 @@
   border-radius: 20px;
   font-size: 14px;
   color: var(--muted, #909090);
-  font-weight: 500;
+  font-weight: 00;
   transition: all 0.12s ease;
   /* Prevent buttons from growing and force a single-line label with ellipsis
      so long option text doesn't push the toolbar out of its bounds. */

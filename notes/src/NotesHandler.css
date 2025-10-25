@@ -17,8 +17,8 @@
   gap: 12px;
   padding: 8px 12px;
   border-top: 1px solid var(--panel-border, rgba(255, 255, 255, 0.04));
-  background: rgba(0, 0, 0, 0.06);
-  border-radius: 0 0 12px 12px;
+  background: var(--panel-bg, rgba(30, 30, 30, 0.6));
+  border-radius: 0 0 16px 16px;
   margin-top: 8px;
   position: relative;
 }
