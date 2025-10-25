@@ -375,14 +375,12 @@ pre {
 }
 
 .theme-pink {
-  /* Softer, more readable pink theme */
-  --bg: #fff1f6; /* slightly off-white pink */
-  --fg: #3a1228; /* deeper foreground for readable contrast */
-  --muted: #b76a93; /* subdued accent */
-  --panel-bg: rgba(255, 240, 245, 0.62); /* gentler pink panel */
-  --panel-border: rgba(150, 100, 130, 0.12); /* softer border */
+  --bg: #fff1f6;
+  --fg: #3a1228;
+  --muted: #b76a93;
+  --panel-bg: rgba(255, 240, 245, 0.62);
+  --panel-border: rgba(150, 100, 130, 0.12);
   --panel-bg-solid: #ffe6ef;
-  /* Subtle glass gradient tuned to the pink palette */
   --glass-bg: linear-gradient(
     135deg,
     rgba(255, 230, 245, 0.6),
@@ -419,17 +417,13 @@ pre {
 }
 
 .theme-sunset {
-  --bg: #ffb347;
+  --bg: #000000;
   --fg: #ffeded;
   --muted: #ffffff;
   --panel-bg: rgba(0, 0, 0, 0.7);
-  --panel-border: rgba(255, 255, 255, 0.14);
-  --panel-bg-solid: rgba(0, 0, 0, 0.443);
-  --glass-bg: linear-gradient(
-    135deg,
-    rgba(0, 0, 0, 0.7),
-    rgba(255, 160, 100, 0.06)
-  );
+  --panel-border: rgba(152, 152, 152, 0.341);
+  --panel-bg-solid: linear-gradient(135deg, rgb(0, 0, 0), rgba(0, 0, 0, 0.38));
+  --glass-bg: linear-gradient(135deg, rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.441));
   --sunset-bg: radial-gradient(
     circle at bottom center,
     #ffb347 0%,
@@ -444,6 +438,48 @@ pre {
   background-size: cover;
   background-position: center center;
   background-attachment: fixed;
+}
+
+.theme-burgundy {
+  --bg: #1a0a0e;
+  --fg: #f5e9ec;
+  --muted: #b87a87;
+  --panel-bg: rgba(64, 0, 21, 0.6);
+  --panel-border: rgba(184, 122, 135, 0.25);
+  --panel-bg-solid: #2a0f17;
+  --glass-bg: linear-gradient(
+    135deg,
+    rgba(64, 0, 21, 0.85),
+    rgba(26, 10, 14, 0.9)
+  );
+}
+
+.theme-forestgreen {
+  --bg: #0e1a0e;
+  --fg: #e6f0e6;
+  --muted: #7ab97a;
+  --panel-bg: rgba(10, 40, 10, 0.6);
+  --panel-border: rgba(122, 185, 122, 0.25);
+  --panel-bg-solid: #162616;
+  --glass-bg: linear-gradient(
+    135deg,
+    rgba(10, 40, 10, 0.85),
+    rgba(14, 26, 14, 0.9)
+  );
+}
+
+.theme-gold {
+  --bg: #cb9a2e;
+  --fg: #fff8e1;
+  --muted: #ffffff;
+  --panel-bg: rgba(30, 20, 5, 0.65);
+  --panel-border: rgba(255, 215, 128, 0.25);
+  --panel-bg-solid: #2c1f0c;
+  --glass-bg: linear-gradient(
+    135deg,
+    rgba(255, 204, 102, 0.08),
+    rgba(30, 20, 5, 0.85)
+  );
 }
 
 body {

@@ -6,16 +6,18 @@ import { FONT_OPTIONS } from "./fonts";
 
 const COLOR_OPTIONS = [
   { id: "one", label: "Black" },
-  { id: "nine", label: "Brown" },
   { id: "two", label: "Blue" },
   { id: "three", label: "Gray" },
   { id: "four", label: "Cream" },
   { id: "five", label: "Purple" },
-  { id: "six", label: "Baby Pink" },
+  { id: "six", label: "Pink" },
   { id: "seven", label: "Sky Blue" },
   { id: "eight", label: "Sage Green" },
   { id: "nine", label: "Brown" },
   { id: "ten", label: "Sunset" },
+  { id: "eleven", label: "Burgundy" },
+  { id: "twelve", label: "Forest Green" },
+  { id: "thirteen", label: "Golden" },
 ];
 
 const Settings = ({ onOpenLoginModal }) => {
@@ -63,6 +65,7 @@ const Settings = ({ onOpenLoginModal }) => {
       const root = document.documentElement;
       root.classList.remove(
         "theme-dark",
+        "theme-brown",
         "theme-blue",
         "theme-gray",
         "theme-cream",
@@ -70,8 +73,10 @@ const Settings = ({ onOpenLoginModal }) => {
         "theme-pink",
         "theme-skyblue",
         "theme-sage",
-        "theme-brown",
-        "theme-sunset"
+        "theme-sunset",
+        "theme-burgundy",
+        "theme-forestgreen",
+        "theme-gold"
       );
       if (val === "one") root.classList.add("theme-dark");
       else if (val === "two") root.classList.add("theme-blue");
@@ -83,6 +88,9 @@ const Settings = ({ onOpenLoginModal }) => {
       else if (val === "eight") root.classList.add("theme-sage");
       else if (val === "nine") root.classList.add("theme-brown");
       else if (val === "ten") root.classList.add("theme-sunset");
+      else if (val === "eleven") root.classList.add("theme-burgundy");
+      else if (val === "twelve") root.classList.add("theme-forestgreen");
+      else if (val === "thirteen") root.classList.add("theme-gold");
     } catch (e) {
       /* ignore */
     }

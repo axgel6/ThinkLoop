@@ -50,7 +50,12 @@ function App() {
         "theme-purple",
         "theme-pink",
         "theme-skyblue",
-        "theme-sage"
+        "theme-sage",
+        "theme-brown",
+        "theme-sunset",
+        "theme-burgundy",
+        "theme-forestgreen",
+        "theme-gold"
       );
 
       if (savedTheme === "one") root.classList.add("theme-dark");
@@ -61,6 +66,11 @@ function App() {
       else if (savedTheme === "six") root.classList.add("theme-pink");
       else if (savedTheme === "seven") root.classList.add("theme-skyblue");
       else if (savedTheme === "eight") root.classList.add("theme-sage");
+      else if (savedTheme === "nine") root.classList.add("theme-brown");
+      else if (savedTheme === "ten") root.classList.add("theme-sunset");
+      else if (savedTheme === "eleven") root.classList.add("theme-burgundy");
+      else if (savedTheme === "twelve") root.classList.add("theme-forestgreen");
+      else if (savedTheme === "thirteen") root.classList.add("theme-gold");
     };
 
     // Apply theme on mount
@@ -76,6 +86,52 @@ function App() {
 
     return () => {
       window.removeEventListener("storage", handleStorageChange);
+    };
+  }, []);
+
+  // Initialize font theme on app startup and listen for changes
+  useEffect(() => {
+    const applyFont = () => {
+      const savedFont = localStorage.getItem("settings:font") || "mono";
+      const root = document.documentElement;
+      // A list of all possible font theme classes
+      const fontClasses = [
+        "font-mono",
+        "font-inter",
+        "font-paper",
+        "font-handwritten",
+        "font-lora",
+        "font-poppins",
+        "font-cormorant",
+        "font-space",
+        "font-orbitron",
+        "font-amatic",
+        "font-greatvibes",
+      ];
+      root.classList.remove(...fontClasses);
+
+      if (savedFont) {
+        root.classList.add(`font-${savedFont}`);
+      }
+    };
+
+    // Apply font on mount
+    applyFont();
+
+    // Listen for storage changes (when font changes in Settings)
+    const handleStorageChange = (e) => {
+      if (e.key === "settings:font") {
+        applyFont();
+      }
+    };
+    window.addEventListener("storage", handleStorageChange);
+
+    // Also listen for the custom 'fontchange' event from the settings page
+    window.addEventListener("fontchange", applyFont);
+
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+      window.removeEventListener("fontchange", applyFont);
     };
   }, []);
 
