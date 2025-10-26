@@ -635,36 +635,6 @@ const TextField = ({
           {/* pinned right-side actions (outside scroll area so they stay put) */}
           <div className="toolbar-actions">
             <Button
-              className="done-btn"
-              onClick={() => setIsEditMode(false)}
-              aria-label="Done editing"
-            >
-              <svg
-                width="15"
-                height="15"
-                viewBox="0 0 50 50"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <line
-                  x1="10"
-                  y1="25"
-                  x2="25"
-                  y2="40"
-                  strokeWidth="5"
-                  strokeLinecap="round"
-                />
-                <line
-                  x1="25"
-                  y1="40"
-                  x2="40"
-                  y2="10"
-                  strokeWidth="5"
-                  strokeLinecap="round"
-                />
-              </svg>{" "}
-              Done
-            </Button>
-            <Button
               className="undo-btn"
               onClick={() => {
                 const active = document.activeElement;
@@ -693,6 +663,36 @@ const TextField = ({
               title="Redo (⌘⇧Z)"
             >
               Redo
+            </Button>
+            <Button
+              className="done-btn"
+              onClick={() => setIsEditMode(false)}
+              aria-label="Done editing"
+            >
+              <svg
+                width="15"
+                height="15"
+                viewBox="0 0 50 50"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <line
+                  x1="10"
+                  y1="25"
+                  x2="25"
+                  y2="40"
+                  strokeWidth="5"
+                  strokeLinecap="round"
+                />
+                <line
+                  x1="25"
+                  y1="40"
+                  x2="40"
+                  y2="10"
+                  strokeWidth="5"
+                  strokeLinecap="round"
+                />
+              </svg>{" "}
+              Done
             </Button>
           </div>
         </div>
