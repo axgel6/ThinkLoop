@@ -26,7 +26,7 @@ function App() {
     settings: "Settings",
   };
 
-  const user = "User"; // Placeholder for user name
+  const user = "Guest"; // Placeholder for user name
 
   // Save activeTab to localStorage whenever it changes
   useEffect(() => {

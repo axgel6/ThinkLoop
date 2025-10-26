@@ -1,6 +1,6 @@
 .text-field {
   border: 3px solid var(--panel-border, rgba(255, 255, 255, 0.08));
-  border-radius: 20px;
+  border-radius: 25px;
   background: var(--panel-bg-solid, rgba(20, 20, 20, 0.9));
   -webkit-backdrop-filter: blur(4px);
   backdrop-filter: blur(4px);
@@ -16,6 +16,53 @@
   animation: slideIn 0.1s ease-out backwards;
 }
 
+/* Note header - always visible */
+.note-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--panel-border, rgba(255, 255, 255, 0.08));
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  border-radius: 25px 25px 0 0;
+}
+
+.view-mode .note-header {
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.view-mode .note-header:hover {
+  background: var(--panel-bg, rgba(30, 30, 30, 0.4));
+}
+
+.note-header-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.note-title-display {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--fg, #e0e0e0);
+  margin-bottom: 4px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.note-last-modified-header {
+  font-size: 12px;
+  color: var(--muted, #909090);
+}
+
+/* Remove the standalone done-btn styles since it's now in toolbar-actions */
+
+/* Hide header in edit mode since we have the toolbar */
+.edit-mode .note-header {
+  display: none;
+}
+
 /* Toolbar */
 .toolbar {
   border-bottom: 1px solid var(--panel-border, rgba(255, 255, 255, 0.08));
@@ -24,15 +71,15 @@
   display: flex;
   gap: 8px;
   justify-content: start;
-  border-radius: 20px 20px 0 0;
+  border-radius: 25px 25px 0 0;
   position: relative; /* contain absolute pinned actions */
   /* modest right padding so the scrollable area can scroll under the pinned actions */
-  padding-right: 48px; /* room for pinned actions */
+  padding-right: 8px; /* room for pinned actions */
 }
 
 .toolbar-scroll {
   display: flex;
-  gap: 8px;
+  gap: 10px;
   /* allow horizontal scrolling with no wrapping */
   flex-wrap: nowrap;
   overflow-x: auto;
@@ -42,8 +89,8 @@
   touch-action: pan-x; /* prefer horizontal pan gestures */
   overscroll-behavior-x: contain; /* prevent scroll chaining to the page */
   width: 100%;
-  /* modest right padding so items can scroll under the pinned actions */
-  padding-right: 48px;
+  /* Right padding must accommodate the pinned Done/Undo/Redo buttons */
+  padding-right: 220px;
 }
 
 /* Add an invisible spacer at the end of the scroll area so users can scroll
@@ -52,7 +99,7 @@
 .toolbar-scroll::after {
   content: "";
   display: inline-block;
-  width: 48px;
+  width: 220px;
   height: 1px;
 }
 
@@ -60,13 +107,15 @@
    This container stays visible while the rest of the toolbar can scroll. */
 .toolbar-actions {
   display: inline-flex;
-  gap: 8px;
+  gap: 10px;
   align-items: center;
   position: absolute;
   right: 10px;
   top: 50%;
   transform: translateY(-50%);
   z-index: 40; /* allow dropdowns (z-index 10050) to appear above actions */
+  /* Increase right padding to accommodate Done button */
+  padding-right: 0;
 }
 
 /* Let clicks pass through the actions container except the actual buttons.
@@ -83,7 +132,8 @@
 
 /* Blurred frosted background behind the undo/redo buttons */
 .toolbar-actions .undo-btn,
-.toolbar-actions .redo-btn {
+.toolbar-actions .redo-btn,
+.toolbar-actions .done-btn {
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
   background: rgba(255, 255, 255, 0.02);
@@ -92,14 +142,24 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border: none;
+  border: var(--panel-border) 1px solid;
   color: var(--muted, #bdbdbd);
 }
 
+.toolbar-actions .done-btn {
+  gap: 5px;
+}
+
 .toolbar-actions .undo-btn:hover,
-.toolbar-actions .redo-btn:hover {
+.toolbar-actions .redo-btn:hover,
+.toolbar-actions .done-btn:hover {
   background: rgba(255, 255, 255, 0.04);
   color: var(--fg, #e0e0e0);
+  box-shadow: none;
+}
+
+.toolbar-actions .done-btn:hover svg {
+  stroke: var(--fg, #e0e0e0);
 }
 
 .toolbar button {
@@ -126,6 +186,13 @@
   border-color: var(--panel-border, rgba(255, 255, 255, 0.12));
   color: var(--fg, #e0e0e0);
   transform: scale(1.01);
+}
+
+.toolbar-actions svg {
+  stroke: var(--muted, #e0e0e0);
+  fill: none;
+  stroke-linejoin: round;
+  stroke-linecap: round;
 }
 
 /* Font picker (checklist) */
@@ -183,6 +250,7 @@
   background: rgba(255, 255, 255, 0.06);
   color: var(--fg, #e0e0e0);
   transform: scale(1.01);
+  box-shadow: none;
 }
 
 .font-picker .custom-select-button:hover,
@@ -190,6 +258,7 @@
   background: rgba(255, 255, 255, 0.06);
   color: var(--fg, #e0e0e0);
   transform: scale(1.01);
+  box-shadow: none;
 }
 
 /* On small screens leave even more right padding so the toolbar can scroll further
@@ -310,15 +379,57 @@
 
 /* Editor area */
 .editor {
-  padding: 14px;
-  min-height: 180px;
+  padding: 16px 20px;
+  padding-left: 40px; /* Extra left padding to show list numbers at large font sizes */
+  min-height: 140px;
   overflow-y: auto;
   outline: none;
   font-family: system-ui, sans-serif;
   font-size: 16px;
   line-height: 1.6;
-  border-radius: 0 0 20px 20px;
+  border-radius: 0 0 25px 25px;
   color: var(--fg, #f0f0f0);
+  max-inline-size: 100%;
+}
+
+/* In view mode, editor takes up full space without footer */
+.view-mode .editor {
+  border-radius: 0 0 25px 25px;
+}
+
+/* In edit mode, keep footer rounded corners */
+.edit-mode .editor {
+  border-radius: 0;
+}
+
+/* Ensure ordered and unordered lists have proper spacing for markers */
+.editor ol,
+.editor ul {
+  padding-left: 1.5em; /* Use em units so it scales with font size */
+  margin: 0.5em 0;
+}
+
+.editor li {
+  margin: 0.3em 0;
+}
+
+/* Make list markers (numbers/bullets) inherit the font size */
+.editor ol li::marker,
+.editor ul li::marker {
+  font-size: inherit;
+}
+
+/* Mobile-friendly adjustments */
+@media (max-width: 640px) {
+  .editor {
+    padding: 12px 16px;
+    padding-left: 32px;
+  }
+
+  .editor ol,
+  .editor ul {
+    padding-left: 1.2em;
+  }
 }
 
 .editor:empty:before {

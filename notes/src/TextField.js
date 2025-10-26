@@ -76,6 +76,8 @@ const TextField = ({
   );
   // Default per-note theme is 'default' which uses global variables
   const [noteTheme, setNoteTheme] = useState(themeProp ?? "default");
+  // Track edit mode state
+  const [isEditMode, setIsEditMode] = useState(false);
   const editorRef = useRef(null);
   // Undo/redo stacks for editor content (HTML strings)
   const undoStackRef = useRef([]);
@@ -552,146 +554,200 @@ const TextField = ({
   const themeVars = noteTheme === "default" ? undefined : THEME_VARS[noteTheme];
 
   return (
-    <div className="text-field" style={themeVars}>
-      <div className="toolbar">
-        <div className="toolbar-scroll">
-          <button onClick={() => handleFormat("bold")}>
-            <b>B</b>
-          </button>
-          <button onClick={() => handleFormat("italic")}>
-            <i>I</i>
-          </button>
-          <button onClick={() => handleFormat("underline")}>
-            <u>U</u>
-          </button>
-          <button onClick={() => handleFormat("insertUnorderedList")}>
-            Bullet List
-          </button>
-          <button onClick={() => handleFormat("insertOrderedList")}>
-            Numbered List
-          </button>
-          <button onClick={() => handleFormat("formatBlock", "H1")}>
-            Heading
-          </button>
-          {/* Per-note font selector using shared Dropdown component */}
-          <div className="font-picker">
-            {/* Local options and labels: mono, inter, paper, handwritten */}
-            {/** Options ids match global theme keys used elsewhere **/}
-            {/** Dropdown will call setNoteFont with the id string **/}
-            <Dropdown
-              options={FONT_OPTIONS}
-              value={noteFont}
-              onChange={(v) => {
-                setNoteFont(v);
-                if (onFontChange) onFontChange(v);
-              }}
-            />
-          </div>
-          {/* Per-note font-size selector */}
-          <div className="font-size-picker">
-            <Dropdown
-              options={FONT_SIZE_OPTIONS}
-              value={noteFontSize}
-              onChange={(v) => {
-                const size = Number(v);
-                setNoteFontSize(size);
-                if (onFontSizeChange) onFontSizeChange(size);
-              }}
-            />
-          </div>
-          {/* Per-note theme selector */}
-          <div className="theme-picker">
-            <Dropdown
-              options={THEME_OPTIONS}
-              value={noteTheme}
-              onChange={(v) => {
-                setNoteTheme(v);
-                if (onThemeChange) onThemeChange(v);
-              }}
-            />
+    <div
+      className={`text-field ${isEditMode ? "edit-mode" : "view-mode"}`}
+      style={themeVars}
+    >
+      {/* Top bar with title and last modified - shown in view mode */}
+      {!isEditMode && (
+        <div className="note-header" onClick={() => setIsEditMode(true)}>
+          <div className="note-header-content">
+            <div className="note-title-display">{noteTitle || "New Note"}</div>
+            {lastModified && (
+              <div className="note-last-modified-header">
+                Last modified: {formatRelative(lastModified)}
+              </div>
+            )}
           </div>
         </div>
-        {/* pinned right-side actions (outside scroll area so they stay put) */}
-        <div className="toolbar-actions">
-          <Button
-            className="undo-btn"
-            onClick={() => {
-              const active = document.activeElement;
-              const inTitle =
-                active &&
-                active.classList &&
-                active.classList.contains("note-title-input");
-              undo(inTitle);
-            }}
-            aria-label="Undo"
-            title="Undo (⌘Z)"
-          >
-            Undo
-          </Button>
-          <Button
-            className="redo-btn"
-            onClick={() => {
-              const active = document.activeElement;
-              const inTitle =
-                active &&
-                active.classList &&
-                active.classList.contains("note-title-input");
-              redo(inTitle);
-            }}
-            aria-label="Redo"
-            title="Redo (⌘⇧Z)"
-          >
-            Redo
-          </Button>
+      )}
+
+      {/* Toolbar - only shown in edit mode */}
+      {isEditMode && (
+        <div className="toolbar">
+          <div className="toolbar-scroll">
+            <button onClick={() => handleFormat("bold")}>
+              <b>B</b>
+            </button>
+            <button onClick={() => handleFormat("italic")}>
+              <i>I</i>
+            </button>
+            <button onClick={() => handleFormat("underline")}>
+              <u>U</u>
+            </button>
+            <button onClick={() => handleFormat("insertUnorderedList")}>
+              Bullet List
+            </button>
+            <button onClick={() => handleFormat("insertOrderedList")}>
+              Numbered List
+            </button>
+            <button onClick={() => handleFormat("formatBlock", "H1")}>
+              Heading
+            </button>
+            {/* Per-note font selector using shared Dropdown component */}
+            <div className="font-picker">
+              {/* Local options and labels: mono, inter, paper, handwritten */}
+              {/** Options ids match global theme keys used elsewhere **/}
+              {/** Dropdown will call setNoteFont with the id string **/}
+              <Dropdown
+                options={FONT_OPTIONS}
+                value={noteFont}
+                onChange={(v) => {
+                  setNoteFont(v);
+                  if (onFontChange) onFontChange(v);
+                }}
+              />
+            </div>
+            {/* Per-note font-size selector */}
+            <div className="font-size-picker">
+              <Dropdown
+                options={FONT_SIZE_OPTIONS}
+                value={noteFontSize}
+                onChange={(v) => {
+                  const size = Number(v);
+                  setNoteFontSize(size);
+                  if (onFontSizeChange) onFontSizeChange(size);
+                }}
+              />
+            </div>
+            {/* Per-note theme selector */}
+            <div className="theme-picker">
+              <Dropdown
+                options={THEME_OPTIONS}
+                value={noteTheme}
+                onChange={(v) => {
+                  setNoteTheme(v);
+                  if (onThemeChange) onThemeChange(v);
+                }}
+              />
+            </div>
+          </div>
+          {/* pinned right-side actions (outside scroll area so they stay put) */}
+          <div className="toolbar-actions">
+            <Button
+              className="done-btn"
+              onClick={() => setIsEditMode(false)}
+              aria-label="Done editing"
+            >
+              <svg
+                width="15"
+                height="15"
+                viewBox="0 0 50 50"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <line
+                  x1="10"
+                  y1="25"
+                  x2="25"
+                  y2="40"
+                  strokeWidth="5"
+                  strokeLinecap="round"
+                />
+                <line
+                  x1="25"
+                  y1="40"
+                  x2="40"
+                  y2="10"
+                  strokeWidth="5"
+                  strokeLinecap="round"
+                />
+              </svg>{" "}
+              Done
+            </Button>
+            <Button
+              className="undo-btn"
+              onClick={() => {
+                const active = document.activeElement;
+                const inTitle =
+                  active &&
+                  active.classList &&
+                  active.classList.contains("note-title-input");
+                undo(inTitle);
+              }}
+              aria-label="Undo"
+              title="Undo (⌘Z)"
+            >
+              Undo
+            </Button>
+            <Button
+              className="redo-btn"
+              onClick={() => {
+                const active = document.activeElement;
+                const inTitle =
+                  active &&
+                  active.classList &&
+                  active.classList.contains("note-title-input");
+                redo(inTitle);
+              }}
+              aria-label="Redo"
+              title="Redo (⌘⇧Z)"
+            >
+              Redo
+            </Button>
+          </div>
         </div>
-      </div>
+      )}
 
       <div
         ref={editorRef}
         className="editor"
-        contentEditable
+        contentEditable={isEditMode}
         onInput={handleInput}
+        onClick={() => !isEditMode && setIsEditMode(true)}
         suppressContentEditableWarning
         aria-label="Note editor"
-        placeholder="Write your note..."
+        placeholder="Tap to edit"
         style={{
           fontFamily: FONT_MAP[noteFont] ?? undefined,
           fontSize: noteFontSize ? `${noteFontSize}px` : undefined,
+          cursor: isEditMode ? "text" : "pointer",
         }}
       />
 
       {/* Bottom mini-bar with editable title, last-modified label, and remove button */}
-      <div className="note-footer">
-        <input
-          className="note-title-input"
-          value={noteTitle}
-          onChange={handleTitleChange}
-          placeholder="Untitled"
-          aria-label="Note title"
-        />
+      {isEditMode && (
+        <div className="note-footer">
+          <input
+            className="note-title-input"
+            value={noteTitle}
+            onChange={handleTitleChange}
+            placeholder="Untitled"
+            aria-label="Note title"
+          />
 
-        {/* Center: Last modified label (if available) */}
-        <div
-          className="note-last-modified"
-          role="status"
-          aria-live="polite"
-          aria-atomic="true"
-        >
-          {lastModified ? (
-            <span>Last modified: {formatRelative(lastModified)}</span>
-          ) : null}
-        </div>
-
-        {onRemove && (
-          <Button
-            className="remove-btn"
-            onClick={onRemove}
-            aria-label="Remove note"
+          {/* Center: Last modified label (if available) */}
+          <div
+            className="note-last-modified"
+            role="status"
+            aria-live="polite"
+            aria-atomic="true"
           >
-            Remove
-          </Button>
-        )}
-      </div>
+            {lastModified ? (
+              <span>Last modified: {formatRelative(lastModified)}</span>
+            ) : null}
+          </div>
+
+          {onRemove && (
+            <Button
+              className="remove-btn"
+              onClick={onRemove}
+              aria-label="Remove note"
+            >
+              Remove
+            </Button>
+          )}
+        </div>
+      )}
     </div>
   );
 };
