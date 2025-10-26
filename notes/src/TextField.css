@@ -110,7 +110,7 @@
   gap: 10px;
   align-items: center;
   position: absolute;
-  right: 10px;
+  right: 20px;
   top: 50%;
   transform: translateY(-50%);
   z-index: 40; /* allow dropdowns (z-index 10050) to appear above actions */
@@ -265,7 +265,7 @@
    and dropdowns under the pinned actions stay reachable */
 @media (max-width: 640px) {
   .toolbar {
-    padding-right: 70px;
+    padding-right: 170px;
   }
   .toolbar-scroll {
     padding-right: 70px;
