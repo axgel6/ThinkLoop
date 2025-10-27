@@ -119,7 +119,11 @@ const Checklist: React.FC = () => {
           aria-label="New task"
         />
         <Button type="submit" className="primary" onClick={() => {}}>
-          Add
+                    <svg width="15" height="15" viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg">
+  <line x1="25" y1="5" x2="25" y2="45" stroke="var(--fg, white)" stroke-width="10" />
+  <line x1="5" y1="25" x2="45" y2="25" stroke="var(--fg, white)" stroke-width="10" />
+</svg>
+
         </Button>
       </form>
 
