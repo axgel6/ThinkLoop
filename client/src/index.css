@@ -90,6 +90,12 @@ body {
   font-family: "Great Vibes", cursive;
 }
 
+/* Classic Mac font utility: Lucida Grande */
+:root.font-lucida body,
+.font-lucida body {
+  font-family: "Lucida Grande", "Lucida Sans Unicode", "Lucida Sans", Arial, sans-serif;
+}
+
 /* Apply font theme to UI chrome (navbar, toolbar buttons, titles, and note title input)
    These selectors intentionally avoid the .editor content area so note text is not affected. */
 :root.font-mono .navbar,
@@ -489,6 +495,20 @@ body {
   font-family: "Great Vibes", cursive;
 }
 
+:root.font-lucida .navbar,
+:root.font-lucida .navbar button,
+:root.font-lucida .toolbar button,
+:root.font-lucida #title,
+:root.font-lucida .note-title-input,
+.font-lucida .navbar,
+.font-lucida .navbar button,
+.font-lucida .toolbar button,
+.font-lucida #title,
+.font-lucida .note-title-input {
+  font-family:'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+}
+
+
 /* Site-wide button outline: use theme panel border for non-note buttons */
 body :not(.text-field) button,
 .navbar button {
@@ -757,6 +777,77 @@ pre {
       rgba(90, 200, 255, 0.25) 30%,
       rgba(0, 0, 0, 0.85) 100%
     );
+}
+
+.theme-snowleopard {
+  --bg: #000000;
+  --fg: #e8e8e8;
+  --muted: #9a9a9a;
+  --panel-bg: rgba(0, 0, 0, 0.65);
+  --panel-border: rgba(255, 255, 255, 0.15);
+  --panel-bg-solid: rgba(0, 0, 0, 0.692);
+  --glass-bg: linear-gradient(
+    135deg,
+    rgba(20, 20, 20, 0.7),
+    rgba(0, 0, 0, 0.6)
+  );
+}
+
+.theme-snowleopard body {
+  background: 
+    radial-gradient(2px 2px at 20% 30%, white, transparent),
+    radial-gradient(2px 2px at 60% 70%, white, transparent),
+    radial-gradient(1px 1px at 50% 50%, white, transparent),
+    radial-gradient(1px 1px at 80% 10%, white, transparent),
+    radial-gradient(2px 2px at 90% 60%, white, transparent),
+    radial-gradient(1px 1px at 33% 80%, white, transparent),
+    radial-gradient(1px 1px at 15% 60%, white, transparent),
+    radial-gradient(circle at 30% 20%, rgba(242, 167, 233, 0.3), transparent 40%),
+    radial-gradient(circle at 70% 80%, rgba(216, 110, 220, 0.25), transparent 50%),
+    radial-gradient(circle at 50% 50%, rgba(164, 60, 191, 0.2), transparent 60%),
+    radial-gradient(circle at 40% 60%, rgba(75, 0, 143, 0.3), transparent 55%),
+    linear-gradient(
+      180deg,
+      #1b0034 0%,
+      #4b008f 20%,
+      #a43cbf 45%,
+      #d86edc 65%,
+      #f2a7e9 80%,
+      rgba(255, 255, 255, 0.1) 100%
+    );
+  background-repeat: repeat;
+  background-size: 
+    200px 200px,
+    300px 300px,
+    250px 250px,
+    280px 280px,
+    320px 320px,
+    240px 240px,
+    260px 260px,
+    100% 100%,
+    100% 100%,
+    100% 100%,
+    100% 100%,
+    100% 100%;
+  background-position: 
+    0 0,
+    40px 60px,
+    130px 270px,
+    70px 100px,
+    150px 50px,
+    220px 180px,
+    90px 220px,
+    center,
+    center,
+    center,
+    center,
+    center;
+  background-attachment: fixed;
+}
+
+
+.theme-snowleopard body {
+  background-color: #000000;
 }
 
 .theme-ai body {

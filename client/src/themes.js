@@ -16,6 +16,7 @@ export const COLOR_OPTIONS = [
   { id: "twelve", label: "Forest Green" },
   { id: "thirteen", label: "Golden" },
   { id: "fourteen", label: "Intelligence" },
+  { id: "fifteen", label: "Snow Leopard" },
 ];
 
 // Mapping of color option IDs to CSS theme classes
@@ -34,6 +35,7 @@ export const THEME_CLASS_MAP = {
   twelve: "theme-forestgreen",
   thirteen: "theme-gold",
   fourteen: "theme-ai",
+  fifteen: "theme-snowleopard",
 };
 
 // All theme classes (for removal when switching themes)
@@ -52,6 +54,7 @@ export const ALL_THEME_CLASSES = [
   "theme-forestgreen",
   "theme-gold",
   "theme-ai",
+  "theme-snowleopard",
 ];
 
 // Per-note theme options (includes "default" to match global theme)
@@ -71,6 +74,7 @@ export const NOTE_THEME_OPTIONS = [
   { id: "forestgreen", label: "Forest Green" },
   { id: "gold", label: "Gold" },
   { id: "ai", label: "Intelligence" },
+  { id: "snowleopard", label: "Snow Leopard" },
 ];
 
 // CSS custom properties for each theme (used for per-note theming)
@@ -216,6 +220,16 @@ export const THEME_VARS = {
       "linear-gradient(135deg, #11152a, rgba(30, 35, 60, 0.5))",
     "--glass-bg":
       "linear-gradient(135deg, rgba(60, 30, 100, 0.7), rgba(20, 30, 60, 0.45))",
+  },
+  snowleopard: {
+    "--bg": "#000000",
+    "--fg": "#e8e8e8",
+    "--muted": "#9a9a9a",
+    "--panel-bg": "rgba(0, 0, 0, 0.65)",
+    "--panel-border": "rgba(255, 255, 255, 0.15)",
+    "--panel-bg-solid": "rgba(0, 0, 0, 0.9)",
+    "--glass-bg":
+      "linear-gradient(135deg, rgba(20, 20, 20, 0.7), rgba(0, 0, 0, 0.6))",
   },
 };
 

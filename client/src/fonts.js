@@ -24,6 +24,7 @@ export const FONT_OPTIONS = [
   { id: "amatic", label: "Amatic SC" },
   { id: "indieflower", label: "Indie Flower" },
   { id: "greatvibes", label: "Great Vibes" },
+  { id: "lucida", label: "Lucida Grande" },
 ];
 
 export const FONT_MAP = {
@@ -67,6 +68,7 @@ export const FONT_MAP = {
   amatic: "'Amatic SC', 'Comic Sans MS', cursive",
   indieflower: "'Indie Flower', 'Comic Sans MS', cursive",
   greatvibes: "'Great Vibes', cursive",
+  lucida: '"Lucida Grande", "Lucida Sans Unicode", "Lucida Sans", Arial, sans-serif',
 };
 
 // Mapping of font IDs to CSS class names
@@ -95,6 +97,7 @@ export const FONT_CLASS_MAP = {
   amatic: "font-amatic",
   indieflower: "font-indieflower",
   greatvibes: "font-greatvibes",
+  lucida: "font-lucida",
 };
 
 // All font classes (for removal when switching fonts)
@@ -123,6 +126,7 @@ export const ALL_FONT_CLASSES = [
   "font-amatic",
   "font-indieflower",
   "font-greatvibes",
+  "font-lucida",
 ];
 
 // Helper function to apply a font to the document root
