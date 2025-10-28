@@ -3,12 +3,14 @@ import { createPortal } from "react-dom";
 import "./Dropdown.css";
 
 // Generic accessible dropdown component
-// props: options: [{id,label}], value, onChange
+// props: options: [{id,label}], value, onChange, fontPreview, fontMap
 const Dropdown = ({
   options = [],
   value = "",
   onChange = () => {},
   placeholder = "Select",
+  fontPreview = false,
+  fontMap = {},
 }) => {
   const [open, setOpen] = useState(false);
   const [highlight, setHighlight] = useState(-1);
@@ -112,6 +114,11 @@ const Dropdown = ({
                   onChange(o.id);
                   setOpen(false);
                 }}
+                style={
+                  fontPreview && fontMap[o.id]
+                    ? { fontFamily: fontMap[o.id] }
+                    : {}
+                }
               >
                 {o.label}
               </li>

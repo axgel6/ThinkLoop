@@ -1,7 +1,9 @@
 @import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600;700&display=swap");
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Merriweather:ital,wght@0,400;0,700;1,400&family=Patrick+Hand&display=swap");
-@import url("https://fonts.googleapis.com/css2?family=Lora:wght@400;700&family=Poppins:wght@300;400;700&family=Cormorant+Garamond:wght@300;400;700&display=swap");
-@import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;700&family=Orbitron:wght@400;700&family=Amatic+SC:wght@400;700&family=Great+Vibes&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Roboto:wght@300;400;700&family=Open+Sans:wght@300;400;700&family=Lato:wght@300;400;700&family=Source+Sans+Pro:wght@300;400;700&family=Nunito:wght@300;400;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,400;0,700;1,400&family=Lora:wght@400;700&family=Playfair+Display:wght@400;700&family=EB+Garamond:wght@400;700&family=Cormorant+Garamond:wght@300;400;700&family=Crimson+Text:wght@400;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Patrick+Hand&family=Caveat:wght@400;700&family=Indie+Flower&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;700&family=Space+Grotesk:wght@300;400;700&family=Source+Code+Pro:wght@400;700&family=Fira+Code:wght@400;700&family=Inconsolata:wght@400;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Amatic+SC:wght@400;700&family=Great+Vibes&display=swap");
 
 body {
   margin: 0;
@@ -239,6 +241,254 @@ body {
   font-family: "Great Vibes", cursive;
 }
 
+/* Additional popular note-taking fonts */
+:root.font-roboto body,
+.font-roboto body {
+  font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+}
+
+:root.font-roboto .navbar,
+:root.font-roboto .navbar button,
+:root.font-roboto .toolbar button,
+:root.font-roboto #title,
+:root.font-roboto .note-title-input,
+.font-roboto .navbar,
+.font-roboto .navbar button,
+.font-roboto .toolbar button,
+.font-roboto #title,
+.font-roboto .note-title-input {
+  font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+}
+
+:root.font-opensans body,
+.font-opensans body {
+  font-family: "Open Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+}
+
+:root.font-opensans .navbar,
+:root.font-opensans .navbar button,
+:root.font-opensans .toolbar button,
+:root.font-opensans #title,
+:root.font-opensans .note-title-input,
+.font-opensans .navbar,
+.font-opensans .navbar button,
+.font-opensans .toolbar button,
+.font-opensans #title,
+.font-opensans .note-title-input {
+  font-family: "Open Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+}
+
+:root.font-lato body,
+.font-lato body {
+  font-family: "Lato", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+}
+
+:root.font-lato .navbar,
+:root.font-lato .navbar button,
+:root.font-lato .toolbar button,
+:root.font-lato #title,
+:root.font-lato .note-title-input,
+.font-lato .navbar,
+.font-lato .navbar button,
+.font-lato .toolbar button,
+.font-lato #title,
+.font-lato .note-title-input {
+  font-family: "Lato", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+}
+
+:root.font-sourcesans body,
+.font-sourcesans body {
+  font-family: "Source Sans Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+}
+
+:root.font-sourcesans .navbar,
+:root.font-sourcesans .navbar button,
+:root.font-sourcesans .toolbar button,
+:root.font-sourcesans #title,
+:root.font-sourcesans .note-title-input,
+.font-sourcesans .navbar,
+.font-sourcesans .navbar button,
+.font-sourcesans .toolbar button,
+.font-sourcesans #title,
+.font-sourcesans .note-title-input {
+  font-family: "Source Sans Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+}
+
+:root.font-nunito body,
+.font-nunito body {
+  font-family: "Nunito", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+}
+
+:root.font-nunito .navbar,
+:root.font-nunito .navbar button,
+:root.font-nunito .toolbar button,
+:root.font-nunito #title,
+:root.font-nunito .note-title-input,
+.font-nunito .navbar,
+.font-nunito .navbar button,
+.font-nunito .toolbar button,
+.font-nunito #title,
+.font-nunito .note-title-input {
+  font-family: "Nunito", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+}
+
+:root.font-caveat body,
+.font-caveat body {
+  font-family: "Caveat", "Comic Sans MS", cursive;
+}
+
+:root.font-caveat .navbar,
+:root.font-caveat .navbar button,
+:root.font-caveat .toolbar button,
+:root.font-caveat #title,
+:root.font-caveat .note-title-input,
+.font-caveat .navbar,
+.font-caveat .navbar button,
+.font-caveat .toolbar button,
+.font-caveat #title,
+.font-caveat .note-title-input {
+  font-family: "Caveat", "Comic Sans MS", cursive;
+}
+
+:root.font-playfair body,
+.font-playfair body {
+  font-family: "Playfair Display", Georgia, "Times New Roman", serif;
+}
+
+:root.font-playfair .navbar,
+:root.font-playfair .navbar button,
+:root.font-playfair .toolbar button,
+:root.font-playfair #title,
+:root.font-playfair .note-title-input,
+.font-playfair .navbar,
+.font-playfair .navbar button,
+.font-playfair .toolbar button,
+.font-playfair #title,
+.font-playfair .note-title-input {
+  font-family: "Playfair Display", Georgia, "Times New Roman", serif;
+}
+
+:root.font-ebgaramond body,
+.font-ebgaramond body {
+  font-family: "EB Garamond", Georgia, "Times New Roman", serif;
+}
+
+:root.font-ebgaramond .navbar,
+:root.font-ebgaramond .navbar button,
+:root.font-ebgaramond .toolbar button,
+:root.font-ebgaramond #title,
+:root.font-ebgaramond .note-title-input,
+.font-ebgaramond .navbar,
+.font-ebgaramond .navbar button,
+.font-ebgaramond .toolbar button,
+.font-ebgaramond #title,
+.font-ebgaramond .note-title-input {
+  font-family: "EB Garamond", Georgia, "Times New Roman", serif;
+}
+
+:root.font-crimson body,
+.font-crimson body {
+  font-family: "Crimson Text", Georgia, "Times New Roman", serif;
+}
+
+:root.font-crimson .navbar,
+:root.font-crimson .navbar button,
+:root.font-crimson .toolbar button,
+:root.font-crimson #title,
+:root.font-crimson .note-title-input,
+.font-crimson .navbar,
+.font-crimson .navbar button,
+.font-crimson .toolbar button,
+.font-crimson #title,
+.font-crimson .note-title-input {
+  font-family: "Crimson Text", Georgia, "Times New Roman", serif;
+}
+
+:root.font-sourcecodepro body,
+.font-sourcecodepro body {
+  font-family: "Source Code Pro", Menlo, Monaco, Consolas, "Courier New", monospace;
+}
+
+:root.font-sourcecodepro .navbar,
+:root.font-sourcecodepro .navbar button,
+:root.font-sourcecodepro .toolbar button,
+:root.font-sourcecodepro #title,
+:root.font-sourcecodepro .note-title-input,
+.font-sourcecodepro .navbar,
+.font-sourcecodepro .navbar button,
+.font-sourcecodepro .toolbar button,
+.font-sourcecodepro #title,
+.font-sourcecodepro .note-title-input {
+  font-family: "Source Code Pro", Menlo, Monaco, Consolas, "Courier New", monospace;
+}
+
+:root.font-firacode body,
+.font-firacode body {
+  font-family: "Fira Code", Menlo, Monaco, Consolas, "Courier New", monospace;
+}
+
+:root.font-firacode .navbar,
+:root.font-firacode .navbar button,
+:root.font-firacode .toolbar button,
+:root.font-firacode #title,
+:root.font-firacode .note-title-input,
+.font-firacode .navbar,
+.font-firacode .navbar button,
+.font-firacode .toolbar button,
+.font-firacode #title,
+.font-firacode .note-title-input {
+  font-family: "Fira Code", Menlo, Monaco, Consolas, "Courier New", monospace;
+}
+
+:root.font-inconsolata body,
+.font-inconsolata body {
+  font-family: "Inconsolata", Menlo, Monaco, Consolas, "Courier New", monospace;
+}
+
+:root.font-inconsolata .navbar,
+:root.font-inconsolata .navbar button,
+:root.font-inconsolata .toolbar button,
+:root.font-inconsolata #title,
+:root.font-inconsolata .note-title-input,
+.font-inconsolata .navbar,
+.font-inconsolata .navbar button,
+.font-inconsolata .toolbar button,
+.font-inconsolata #title,
+.font-inconsolata .note-title-input {
+  font-family: "Inconsolata", Menlo, Monaco, Consolas, "Courier New", monospace;
+}
+
+:root.font-indieflower body,
+.font-indieflower body {
+  font-family: "Indie Flower", "Comic Sans MS", cursive;
+}
+
+:root.font-indieflower .navbar,
+:root.font-indieflower .navbar button,
+:root.font-indieflower .toolbar button,
+:root.font-indieflower #title,
+:root.font-indieflower .note-title-input,
+.font-indieflower .navbar,
+.font-indieflower .navbar button,
+.font-indieflower .toolbar button,
+.font-indieflower #title,
+.font-indieflower .note-title-input {
+  font-family: "Indie Flower", "Comic Sans MS", cursive;
+}
+
+:root.font-greatvibes .navbar,
+:root.font-greatvibes .navbar button,
+:root.font-greatvibes .toolbar button,
+:root.font-greatvibes #title,
+:root.font-greatvibes .note-title-input,
+.font-greatvibes .navbar,
+.font-greatvibes .navbar button,
+.font-greatvibes .toolbar button,
+.font-greatvibes #title,
+.font-greatvibes .note-title-input {
+  font-family: "Great Vibes", cursive;
+}
+
 /* Site-wide button outline: use theme panel border for non-note buttons */
 body :not(.text-field) button,
 .navbar button {
@@ -292,11 +542,11 @@ pre {
 
 .theme-dark {
   --bg: #000000;
-  --fg: #e0e0e0;
+  --fg: #ffffff;
   --muted: #9a9a9a;
   --panel-bg: rgba(30, 30, 30, 0.6);
   --panel-border: rgba(255, 255, 255, 0.08);
-  --panel-bg-solid: rgb(20, 20, 20);
+  --panel-bg-solid: rgba(41, 41, 41, 0.5);
   --glass-bg: linear-gradient(
     135deg,
     rgba(0, 0, 0, 0.195),

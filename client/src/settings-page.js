@@ -2,24 +2,8 @@ import React from "react";
 import Dropdown from "./Dropdown";
 import Button from "./Button";
 import "./settings-page.css";
-import { FONT_OPTIONS } from "./fonts";
-
-const COLOR_OPTIONS = [
-  { id: "one", label: "Black" },
-  { id: "two", label: "Blue" },
-  { id: "three", label: "Gray" },
-  { id: "four", label: "Cream" },
-  { id: "five", label: "Purple" },
-  { id: "six", label: "Pink" },
-  { id: "seven", label: "Sky Blue" },
-  { id: "eight", label: "Sage Green" },
-  { id: "nine", label: "Brown" },
-  { id: "ten", label: "Sunset" },
-  { id: "eleven", label: "Burgundy" },
-  { id: "twelve", label: "Forest Green" },
-  { id: "thirteen", label: "Golden" },
-  { id: "fourteen", label: "Intelligence" },
-];
+import { FONT_OPTIONS, FONT_MAP, applyFont } from "./fonts";
+import { COLOR_OPTIONS, applyTheme } from "./themes";
 
 const Settings = ({ onOpenLoginModal }) => {
   // Safely stringify JSON for export: escape characters/sequences that can
@@ -61,39 +45,8 @@ const Settings = ({ onOpenLoginModal }) => {
   React.useEffect(() => {
     try {
       localStorage.setItem("settings:selected", val);
-
-      // Apply theme immediately
-      const root = document.documentElement;
-      root.classList.remove(
-        "theme-dark",
-        "theme-brown",
-        "theme-blue",
-        "theme-gray",
-        "theme-cream",
-        "theme-purple",
-        "theme-pink",
-        "theme-skyblue",
-        "theme-sage",
-        "theme-sunset",
-        "theme-burgundy",
-        "theme-forestgreen",
-        "theme-gold",
-        "theme-ai"
-      );
-      if (val === "one") root.classList.add("theme-dark");
-      else if (val === "two") root.classList.add("theme-blue");
-      else if (val === "three") root.classList.add("theme-gray");
-      else if (val === "four") root.classList.add("theme-cream");
-      else if (val === "five") root.classList.add("theme-purple");
-      else if (val === "six") root.classList.add("theme-pink");
-      else if (val === "seven") root.classList.add("theme-skyblue");
-      else if (val === "eight") root.classList.add("theme-sage");
-      else if (val === "nine") root.classList.add("theme-brown");
-      else if (val === "ten") root.classList.add("theme-sunset");
-      else if (val === "eleven") root.classList.add("theme-burgundy");
-      else if (val === "twelve") root.classList.add("theme-forestgreen");
-      else if (val === "thirteen") root.classList.add("theme-gold");
-      else if (val === "fourteen") root.classList.add("theme-ai");
+      // Apply theme immediately using helper function
+      applyTheme(val);
     } catch (e) {
       /* ignore */
     }
@@ -103,39 +56,8 @@ const Settings = ({ onOpenLoginModal }) => {
   React.useEffect(() => {
     try {
       localStorage.setItem("settings:font", fontVal);
-      const root = document.documentElement;
-      // remove any existing font classes
-      root.classList.remove(
-        "font-mono",
-        "font-inter",
-        "font-paper",
-        "font-handwritten",
-        "font-lora",
-        "font-poppins",
-        "font-cormorant",
-        "font-space",
-        "font-orbitron",
-        "font-amatic",
-        "font-greatvibes"
-      );
-      if (fontVal === "mono") root.classList.add("font-mono");
-      else if (fontVal === "inter") root.classList.add("font-inter");
-      else if (fontVal === "paper") root.classList.add("font-paper");
-      else if (fontVal === "handwritten")
-        root.classList.add("font-handwritten");
-      else if (fontVal === "lora") root.classList.add("font-lora");
-      else if (fontVal === "poppins") root.classList.add("font-poppins");
-      else if (fontVal === "cormorant") root.classList.add("font-cormorant");
-      else if (fontVal === "space") root.classList.add("font-space");
-      else if (fontVal === "orbitron") root.classList.add("font-orbitron");
-      else if (fontVal === "amatic") root.classList.add("font-amatic");
-      else if (fontVal === "greatvibes") root.classList.add("font-greatvibes");
-      // Notify other UI components that fonts changed so they can reflow instantly
-      try {
-        window.dispatchEvent(new Event("fontchange"));
-      } catch (e) {
-        /* ignore */
-      }
+      // Apply font immediately using helper function
+      applyFont(fontVal);
     } catch (e) {
       /* ignore */
     }
@@ -164,6 +86,8 @@ const Settings = ({ onOpenLoginModal }) => {
                 options={FONT_OPTIONS}
                 value={fontVal}
                 onChange={(v) => setFontVal(v)}
+                fontPreview={true}
+                fontMap={FONT_MAP}
               />
             </div>
           </div>
