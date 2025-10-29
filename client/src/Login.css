@@ -34,13 +34,13 @@
 .modal-close {
   position: absolute;
   top: 16px;
-  right: 16px;
+  left: 16px;
   background: rgba(150, 0, 0, 0.3);
   color: #ffb3b3;
   border: 1px solid rgba(255, 138, 138, 0.2);
-  border-radius: 15px;
-  width: 36px;
-  height: 36px;
+  border-radius: 36px;
+  width: 20px;
+  height: 20px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -61,7 +61,7 @@
   color: var(--fg--panel-bg-solid, #dcdcdc);
   font-size: 2em;
   font-weight: 600;
-  text-align: left;
+  text-align: center;
 }
 
 /* Login Form */

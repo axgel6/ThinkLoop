@@ -25,7 +25,6 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
     <div className="modal-backdrop" onClick={handleBackdropClick}>
       <div className="modal-content">
         <button className="modal-close" onClick={onClose} aria-label="Close">
-          ✕
         </button>
         <h1>Sign In</h1>
         <form onSubmit={handleSubmit} className="login-form">

@@ -787,9 +787,11 @@ pre {
   --panel-border: rgba(255, 255, 255, 0.15);
   --panel-bg-solid: rgba(0, 0, 0, 0.692);
   --glass-bg: linear-gradient(
-    135deg,
-    rgba(20, 20, 20, 0.7),
-    rgba(0, 0, 0, 0.6)
+    to bottom,
+    rgba(255, 255, 255, 0.15), 
+    rgba(255, 255, 255, 0) 50%, 
+    rgba(0, 0, 0, 0) 50%,
+    rgba(0, 0, 0, 0.05) 
   );
 }
 
@@ -849,6 +851,121 @@ pre {
 .theme-snowleopard body {
   background-color: #000000;
 }
+
+.theme-snowleopard .text-field {
+
+  color: var(--fg);
+  background-image: linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0.15), 
+    rgba(255, 255, 255, 0) 50%, 
+    rgba(0, 0, 0, 0) 50%,
+    rgba(0, 0, 0, 0.05) 
+  );
+}
+
+.theme-snowleopard .nav-bubble {
+  
+  background-image: linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0.15), 
+    rgba(255, 255, 255, 0) 50%, 
+    rgba(0, 0, 0, 0) 50%,
+    rgba(0, 0, 0, 0.05) 
+  );
+}
+
+.theme-snowleopard .settings-toggles button, .theme-snowleopard .modal-content .login-submit-btn {
+  font-weight: 700;
+  color: #fff;
+  text-shadow: rgba(10, 10, 10, 0.5) 1px 2px 2px;
+  background-color: rgba(60, 132, 198, 0.8);
+  background-image: -webkit-gradient(linear, 0% 0%, 0% 90%, from(rgba(28, 91, 155, 0.8)), to(rgba(108, 191, 255, .9)));
+}
+
+.theme-snowleopard .modal-content h1 {
+  color: rgb(54, 54, 54);
+}
+
+.theme-snowleopard .modal-content .form-group  input{
+  background: rgba(255, 255, 255, 0.377);
+  border: 2px solid rgba(60, 132, 198, 0.8); 
+  border-radius: 25px;
+  color: rgb(54, 54, 54);
+  max-height: 2px;
+}
+
+
+
+.theme-snowleopard  .settings-toggles button:hover {
+  font-weight: 700;
+  color: #fff;
+  text-shadow: rgba(10, 10, 10, 0.5) 1px 2px 2px;
+  background-color: rgba(37, 84, 128, 0.8);
+  background-image: -webkit-gradient(linear, 0% 0%, 0% 90%, from(rgba(16, 51, 87, 0.8)), to(rgba(90, 162, 218, 0.9)));
+  scale: none;
+}
+
+
+.theme-snowleopard .modal-content {
+  background: linear-gradient(to bottom, #ededed 0%, #d1d1d1 100%);
+}
+
+
+.theme-snowleopard .modal-close {
+  border: 1px solid rgba(0, 0, 0, 0.25);
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.1),
+  inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  background: radial-gradient(circle at 50% 30%, #ff9492, #ff0800 80%);
+  border-color: #c03632;
+
+}
+
+.theme-snowleopard .modal-close:hover {
+  border: 1px solid rgba(0, 0, 0, 0.25);
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.1),
+  inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  background: radial-gradient(circle at 50% 30%, #ff9492, #690400 80%);
+  border-color: #c03632;
+}
+
+
+.theme-snowleopard .checklist-input {
+  border: 2px solid rgba(60, 132, 198, 0.8); 
+  background-color: #f0f0f0dc; 
+  color: #000000;
+}
+
+.theme-snowleopard .checklist-input:hover {
+  border: 2px solid rgba(101, 169, 233, 0.8); 
+  background-color: #f0f0f0dc; 
+  scale: none;
+}
+
+.theme-snowleopard .checklist-input:focus {
+  border: 2px solid rgba(101, 169, 233, 0.8); 
+  background-color: #f0f0f0dc; 
+  scale: none;
+}
+
+.theme-snowleopard .custom-select-list {
+  background-color: white;
+  border: 2px solid rgba(60, 132, 198, 0.8);
+} 
+
+.theme-snowleopard .custom-select-option {
+  color: black;
+}
+
+.theme-snowleopard .custom-select-option:hover {
+  background-color: rgba(60, 132, 198, 0.8);
+  background-image: -webkit-gradient(linear, 0% 0%, 0% 90%, from(rgba(28, 91, 155, 0.8)), to(rgba(108, 191, 255, .9)));
+  color:white;
+  border-radius: 25px;
+}
+
+
+
 
 .theme-ai body {
   background-image: var(--ai-bg);
