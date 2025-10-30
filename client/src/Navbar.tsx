@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import "./Navbar.css";
 
-type TabKey = "notes" | "tasks" | "feed" | "settings";
+type TabKey = "notes" | "tasks" | "settings";
 
 interface NavbarProps {
   activeTab?: TabKey;
@@ -153,23 +153,6 @@ const Navbar: React.FC<NavbarProps> = ({
             aria-pressed={activeTab === "tasks"}
           >
             Tasks
-          </button>
-        </li>
-        <li>
-          <button
-            className={activeTab === "feed" ? "active" : ""}
-            onMouseEnter={() => {
-              if (activeTab === "feed" && bubbleRef.current)
-                bubbleRef.current.classList.add("hovering");
-            }}
-            onMouseLeave={() => {
-              if (bubbleRef.current)
-                bubbleRef.current.classList.remove("hovering");
-            }}
-            onClick={() => onChangeTab("feed")}
-            aria-pressed={activeTab === "feed"}
-          >
-            Feed
           </button>
         </li>
         <li>

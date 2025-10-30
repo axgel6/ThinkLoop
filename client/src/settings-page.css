@@ -19,10 +19,7 @@
   padding: 30px;
 }
 
-.settings-toggles:hover {
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.486);
-  border-color: rgba(255, 255, 255, 0.12);
-}
+
 
 .settings-section {
   padding: 0;

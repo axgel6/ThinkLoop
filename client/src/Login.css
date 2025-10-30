@@ -35,7 +35,7 @@
   position: absolute;
   top: 16px;
   left: 16px;
-  background: rgba(150, 0, 0, 0.3);
+  background: rgb(255, 0, 0);
   color: #ffb3b3;
   border: 1px solid rgba(255, 138, 138, 0.2);
   border-radius: 36px;
@@ -52,7 +52,6 @@
 .modal-close:hover {
   background: rgba(223, 0, 0, 0.5);
   border-color: rgba(255, 138, 138, 0.4);
-  box-shadow: 0 4px 12px rgba(223, 0, 0, 0.3);
 }
 
 /* Modal Title */

@@ -71,7 +71,8 @@
   position: absolute;
   top: 5px;
   height: calc(100% - 12px);
-  background: var(--panel-bg, rgba(30, 30, 30, 0.377));
+  background-image: radial-gradient(circle, var(--panel-bg), rgba(255, 255, 255, 0.158));
+
   border: 1px solid var(--panel-border, rgba(255, 255, 255, 0.253));
   border-radius: 25px;
   transform: scale(1.2);

@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import Navbar from "./Navbar";
-import Feed from "./Feed";
 import Tasks from "./Tasks";
 import NotesHandler from "./NotesHandler";
 import Settings from "./settings-page";
@@ -22,7 +21,6 @@ function App() {
   const titles = {
     notes: "Notes",
     tasks: "Tasks",
-    feed: "Feed",
     settings: "Settings",
   };
 
@@ -147,11 +145,10 @@ function App() {
       </div>
       {activeTab === "notes" && <NotesHandler />}
       {activeTab === "tasks" && <Tasks />}
-      {activeTab === "feed" && <Feed />}
       {activeTab === "settings" && (
         <Settings onOpenLoginModal={() => setIsLoginModalOpen(true)} />
       )}
-      {!["notes", "tasks", "feed", "settings"].includes(activeTab) && (
+      {!["notes", "tasks", "settings"].includes(activeTab) && (
         <NotFound />
       )}
 
