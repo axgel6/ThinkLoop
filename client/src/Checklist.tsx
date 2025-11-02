@@ -32,7 +32,7 @@ const Checklist: React.FC = () => {
   React.useEffect(() => {
     const timer = setInterval(() => {
       setCurrentTime(new Date());
-    }, 60000); // Update every 60 seconds
+    }, 1000); // Update every second
 
     return () => clearInterval(timer);
   }, []);
