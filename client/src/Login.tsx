@@ -4,7 +4,7 @@ import "./Login.css";
 interface LoginModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onLogin: (userData: { id: string; username: string }) => void;
+  onLogin: (userData: { id: string; username: string; name?: string }) => void;
 }
 
 const API_URL = process.env.REACT_APP_API_URL || "http://localhost:3000";
@@ -16,6 +16,7 @@ export default function LoginModal({
 }: LoginModalProps) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [name, setName] = useState("");
   const [isRegister, setIsRegister] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -38,7 +39,9 @@ export default function LoginModal({
       const response = await fetch(`${API_URL}${endpoint}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password }),
+        body: JSON.stringify(
+          isRegister ? { username, password, name } : { username, password },
+        ),
       });
 
       const data = await response.json();
@@ -47,9 +50,10 @@ export default function LoginModal({
         throw new Error(data.error || "Authentication failed");
       }
 
-      onLogin({ id: data.id, username: data.username });
+      onLogin({ id: data.id, username: data.username, name: data.name });
       setUsername("");
       setPassword("");
+      setName("");
     } catch (err: any) {
       setError(err.message || "An error occurred");
     } finally {
@@ -78,6 +82,19 @@ export default function LoginModal({
           </div>
         )}
         <form onSubmit={handleSubmit} className="login-form">
+          {isRegister && (
+            <div className="form-group">
+              <label htmlFor="name">Full Name</label>
+              <input
+                id="name"
+                type="text"
+                placeholder="Enter your full name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required
+              />
+            </div>
+          )}
           <div className="form-group">
             <label htmlFor="username">Username</label>
             <input

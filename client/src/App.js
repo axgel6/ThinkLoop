@@ -32,7 +32,7 @@ function App() {
     settings: "Settings",
   };
 
-  const user = currentUser ? currentUser.username : "Guest";
+  const user = currentUser ? currentUser.name || currentUser.username : "Guest";
 
   // Save current user to localStorage
   useEffect(() => {

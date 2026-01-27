@@ -44,6 +44,7 @@ const Settings = ({ onOpenLoginModal, currentUser, onLogout }) => {
   });
 
   const [showAccountModal, setShowAccountModal] = useState(false);
+  const [newName, setNewName] = useState("");
   const [newUsername, setNewUsername] = useState("");
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -72,6 +73,38 @@ const Settings = ({ onOpenLoginModal, currentUser, onLogout }) => {
       /* ignore */
     }
   }, [fontVal]);
+
+  const handleUpdateName = async () => {
+    if (!currentUser || !newName) return;
+    setAccountError("");
+    setAccountSuccess("");
+
+    try {
+      const response = await fetch(
+        `${API_URL}/auth/user/${currentUser.id}/name`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ newName }),
+        },
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to update name");
+      }
+
+      setAccountSuccess("Name updated successfully!");
+      setNewName("");
+      // Update local user data
+      const updatedUser = { ...currentUser, name: data.name };
+      localStorage.setItem("currentUser", JSON.stringify(updatedUser));
+      window.location.reload(); // Reload to update UI
+    } catch (err) {
+      setAccountError(err.message);
+    }
+  };
 
   const handleUpdateUsername = async () => {
     if (!currentUser || !newUsername) return;
@@ -204,10 +237,11 @@ const Settings = ({ onOpenLoginModal, currentUser, onLogout }) => {
             {currentUser ? (
               <>
                 <p style={{ marginBottom: 12, color: "var(--muted, #9a9a9a)" }}>
-                  Logged in as:{" "}
+                  Hello,{" "}
                   <strong style={{ color: "var(--fg, #dcdcdc)" }}>
-                    {currentUser.username}
+                    {currentUser.name || currentUser.username}
                   </strong>
+                  !
                 </p>
                 <div style={{ display: "flex", gap: 12 }}>
                   <Button onClick={() => setShowAccountModal(true)}>
@@ -261,6 +295,27 @@ const Settings = ({ onOpenLoginModal, currentUser, onLogout }) => {
                     {accountSuccess}
                   </div>
                 )}
+
+                <div style={{ marginBottom: 24 }}>
+                  <h3 style={{ marginBottom: 8 }}>Change Name</h3>
+                  <input
+                    type="text"
+                    placeholder="New name"
+                    value={newName}
+                    onChange={(e) => setNewName(e.target.value)}
+                    style={{
+                      width: "100%",
+                      padding: 8,
+                      marginBottom: 8,
+                      background: "var(--panel-bg, rgba(30, 30, 30, 0.6))",
+                      border:
+                        "1px solid var(--panel-border, rgba(255, 255, 255, 0.08))",
+                      borderRadius: 8,
+                      color: "var(--fg, #dcdcdc)",
+                    }}
+                  />
+                  <Button onClick={handleUpdateName}>Update Name</Button>
+                </div>
 
                 <div style={{ marginBottom: 24 }}>
                   <h3 style={{ marginBottom: 8 }}>Change Username</h3>

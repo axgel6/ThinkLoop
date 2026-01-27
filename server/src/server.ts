@@ -165,10 +165,12 @@ app.delete("/notes/:id", async (req, res) => {
 // Register new user
 app.post("/auth/register", async (req, res) => {
   try {
-    const { username, password } = req.body;
+    const { username, password, name } = req.body;
 
-    if (!username || !password) {
-      return res.status(400).json({ error: "Username and password required" });
+    if (!username || !password || !name) {
+      return res
+        .status(400)
+        .json({ error: "Username, password, and name required" });
     }
 
     // Check if user already exists
@@ -185,6 +187,7 @@ app.post("/auth/register", async (req, res) => {
     const newUser = {
       username,
       password: hashedPassword,
+      name,
       createdAt: Date.now(),
     };
 
@@ -192,6 +195,7 @@ app.post("/auth/register", async (req, res) => {
     res.status(201).json({
       id: result.insertedId.toString(),
       username,
+      name,
       message: "User created successfully",
     });
   } catch (error) {
@@ -224,6 +228,7 @@ app.post("/auth/login", async (req, res) => {
     res.json({
       id: user._id.toString(),
       username: user.username,
+      name: user.name || user.username,
       message: "Login successful",
     });
   } catch (error) {
@@ -283,6 +288,33 @@ app.put("/auth/user/:userId/username", async (req, res) => {
     });
   } catch (error) {
     res.status(500).json({ error: "Failed to update username" });
+  }
+});
+
+// Update user name
+app.put("/auth/user/:userId/name", async (req, res) => {
+  try {
+    const { newName } = req.body;
+
+    if (!newName) {
+      return res.status(400).json({ error: "New name required" });
+    }
+
+    const result = await userInfoCollection.updateOne(
+      { _id: new ObjectId(req.params.userId) },
+      { $set: { name: newName } },
+    );
+
+    if (result.matchedCount === 0) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    res.json({
+      message: "Name updated successfully",
+      name: newName,
+    });
+  } catch (error) {
+    res.status(500).json({ error: "Failed to update name" });
   }
 });
 
