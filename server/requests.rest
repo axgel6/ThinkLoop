@@ -1,0 +1,26 @@
+### Get all notes
+GET http://localhost:3000/notes
+
+### Create note
+POST http://localhost:3000/notes
+Content-Type: application/json
+
+{
+  "title": "My first note",
+  "content": "This is my content"
+}
+
+### Get single note
+GET http://localhost:3000/notes/[PASTE_NOTE_ID_HERE]
+
+### Update note
+PUT http://localhost:3000/notes/[PASTE_NOTE_ID_HERE]
+Content-Type: application/json
+
+{
+  "title": "Updated title",
+  "content": "Updated content"
+}
+
+### Delete note
+DELETE http://localhost:3000/notes/[PASTE_NOTE_ID_HERE]

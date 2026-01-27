@@ -52,7 +52,6 @@
   letter-spacing: 0.3px;
   transition: all 0.15s ease;
   outline: none;
-  transform: scale(1);
 }
 
 .navbar li button:hover {
@@ -65,23 +64,29 @@
   color: var(--fg, #ffffff);
   border-color: var(--accent, #666666);
   background: var(--accent-bg, rgba(150, 150, 150, 0.15));
-  animation: tabBounce 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-
-@keyframes tabBounce {
-  0% {
-    transform: scale(0.95);
-  }
-  50% {
-    transform: scale(1.1);
-  }
-  100% {
-    transform: scale(1);
-  }
   font-weight: 600;
 }
 
 .navbar li button.active:hover {
   border-color: var(--accent, #666666);
   background: var(--accent-bg, rgba(150, 150, 150, 0.25));
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+  .navbar ul {
+    padding: 10px 14px;
+    gap: 6px;
+    font-size: 14px;
+  }
+
+  .navbar li button {
+    padding: 8px 16px;
+    font-size: 14px;
+    min-height: 44px;
+  }
+
+  .navbar li button.active {
+    font-size: 16px;
+  }
 }

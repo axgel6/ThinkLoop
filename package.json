@@ -20,6 +20,9 @@
     "install:all": "npm install"
   },
   "dependencies": {
+    "cors": "^2.8.6",
+    "dotenv": "^17.2.3",
+    "express": "^5.2.1",
     "gh": "^2.8.9"
   }
 }
