@@ -61,160 +61,76 @@ const NoteItem = React.memo(function NoteItem({
   );
 });
 
-const API_URL = process.env.REACT_APP_API_URL || "http://localhost:3000";
-
-const NotesHandler = ({ currentUser }) => {
+const NotesHandler = () => {
   const [notes, setNotes] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Fetch notes from server on mount
+  // Load notes from localStorage on mount
   useEffect(() => {
-    const fetchNotes = async () => {
-      try {
-        const url = currentUser
-          ? `${API_URL}/notes?userId=${currentUser.id}`
-          : `${API_URL}/notes`;
-
-        const response = await fetch(url);
-        if (response.ok) {
-          const data = await response.json();
-          setNotes(data);
-        }
-      } catch (error) {
-        console.error("Failed to fetch notes:", error);
-        // Fallback to localStorage if server is unavailable
-        try {
-          const raw = localStorage.getItem("notes");
-          if (raw) {
-            const parsed = JSON.parse(raw);
-            setNotes(Array.isArray(parsed) ? parsed : []);
-          }
-        } catch (e) {
-          setNotes([]);
-        }
-      } finally {
-        setLoading(false);
+    try {
+      const raw = localStorage.getItem("notes");
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        setNotes(Array.isArray(parsed) ? parsed : []);
       }
-    };
-    fetchNotes();
-  }, [currentUser]);
+    } catch (e) {
+      setNotes([]);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
-  const handleNewNote = useCallback(async () => {
+  const handleNewNote = useCallback(() => {
     const newNote = {
+      id: Date.now(),
       content: "",
       title: "",
       font: "inter",
       fontSize: 16,
       theme: "default",
-      userId: currentUser ? currentUser.id : null,
+      createdAt: Date.now(),
+      lastModified: Date.now(),
     };
-
-    try {
-      const response = await fetch(`${API_URL}/notes`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(newNote),
-      });
-
-      if (response.ok) {
-        const createdNote = await response.json();
-        setNotes((prev) => [createdNote, ...prev]);
-      }
-    } catch (error) {
-      console.error("Failed to create note:", error);
-      // Fallback to local state
-      const localNote = {
-        ...newNote,
-        id: Date.now(),
-        createdAt: Date.now(),
-        lastModified: Date.now(),
-      };
-      setNotes((prev) => [localNote, ...prev]);
-    }
-  }, [currentUser]);
-
-  const handleRemove = useCallback(async (id) => {
-    try {
-      await fetch(`${API_URL}/notes/${id}`, { method: "DELETE" });
-      setNotes((prev) => prev.filter((n) => n.id !== id));
-    } catch (error) {
-      console.error("Failed to delete note:", error);
-    }
+    setNotes((prev) => [newNote, ...prev]);
   }, []);
 
-  const updateNoteContent = useCallback(async (id, content) => {
+  const handleRemove = useCallback((id) => {
+    setNotes((prev) => prev.filter((n) => n.id !== id));
+  }, []);
+
+  const updateNoteContent = useCallback((id, content) => {
     setNotes((prev) =>
       prev.map((n) =>
         n.id === id ? { ...n, content, lastModified: Date.now() } : n,
       ),
     );
-
-    try {
-      await fetch(`${API_URL}/notes/${id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ content }),
-      });
-    } catch (error) {
-      console.error("Failed to update note content:", error);
-    }
   }, []);
 
-  const updateNoteTitle = useCallback(async (id, title) => {
+  const updateNoteTitle = useCallback((id, title) => {
     setNotes((prev) =>
       prev.map((n) =>
         n.id === id ? { ...n, title, lastModified: Date.now() } : n,
       ),
     );
-
-    try {
-      await fetch(`${API_URL}/notes/${id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title }),
-      });
-    } catch (error) {
-      console.error("Failed to update note title:", error);
-    }
   }, []);
 
-  const updateNoteFont = useCallback(async (id, font) => {
+  const updateNoteFont = useCallback((id, font) => {
     setNotes((prev) =>
       prev.map((n) =>
         n.id === id ? { ...n, font, lastModified: Date.now() } : n,
       ),
     );
-
-    try {
-      await fetch(`${API_URL}/notes/${id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ font }),
-      });
-    } catch (error) {
-      console.error("Failed to update note font:", error);
-    }
   }, []);
 
-  const updateNoteTheme = useCallback(async (id, theme) => {
+  const updateNoteTheme = useCallback((id, theme) => {
     setNotes((prev) =>
       prev.map((n) =>
         n.id === id ? { ...n, theme, lastModified: Date.now() } : n,
       ),
     );
-
-    try {
-      await fetch(`${API_URL}/notes/${id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ theme }),
-      });
-    } catch (error) {
-      console.error("Failed to update note theme:", error);
-    }
   }, []);
 
-  const updateNoteFontSize = useCallback(async (id, fontSize) => {
+  const updateNoteFontSize = useCallback((id, fontSize) => {
     setNotes((prev) =>
       prev.map((n) =>
         n.id === id
@@ -222,16 +138,6 @@ const NotesHandler = ({ currentUser }) => {
           : n,
       ),
     );
-
-    try {
-      await fetch(`${API_URL}/notes/${id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ fontSize: Number(fontSize) }),
-      });
-    } catch (error) {
-      console.error("Failed to update note font size:", error);
-    }
   }, []);
 
   // Persist to localStorage as backup
@@ -252,6 +158,10 @@ const NotesHandler = ({ currentUser }) => {
           <p>No notes yet</p>
           <p className="empty-state-subtitle">
             Click "New Note" below to begin
+            <br />
+            All notes are saved locally in your browser.
+            <br /> For live sync and backups, visit{" "}
+            <a href="https://think-loop-client.onrender.com">ThinkLoop Live</a>.
           </p>
         </div>
       ) : (
