@@ -250,7 +250,7 @@ export const THEME_VARS = {
 export const applyTheme = (themeId) => {
   const root = document.documentElement;
   root.classList.remove(...ALL_THEME_CLASSES);
-  
+
   const themeClass = THEME_CLASS_MAP[themeId];
   if (themeClass) {
     root.classList.add(themeClass);

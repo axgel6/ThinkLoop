@@ -56,7 +56,7 @@ function App() {
         "theme-forestgreen",
         "theme-gold",
         "theme-ai",
-        "theme-snowleopard"
+        "theme-snowleopard",
       );
 
       if (savedTheme === "zero") root.classList.add("theme-default");
@@ -74,7 +74,8 @@ function App() {
       else if (savedTheme === "twelve") root.classList.add("theme-forestgreen");
       else if (savedTheme === "thirteen") root.classList.add("theme-gold");
       else if (savedTheme === "fourteen") root.classList.add("theme-ai");
-      else if (savedTheme === "fifteen") root.classList.add("theme-snowleopard");
+      else if (savedTheme === "fifteen")
+        root.classList.add("theme-snowleopard");
     };
 
     // Apply theme on mount
@@ -150,9 +151,7 @@ function App() {
       {activeTab === "settings" && (
         <Settings onOpenLoginModal={() => setIsLoginModalOpen(true)} />
       )}
-      {!["notes", "tasks", "settings"].includes(activeTab) && (
-        <NotFound />
-      )}
+      {!["notes", "tasks", "settings"].includes(activeTab) && <NotFound />}
 
       <LoginModal
         isOpen={isLoginModalOpen}

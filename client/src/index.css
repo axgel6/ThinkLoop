@@ -7,8 +7,15 @@
 
 body {
   margin: 0;
-  font-family: "JetBrains Mono", -apple-system, BlinkMacSystemFont, "Segoe UI",
-    Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-family:
+    "JetBrains Mono",
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    "Helvetica Neue",
+    Arial,
+    sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   font-synthesis: none;
@@ -29,14 +36,20 @@ body {
    This ensures body-level font-family is overridden when we add the class to html. */
 :root.font-mono body,
 .font-mono body {
-  font-family: "JetBrains Mono", Menlo, Monaco, Consolas, "Courier New",
-    monospace;
+  font-family:
+    "JetBrains Mono", Menlo, Monaco, Consolas, "Courier New", monospace;
 }
 
 :root.font-inter body,
 .font-inter body {
-  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-    Arial, sans-serif;
+  font-family:
+    "Inter",
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    Arial,
+    sans-serif;
 }
 
 :root.font-paper body,
@@ -46,8 +59,14 @@ body {
 
 :root.font-handwritten body,
 .font-handwritten body {
-  font-family: "Patrick Hand", -apple-system, BlinkMacSystemFont, "Segoe UI",
-    Roboto, Arial, sans-serif;
+  font-family:
+    "Patrick Hand",
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    Arial,
+    sans-serif;
 }
 
 /* New font utilities: lora, poppins, cormorant */
@@ -58,8 +77,14 @@ body {
 
 :root.font-poppins body,
 .font-poppins body {
-  font-family: "Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-    Arial, sans-serif;
+  font-family:
+    "Poppins",
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    Arial,
+    sans-serif;
 }
 
 :root.font-cormorant body,
@@ -70,14 +95,26 @@ body {
 /* Gen Z aesthetic additions */
 :root.font-space body,
 .font-space body {
-  font-family: "Space Grotesk", -apple-system, BlinkMacSystemFont, "Segoe UI",
-    Roboto, Arial, sans-serif;
+  font-family:
+    "Space Grotesk",
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    Arial,
+    sans-serif;
 }
 
 :root.font-orbitron body,
 .font-orbitron body {
-  font-family: "Orbitron", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-    Arial, sans-serif;
+  font-family:
+    "Orbitron",
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    Arial,
+    sans-serif;
 }
 
 :root.font-amatic body,
@@ -93,7 +130,8 @@ body {
 /* Classic Mac font utility: Lucida Grande */
 :root.font-lucida body,
 .font-lucida body {
-  font-family: "Lucida Grande", "Lucida Sans Unicode", "Lucida Sans", Arial, sans-serif;
+  font-family:
+    "Lucida Grande", "Lucida Sans Unicode", "Lucida Sans", Arial, sans-serif;
 }
 
 /* Apply font theme to UI chrome (navbar, toolbar buttons, titles, and note title input)
@@ -108,8 +146,8 @@ body {
 .font-mono .toolbar button,
 .font-mono #title,
 .font-mono .note-title-input {
-  font-family: "JetBrains Mono", Menlo, Monaco, Consolas, "Courier New",
-    monospace;
+  font-family:
+    "JetBrains Mono", Menlo, Monaco, Consolas, "Courier New", monospace;
 }
 
 :root.font-inter .navbar,
@@ -122,8 +160,14 @@ body {
 .font-inter .toolbar button,
 .font-inter #title,
 .font-inter .note-title-input {
-  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-    Arial, sans-serif;
+  font-family:
+    "Inter",
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    Arial,
+    sans-serif;
 }
 
 :root.font-paper .navbar,
@@ -149,8 +193,14 @@ body {
 .font-handwritten .toolbar button,
 .font-handwritten #title,
 .font-handwritten .note-title-input {
-  font-family: "Patrick Hand", -apple-system, BlinkMacSystemFont, "Segoe UI",
-    Roboto, Arial, sans-serif;
+  font-family:
+    "Patrick Hand",
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    Arial,
+    sans-serif;
 }
 
 :root.font-lora .navbar,
@@ -176,8 +226,14 @@ body {
 .font-poppins .toolbar button,
 .font-poppins #title,
 .font-poppins .note-title-input {
-  font-family: "Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-    Arial, sans-serif;
+  font-family:
+    "Poppins",
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    Arial,
+    sans-serif;
 }
 
 :root.font-cormorant .navbar,
@@ -203,8 +259,14 @@ body {
 .font-space .toolbar button,
 .font-space #title,
 .font-space .note-title-input {
-  font-family: "Space Grotesk", -apple-system, BlinkMacSystemFont, "Segoe UI",
-    Roboto, Arial, sans-serif;
+  font-family:
+    "Space Grotesk",
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    Arial,
+    sans-serif;
 }
 
 :root.font-orbitron .navbar,
@@ -217,8 +279,14 @@ body {
 .font-orbitron .toolbar button,
 .font-orbitron #title,
 .font-orbitron .note-title-input {
-  font-family: "Orbitron", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-    Arial, sans-serif;
+  font-family:
+    "Orbitron",
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    Arial,
+    sans-serif;
 }
 
 :root.font-amatic .navbar,
@@ -250,7 +318,13 @@ body {
 /* Additional popular note-taking fonts */
 :root.font-roboto body,
 .font-roboto body {
-  font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+  font-family:
+    "Roboto",
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Arial,
+    sans-serif;
 }
 
 :root.font-roboto .navbar,
@@ -263,12 +337,25 @@ body {
 .font-roboto .toolbar button,
 .font-roboto #title,
 .font-roboto .note-title-input {
-  font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+  font-family:
+    "Roboto",
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Arial,
+    sans-serif;
 }
 
 :root.font-opensans body,
 .font-opensans body {
-  font-family: "Open Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+  font-family:
+    "Open Sans",
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    Arial,
+    sans-serif;
 }
 
 :root.font-opensans .navbar,
@@ -281,12 +368,26 @@ body {
 .font-opensans .toolbar button,
 .font-opensans #title,
 .font-opensans .note-title-input {
-  font-family: "Open Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+  font-family:
+    "Open Sans",
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    Arial,
+    sans-serif;
 }
 
 :root.font-lato body,
 .font-lato body {
-  font-family: "Lato", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+  font-family:
+    "Lato",
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    Arial,
+    sans-serif;
 }
 
 :root.font-lato .navbar,
@@ -299,12 +400,26 @@ body {
 .font-lato .toolbar button,
 .font-lato #title,
 .font-lato .note-title-input {
-  font-family: "Lato", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+  font-family:
+    "Lato",
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    Arial,
+    sans-serif;
 }
 
 :root.font-sourcesans body,
 .font-sourcesans body {
-  font-family: "Source Sans Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+  font-family:
+    "Source Sans Pro",
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    Arial,
+    sans-serif;
 }
 
 :root.font-sourcesans .navbar,
@@ -317,12 +432,26 @@ body {
 .font-sourcesans .toolbar button,
 .font-sourcesans #title,
 .font-sourcesans .note-title-input {
-  font-family: "Source Sans Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+  font-family:
+    "Source Sans Pro",
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    Arial,
+    sans-serif;
 }
 
 :root.font-nunito body,
 .font-nunito body {
-  font-family: "Nunito", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+  font-family:
+    "Nunito",
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    Arial,
+    sans-serif;
 }
 
 :root.font-nunito .navbar,
@@ -335,7 +464,14 @@ body {
 .font-nunito .toolbar button,
 .font-nunito #title,
 .font-nunito .note-title-input {
-  font-family: "Nunito", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+  font-family:
+    "Nunito",
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    Arial,
+    sans-serif;
 }
 
 :root.font-caveat body,
@@ -412,7 +548,8 @@ body {
 
 :root.font-sourcecodepro body,
 .font-sourcecodepro body {
-  font-family: "Source Code Pro", Menlo, Monaco, Consolas, "Courier New", monospace;
+  font-family:
+    "Source Code Pro", Menlo, Monaco, Consolas, "Courier New", monospace;
 }
 
 :root.font-sourcecodepro .navbar,
@@ -425,7 +562,8 @@ body {
 .font-sourcecodepro .toolbar button,
 .font-sourcecodepro #title,
 .font-sourcecodepro .note-title-input {
-  font-family: "Source Code Pro", Menlo, Monaco, Consolas, "Courier New", monospace;
+  font-family:
+    "Source Code Pro", Menlo, Monaco, Consolas, "Courier New", monospace;
 }
 
 :root.font-firacode body,
@@ -505,9 +643,10 @@ body {
 .font-lucida .toolbar button,
 .font-lucida #title,
 .font-lucida .note-title-input {
-  font-family:'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+  font-family:
+    "Lucida Sans", "Lucida Sans Regular", "Lucida Grande",
+    "Lucida Sans Unicode", Geneva, Verdana, sans-serif;
 }
-
 
 /* Site-wide button outline: use theme panel border for non-note buttons */
 body :not(.text-field) button,
@@ -517,8 +656,8 @@ body :not(.text-field) button,
 
 code,
 pre {
-  font-family: "JetBrains Mono", Menlo, Monaco, Consolas, "Courier New",
-    monospace;
+  font-family:
+    "JetBrains Mono", Menlo, Monaco, Consolas, "Courier New", monospace;
 }
 
 #top-bar {
@@ -570,13 +709,17 @@ pre {
   --glass-bg: linear-gradient(
     135deg,
     rgba(0, 0, 20, 0.4),
-    rgba(100, 150, 255, 0.08)
+    rgba(31, 0, 186, 0.08)
   );
 }
 
 .theme-default body {
-  background: 
-    radial-gradient(ellipse at bottom, rgba(100, 150, 255, 0.2) 0%, transparent 70%),
+  background:
+    radial-gradient(
+      ellipse at bottom,
+      rgba(38, 0, 255, 0.2) 0%,
+      transparent 70%
+    ),
     #000000;
   background-attachment: fixed;
 }
@@ -785,7 +928,8 @@ pre {
     rgba(60, 30, 100, 0.7),
     rgba(20, 30, 60, 0.45)
   );
-  --ai-bg: radial-gradient(
+  --ai-bg:
+    radial-gradient(
       circle at 25% 30%,
       rgba(82, 125, 254, 0.4),
       rgba(141, 85, 255, 0.35) 25%,
@@ -809,15 +953,15 @@ pre {
   --panel-bg-solid: rgba(0, 0, 0, 0.692);
   --glass-bg: linear-gradient(
     to bottom,
-    rgba(255, 255, 255, 0.15), 
-    rgba(255, 255, 255, 0) 50%, 
+    rgba(255, 255, 255, 0.15),
+    rgba(255, 255, 255, 0) 50%,
     rgba(0, 0, 0, 0) 50%,
-    rgba(0, 0, 0, 0.05) 
+    rgba(0, 0, 0, 0.05)
   );
 }
 
 .theme-snowleopard body {
-  background: 
+  background:
     radial-gradient(2px 2px at 20% 30%, white, transparent),
     radial-gradient(2px 2px at 60% 70%, white, transparent),
     radial-gradient(1px 1px at 50% 50%, white, transparent),
@@ -825,9 +969,21 @@ pre {
     radial-gradient(2px 2px at 90% 60%, white, transparent),
     radial-gradient(1px 1px at 33% 80%, white, transparent),
     radial-gradient(1px 1px at 15% 60%, white, transparent),
-    radial-gradient(circle at 30% 20%, rgba(242, 167, 233, 0.3), transparent 40%),
-    radial-gradient(circle at 70% 80%, rgba(216, 110, 220, 0.25), transparent 50%),
-    radial-gradient(circle at 50% 50%, rgba(164, 60, 191, 0.2), transparent 60%),
+    radial-gradient(
+      circle at 30% 20%,
+      rgba(242, 167, 233, 0.3),
+      transparent 40%
+    ),
+    radial-gradient(
+      circle at 70% 80%,
+      rgba(216, 110, 220, 0.25),
+      transparent 50%
+    ),
+    radial-gradient(
+      circle at 50% 50%,
+      rgba(164, 60, 191, 0.2),
+      transparent 60%
+    ),
     radial-gradient(circle at 40% 60%, rgba(75, 0, 143, 0.3), transparent 55%),
     linear-gradient(
       180deg,
@@ -839,7 +995,7 @@ pre {
       rgba(255, 255, 255, 0.1) 100%
     );
   background-repeat: repeat;
-  background-size: 
+  background-size:
     200px 200px,
     300px 300px,
     250px 250px,
@@ -852,7 +1008,7 @@ pre {
     100% 100%,
     100% 100%,
     100% 100%;
-  background-position: 
+  background-position:
     0 0,
     40px 60px,
     130px 270px,
@@ -868,111 +1024,117 @@ pre {
   background-attachment: fixed;
 }
 
-
 .theme-snowleopard body {
   background-color: #000000;
 }
 
 .theme-snowleopard .text-field {
-
   color: var(--fg);
   background-image: linear-gradient(
     to bottom,
-    rgba(255, 255, 255, 0.15), 
-    rgba(255, 255, 255, 0) 50%, 
+    rgba(255, 255, 255, 0.15),
+    rgba(255, 255, 255, 0) 50%,
     rgba(0, 0, 0, 0) 50%,
-    rgba(0, 0, 0, 0.05) 
+    rgba(0, 0, 0, 0.05)
   );
 }
 
 .theme-snowleopard .nav-bubble {
-  
   background-image: linear-gradient(
     to bottom,
-    rgba(255, 255, 255, 0.15), 
-    rgba(255, 255, 255, 0) 50%, 
+    rgba(255, 255, 255, 0.15),
+    rgba(255, 255, 255, 0) 50%,
     rgba(0, 0, 0, 0) 50%,
-    rgba(0, 0, 0, 0.05) 
+    rgba(0, 0, 0, 0.05)
   );
 }
 
-.theme-snowleopard .settings-toggles button, .theme-snowleopard .modal-content .login-submit-btn {
+.theme-snowleopard .settings-toggles button,
+.theme-snowleopard .modal-content .login-submit-btn {
   font-weight: 700;
   color: #fff;
   text-shadow: rgba(10, 10, 10, 0.5) 1px 2px 2px;
   background-color: rgba(60, 132, 198, 0.8);
-  background-image: -webkit-gradient(linear, 0% 0%, 0% 90%, from(rgba(28, 91, 155, 0.8)), to(rgba(108, 191, 255, .9)));
+  background-image: -webkit-gradient(
+    linear,
+    0% 0%,
+    0% 90%,
+    from(rgba(28, 91, 155, 0.8)),
+    to(rgba(108, 191, 255, 0.9))
+  );
 }
 
 .theme-snowleopard .modal-content h1 {
   color: rgb(54, 54, 54);
 }
 
-.theme-snowleopard .modal-content .form-group  input{
+.theme-snowleopard .modal-content .form-group input {
   background: rgba(255, 255, 255, 0.377);
-  border: 2px solid rgba(60, 132, 198, 0.8); 
+  border: 2px solid rgba(60, 132, 198, 0.8);
   border-radius: 25px;
   color: rgb(54, 54, 54);
   max-height: 2px;
 }
 
-
-
-.theme-snowleopard  .settings-toggles button:hover {
+.theme-snowleopard .settings-toggles button:hover {
   font-weight: 700;
   color: #fff;
   text-shadow: rgba(10, 10, 10, 0.5) 1px 2px 2px;
   background-color: rgba(37, 84, 128, 0.8);
-  background-image: -webkit-gradient(linear, 0% 0%, 0% 90%, from(rgba(16, 51, 87, 0.8)), to(rgba(90, 162, 218, 0.9)));
+  background-image: -webkit-gradient(
+    linear,
+    0% 0%,
+    0% 90%,
+    from(rgba(16, 51, 87, 0.8)),
+    to(rgba(90, 162, 218, 0.9))
+  );
   scale: none;
 }
-
 
 .theme-snowleopard .modal-content {
   background: linear-gradient(to bottom, #ededed 0%, #d1d1d1 100%);
 }
 
-
 .theme-snowleopard .modal-close {
   border: 1px solid rgba(0, 0, 0, 0.25);
-  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.1),
-  inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  box-shadow:
+    0 1px 1px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
   background: radial-gradient(circle at 50% 30%, #ff9492, #ff0800 80%);
   border-color: #c03632;
-
 }
 
 .theme-snowleopard .modal-close:hover {
   border: 1px solid rgba(0, 0, 0, 0.25);
-  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.1),
-  inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  box-shadow:
+    0 1px 1px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
   background: radial-gradient(circle at 50% 30%, #ff9492, #690400 80%);
   border-color: #c03632;
 }
 
-
 .theme-snowleopard .checklist-input {
-  border: 2px solid rgba(60, 132, 198, 0.8); 
-  background-color: #f0f0f0dc; 
+  border: 2px solid rgba(60, 132, 198, 0.8);
+  background-color: #f0f0f0dc;
   color: #000000;
 }
 
 .theme-snowleopard .checklist-input:hover {
-  border: 2px solid rgba(101, 169, 233, 0.8); 
-  background-color: #f0f0f0dc; 
+  border: 2px solid rgba(101, 169, 233, 0.8);
+  background-color: #f0f0f0dc;
   scale: none;
 }
 
 .theme-snowleopard .checklist-input:focus {
-  border: 2px solid rgba(101, 169, 233, 0.8); 
-  background-color: #f0f0f0dc; 
+  border: 2px solid rgba(101, 169, 233, 0.8);
+  background-color: #f0f0f0dc;
   scale: none;
 }
 
 .theme-snowleopard .custom-select-list {
   background-color: white;
   border: 2px solid rgba(60, 132, 198, 0.8);
-} 
+}
 
 .theme-snowleopard .custom-select-option {
   color: black;
@@ -980,13 +1142,16 @@ pre {
 
 .theme-snowleopard .custom-select-option:hover {
   background-color: rgba(60, 132, 198, 0.8);
-  background-image: -webkit-gradient(linear, 0% 0%, 0% 90%, from(rgba(28, 91, 155, 0.8)), to(rgba(108, 191, 255, .9)));
-  color:white;
+  background-image: -webkit-gradient(
+    linear,
+    0% 0%,
+    0% 90%,
+    from(rgba(28, 91, 155, 0.8)),
+    to(rgba(108, 191, 255, 0.9))
+  );
+  color: white;
   border-radius: 25px;
 }
-
-
-
 
 .theme-ai body {
   background-image: var(--ai-bg);
