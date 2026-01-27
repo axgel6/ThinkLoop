@@ -1,15 +1,15 @@
 {
   "files": {
-    "main.css": "/ThinkLoop/static/css/main.15eaec94.css",
-    "main.js": "/ThinkLoop/static/js/main.5c0d4519.js",
-    "static/js/714.91e284db.chunk.js": "/ThinkLoop/static/js/714.91e284db.chunk.js",
-    "index.html": "/ThinkLoop/index.html",
-    "main.15eaec94.css.map": "/ThinkLoop/static/css/main.15eaec94.css.map",
-    "main.5c0d4519.js.map": "/ThinkLoop/static/js/main.5c0d4519.js.map",
-    "714.91e284db.chunk.js.map": "/ThinkLoop/static/js/714.91e284db.chunk.js.map"
+    "main.css": "/static/css/main.15eaec94.css",
+    "main.js": "/static/js/main.9d3bb77e.js",
+    "static/js/714.91e284db.chunk.js": "/static/js/714.91e284db.chunk.js",
+    "index.html": "/index.html",
+    "main.15eaec94.css.map": "/static/css/main.15eaec94.css.map",
+    "main.9d3bb77e.js.map": "/static/js/main.9d3bb77e.js.map",
+    "714.91e284db.chunk.js.map": "/static/js/714.91e284db.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.15eaec94.css",
-    "static/js/main.5c0d4519.js"
+    "static/js/main.9d3bb77e.js"
   ]
 }
