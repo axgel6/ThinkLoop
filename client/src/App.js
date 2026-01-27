@@ -38,9 +38,10 @@ function App() {
   // Initialize theme on app startup and listen for changes
   useEffect(() => {
     const applyTheme = () => {
-      const savedTheme = localStorage.getItem("settings:selected") || "one";
+      const savedTheme = localStorage.getItem("settings:selected") || "zero";
       const root = document.documentElement;
       root.classList.remove(
+        "theme-default",
         "theme-dark",
         "theme-blue",
         "theme-gray",
@@ -58,7 +59,8 @@ function App() {
         "theme-snowleopard"
       );
 
-      if (savedTheme === "one") root.classList.add("theme-dark");
+      if (savedTheme === "zero") root.classList.add("theme-default");
+      else if (savedTheme === "one") root.classList.add("theme-dark");
       else if (savedTheme === "two") root.classList.add("theme-blue");
       else if (savedTheme === "three") root.classList.add("theme-gray");
       else if (savedTheme === "four") root.classList.add("theme-cream");

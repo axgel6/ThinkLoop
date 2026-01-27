@@ -2,6 +2,7 @@
 
 // Color theme options for settings
 export const COLOR_OPTIONS = [
+  { id: "zero", label: "Default" },
   { id: "one", label: "Black" },
   { id: "two", label: "Blue" },
   { id: "three", label: "Gray" },
@@ -21,6 +22,7 @@ export const COLOR_OPTIONS = [
 
 // Mapping of color option IDs to CSS theme classes
 export const THEME_CLASS_MAP = {
+  zero: "theme-default",
   one: "theme-dark",
   two: "theme-blue",
   three: "theme-gray",
@@ -40,6 +42,7 @@ export const THEME_CLASS_MAP = {
 
 // All theme classes (for removal when switching themes)
 export const ALL_THEME_CLASSES = [
+  "theme-default",
   "theme-dark",
   "theme-brown",
   "theme-blue",
@@ -79,6 +82,16 @@ export const NOTE_THEME_OPTIONS = [
 
 // CSS custom properties for each theme (used for per-note theming)
 export const THEME_VARS = {
+  default: {
+    "--bg": "#000000",
+    "--fg": "#ffffff",
+    "--muted": "#999999",
+    "--panel-bg": "rgba(30, 30, 30, 0.6)",
+    "--panel-border": "rgba(100, 150, 255, 0.2)",
+    "--panel-bg-solid": "rgba(20, 20, 30, 0.8)",
+    "--glass-bg":
+      "linear-gradient(135deg, rgba(0, 0, 20, 0.4), rgba(100, 150, 255, 0.08))",
+  },
   dark: {
     "--bg": "#000000",
     "--fg": "#e0e0e0",

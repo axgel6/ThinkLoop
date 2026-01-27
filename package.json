@@ -18,5 +18,8 @@
     "test:server": "npm run test --workspace=server",
     "deploy": "npm run deploy --workspace=client",
     "install:all": "npm install"
+  },
+  "dependencies": {
+    "gh": "^2.8.9"
   }
 }

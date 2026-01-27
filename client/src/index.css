@@ -560,6 +560,27 @@ pre {
   );
 }
 
+.theme-default {
+  --bg: #000000;
+  --fg: #ffffff;
+  --muted: #999999;
+  --panel-bg: rgba(30, 30, 30, 0.6);
+  --panel-border: rgba(100, 150, 255, 0.2);
+  --panel-bg-solid: rgba(20, 20, 30, 0.8);
+  --glass-bg: linear-gradient(
+    135deg,
+    rgba(0, 0, 20, 0.4),
+    rgba(100, 150, 255, 0.08)
+  );
+}
+
+.theme-default body {
+  background: 
+    radial-gradient(ellipse at bottom, rgba(100, 150, 255, 0.2) 0%, transparent 70%),
+    #000000;
+  background-attachment: fixed;
+}
+
 .theme-dark {
   --bg: #000000;
   --fg: #ffffff;
