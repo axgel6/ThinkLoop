@@ -1,6 +1,6 @@
 {
-  "homepage": "https://axgel6.github.io/Notes/",
-  "name": "notes",
+  "homepage": "https://axgel6.github.io/thinkloop/",
+  "name": "thinkloop",
   "version": "0.1.0",
   "private": true,
   "dependencies": {

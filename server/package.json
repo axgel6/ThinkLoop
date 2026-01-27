@@ -1,9 +1,9 @@
 {
-  "name": "server",
+  "name": "thinkloop-server",
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Server-side API for Notes application",
+  "description": "Server-side API for ThinkLoop application",
   "main": "dist/server.js",
   "engines": {
     "node": ">=18.0.0"
