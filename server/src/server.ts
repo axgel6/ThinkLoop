@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import { MongoClient, ServerApiVersion, ObjectId } from "mongodb";
 import dotenv from "dotenv";
+import bcrypt from "bcrypt";
 
 dotenv.config();
 
@@ -28,6 +29,7 @@ const client = new MongoClient(uri, {
 
 let db: any;
 let notesCollection: any;
+let userInfoCollection: any;
 
 // Connect to MongoDB
 async function connectDB() {
@@ -35,24 +37,42 @@ async function connectDB() {
     await client.connect();
     console.log("Connected to MongoDB!");
 
-    db = client.db("notesapp");
+    db = client.db("ThinkLoop");
     notesCollection = db.collection("notes");
+    userInfoCollection = db.collection("users");
   } catch (error) {
     console.error("MongoDB connection error:", error);
     process.exit(1);
   }
 }
 
-// Routes
+// Routes for notes
 
-// Get all notes
+// Get all notes (filtered by user if userId provided)
 app.get("/notes", async (req, res) => {
   try {
+    const { userId } = req.query;
+    const filter = userId ? { userId } : {};
+
     const notes = await notesCollection
-      .find()
+      .find(filter)
       .sort({ createdAt: -1 })
       .toArray();
-    res.json(notes);
+
+    // Transform MongoDB _id to id for client compatibility
+    const transformedNotes = notes.map((note: any) => ({
+      id: note._id.toString(),
+      title: note.title || "",
+      content: note.content || "",
+      font: note.font || "inter",
+      fontSize: note.fontSize || 16,
+      theme: note.theme || "default",
+      createdAt: note.createdAt || Date.now(),
+      lastModified: note.lastModified || note.createdAt || Date.now(),
+      userId: note.userId || null,
+    }));
+
+    res.json(transformedNotes);
   } catch (error) {
     res.status(500).json({ error: "Failed to fetch notes" });
   }
@@ -76,15 +96,23 @@ app.get("/notes/:id", async (req, res) => {
 // Create note
 app.post("/notes", async (req, res) => {
   try {
-    const { title, content } = req.body;
+    const { title, content, font, fontSize, theme, userId } = req.body;
+    const now = Date.now();
     const newNote = {
-      title,
-      content,
-      createdAt: new Date(),
-      updatedAt: new Date(),
+      title: title || "",
+      content: content || "",
+      font: font || "inter",
+      fontSize: fontSize || 16,
+      theme: theme || "default",
+      userId: userId || null,
+      createdAt: now,
+      lastModified: now,
     };
     const result = await notesCollection.insertOne(newNote);
-    res.status(201).json({ _id: result.insertedId, ...newNote });
+    res.status(201).json({
+      id: result.insertedId.toString(),
+      ...newNote,
+    });
   } catch (error) {
     res.status(500).json({ error: "Failed to create note" });
   }
@@ -93,10 +121,20 @@ app.post("/notes", async (req, res) => {
 // Update note
 app.put("/notes/:id", async (req, res) => {
   try {
-    const { title, content } = req.body;
+    const { title, content, font, fontSize, theme } = req.body;
+    const updateFields: any = {
+      lastModified: Date.now(),
+    };
+
+    if (title !== undefined) updateFields.title = title;
+    if (content !== undefined) updateFields.content = content;
+    if (font !== undefined) updateFields.font = font;
+    if (fontSize !== undefined) updateFields.fontSize = fontSize;
+    if (theme !== undefined) updateFields.theme = theme;
+
     const result = await notesCollection.updateOne(
       { _id: new ObjectId(req.params.id) },
-      { $set: { title, content, updatedAt: new Date() } },
+      { $set: updateFields },
     );
     if (result.matchedCount === 0) {
       return res.status(404).json({ error: "Note not found" });
@@ -119,6 +157,214 @@ app.delete("/notes/:id", async (req, res) => {
     res.json({ message: "Note deleted successfully" });
   } catch (error) {
     res.status(500).json({ error: "Failed to delete note" });
+  }
+});
+
+// Routes for user info
+
+// Register new user
+app.post("/auth/register", async (req, res) => {
+  try {
+    const { username, password } = req.body;
+
+    if (!username || !password) {
+      return res.status(400).json({ error: "Username and password required" });
+    }
+
+    // Check if user already exists
+    const existingUser = await userInfoCollection.findOne({ username });
+    if (existingUser) {
+      return res.status(409).json({ error: "Username already exists" });
+    }
+
+    // Hash password with bcrypt
+    const saltRounds = 10;
+    const hashedPassword = await bcrypt.hash(password, saltRounds);
+
+    // Create new user
+    const newUser = {
+      username,
+      password: hashedPassword,
+      createdAt: Date.now(),
+    };
+
+    const result = await userInfoCollection.insertOne(newUser);
+    res.status(201).json({
+      id: result.insertedId.toString(),
+      username,
+      message: "User created successfully",
+    });
+  } catch (error) {
+    res.status(500).json({ error: "Failed to register user" });
+  }
+});
+
+// Login user
+app.post("/auth/login", async (req, res) => {
+  try {
+    const { username, password } = req.body;
+
+    if (!username || !password) {
+      return res.status(400).json({ error: "Username and password required" });
+    }
+
+    const user = await userInfoCollection.findOne({ username });
+
+    if (!user) {
+      return res.status(401).json({ error: "Invalid credentials" });
+    }
+
+    // Compare password with hashed password
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+
+    if (!isPasswordValid) {
+      return res.status(401).json({ error: "Invalid credentials" });
+    }
+
+    res.json({
+      id: user._id.toString(),
+      username: user.username,
+      message: "Login successful",
+    });
+  } catch (error) {
+    res.status(500).json({ error: "Failed to login" });
+  }
+});
+
+// Get user info
+app.get("/auth/user/:userId", async (req, res) => {
+  try {
+    const user = await userInfoCollection.findOne({
+      _id: new ObjectId(req.params.userId),
+    });
+
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    res.json({
+      id: user._id.toString(),
+      username: user.username,
+    });
+  } catch (error) {
+    res.status(500).json({ error: "Failed to fetch user" });
+  }
+});
+
+// Update username
+app.put("/auth/user/:userId/username", async (req, res) => {
+  try {
+    const { newUsername } = req.body;
+
+    if (!newUsername) {
+      return res.status(400).json({ error: "New username required" });
+    }
+
+    // Check if username already exists
+    const existingUser = await userInfoCollection.findOne({
+      username: newUsername,
+    });
+    if (existingUser) {
+      return res.status(409).json({ error: "Username already exists" });
+    }
+
+    const result = await userInfoCollection.updateOne(
+      { _id: new ObjectId(req.params.userId) },
+      { $set: { username: newUsername } },
+    );
+
+    if (result.matchedCount === 0) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    res.json({
+      message: "Username updated successfully",
+      username: newUsername,
+    });
+  } catch (error) {
+    res.status(500).json({ error: "Failed to update username" });
+  }
+});
+
+// Update password
+app.put("/auth/user/:userId/password", async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+
+    if (!currentPassword || !newPassword) {
+      return res
+        .status(400)
+        .json({ error: "Current and new password required" });
+    }
+
+    const user = await userInfoCollection.findOne({
+      _id: new ObjectId(req.params.userId),
+    });
+
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    // Verify current password
+    const isPasswordValid = await bcrypt.compare(
+      currentPassword,
+      user.password,
+    );
+    if (!isPasswordValid) {
+      return res.status(401).json({ error: "Current password is incorrect" });
+    }
+
+    // Hash new password
+    const saltRounds = 10;
+    const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
+
+    await userInfoCollection.updateOne(
+      { _id: new ObjectId(req.params.userId) },
+      { $set: { password: hashedPassword } },
+    );
+
+    res.json({ message: "Password updated successfully" });
+  } catch (error) {
+    res.status(500).json({ error: "Failed to update password" });
+  }
+});
+
+// Delete account
+app.delete("/auth/user/:userId", async (req, res) => {
+  try {
+    const { password } = req.body;
+
+    if (!password) {
+      return res
+        .status(400)
+        .json({ error: "Password required to delete account" });
+    }
+
+    const user = await userInfoCollection.findOne({
+      _id: new ObjectId(req.params.userId),
+    });
+
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    // Verify password before deletion
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid) {
+      return res.status(401).json({ error: "Incorrect password" });
+    }
+
+    // Delete all user's notes
+    await notesCollection.deleteMany({ userId: req.params.userId });
+
+    // Delete user account
+    await userInfoCollection.deleteOne({
+      _id: new ObjectId(req.params.userId),
+    });
+
+    res.json({ message: "Account deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ error: "Failed to delete account" });
   }
 });
 

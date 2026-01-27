@@ -17,6 +17,14 @@ function App() {
   });
 
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const [currentUser, setCurrentUser] = useState(() => {
+    try {
+      const stored = localStorage.getItem("currentUser");
+      return stored ? JSON.parse(stored) : null;
+    } catch (e) {
+      return null;
+    }
+  });
 
   const titles = {
     notes: "Notes",
@@ -24,7 +32,30 @@ function App() {
     settings: "Settings",
   };
 
-  const user = "Guest"; // Placeholder for user name
+  const user = currentUser ? currentUser.username : "Guest";
+
+  // Save current user to localStorage
+  useEffect(() => {
+    try {
+      if (currentUser) {
+        localStorage.setItem("currentUser", JSON.stringify(currentUser));
+      } else {
+        localStorage.removeItem("currentUser");
+      }
+    } catch (e) {
+      // ignore
+    }
+  }, [currentUser]);
+
+  const handleLogin = (userData) => {
+    setCurrentUser(userData);
+    setIsLoginModalOpen(false);
+  };
+
+  const handleLogout = () => {
+    setCurrentUser(null);
+    localStorage.removeItem("currentUser");
+  };
 
   // Save activeTab to localStorage whenever it changes
   useEffect(() => {
@@ -144,18 +175,31 @@ function App() {
     <div className="App">
       <div id="top-bar">
         <h1 id="title">{"ThinkLoop / " + titles[activeTab]}</h1>
-        <h1 id="user">{"Hello, " + user + "!"}</h1>
+        <h1
+          id="user"
+          onClick={() =>
+            currentUser ? handleLogout() : setIsLoginModalOpen(true)
+          }
+          style={{ cursor: "pointer" }}
+        >
+          {"Hello, " + user + "!"}
+        </h1>
       </div>
-      {activeTab === "notes" && <NotesHandler />}
+      {activeTab === "notes" && <NotesHandler currentUser={currentUser} />}
       {activeTab === "tasks" && <Tasks />}
       {activeTab === "settings" && (
-        <Settings onOpenLoginModal={() => setIsLoginModalOpen(true)} />
+        <Settings
+          onOpenLoginModal={() => setIsLoginModalOpen(true)}
+          currentUser={currentUser}
+          onLogout={handleLogout}
+        />
       )}
       {!["notes", "tasks", "settings"].includes(activeTab) && <NotFound />}
 
       <LoginModal
         isOpen={isLoginModalOpen}
         onClose={() => setIsLoginModalOpen(false)}
+        onLogin={handleLogin}
       />
 
       <Navbar activeTab={activeTab} onChangeTab={setActiveTab} />
