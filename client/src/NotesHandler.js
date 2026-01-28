@@ -386,7 +386,7 @@ const NotesHandler = ({ currentUser }) => {
               x2="25"
               y2="45"
               stroke="var(--fg, white)"
-              stroke-width="10"
+              strokeWidth="10"
             />
             <line
               x1="5"
@@ -394,7 +394,7 @@ const NotesHandler = ({ currentUser }) => {
               x2="45"
               y2="25"
               stroke="var(--fg, white)"
-              stroke-width="10"
+              strokeWidth="10"
             />
           </svg>
         </Button>

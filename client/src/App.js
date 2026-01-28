@@ -211,9 +211,7 @@ function App() {
         <h1 id="title">{"ThinkLoop / " + titles[activeTab]}</h1>
         <h1
           id="user"
-          onClick={() =>
-            currentUser ? handleLogout() : setIsLoginModalOpen(true)
-          }
+          onClick={() => !currentUser && setIsLoginModalOpen(true)}
           style={{ cursor: "pointer" }}
         >
           {"Hello, " + user + "!"}
