@@ -1,9 +1,10 @@
 .navbar {
   position: fixed;
   bottom: 24px;
-  left: 24px;
+  left: 50%;
+  transform: translateX(-50%);
   display: flex;
-  justify-content: flex-start;
+  justify-content: center;
   z-index: 1000;
   pointer-events: none;
   width: auto;
