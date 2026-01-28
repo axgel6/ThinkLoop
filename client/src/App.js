@@ -55,6 +55,40 @@ function App() {
   const handleLogout = () => {
     setCurrentUser(null);
     localStorage.removeItem("currentUser");
+
+    // Reset to default theme
+    localStorage.setItem("settings:selected", "zero");
+    localStorage.setItem("settings:font", "zero");
+
+    // Apply default theme immediately
+    const root = document.documentElement;
+    root.classList.remove(
+      "theme-default",
+      "theme-dark",
+      "theme-blue",
+      "theme-gray",
+      "theme-cream",
+      "theme-purple",
+      "theme-pink",
+      "theme-skyblue",
+      "theme-sage",
+      "theme-brown",
+      "theme-sunset",
+      "theme-burgundy",
+      "theme-forestgreen",
+      "theme-gold",
+      "theme-ai",
+      "theme-snowleopard",
+    );
+    root.classList.add("theme-default");
+
+    // Trigger storage event to update settings page
+    window.dispatchEvent(
+      new StorageEvent("storage", {
+        key: "settings:selected",
+        newValue: "zero",
+      }),
+    );
   };
 
   // Save activeTab to localStorage whenever it changes

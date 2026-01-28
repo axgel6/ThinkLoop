@@ -168,9 +168,7 @@ app.post("/auth/register", async (req, res) => {
     const { username, password, name } = req.body;
 
     if (!username || !password) {
-      return res
-        .status(400)
-        .json({ error: "Username and password required" });
+      return res.status(400).json({ error: "Username and password required" });
     }
 
     // Check if user already exists
