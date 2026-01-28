@@ -85,10 +85,7 @@ const Settings = ({ onOpenLoginModal, currentUser, onLogout }) => {
 
     try {
       localStorage.setItem("settings:selected", val);
-      // Apply theme immediately using helper function
       applyTheme(val);
-      // Dispatch custom event to notify other components in same tab
-      window.dispatchEvent(new Event("themeUpdated"));
 
       // Sync to server if logged in
       if (currentUser) {
@@ -110,10 +107,7 @@ const Settings = ({ onOpenLoginModal, currentUser, onLogout }) => {
 
     try {
       localStorage.setItem("settings:font", fontVal);
-      // Apply font immediately using helper function
       applyFont(fontVal);
-      // Dispatch custom event to notify other components in same tab
-      window.dispatchEvent(new Event("fontUpdated"));
 
       // Sync to server if logged in
       if (currentUser) {

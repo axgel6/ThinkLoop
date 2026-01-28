@@ -40,25 +40,8 @@ export const THEME_CLASS_MAP = {
   fifteen: "theme-snowleopard",
 };
 
-// All theme classes (for removal when switching themes)
-export const ALL_THEME_CLASSES = [
-  "theme-default",
-  "theme-dark",
-  "theme-brown",
-  "theme-blue",
-  "theme-gray",
-  "theme-cream",
-  "theme-purple",
-  "theme-pink",
-  "theme-skyblue",
-  "theme-sage",
-  "theme-sunset",
-  "theme-burgundy",
-  "theme-forestgreen",
-  "theme-gold",
-  "theme-ai",
-  "theme-snowleopard",
-];
+// All theme classes (auto-generated from THEME_CLASS_MAP)
+export const ALL_THEME_CLASSES = Object.values(THEME_CLASS_MAP);
 
 // Per-note theme options (includes "default" to match global theme)
 export const NOTE_THEME_OPTIONS = [

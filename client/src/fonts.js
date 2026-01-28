@@ -95,34 +95,8 @@ export const FONT_CLASS_MAP = {
   lucida: "font-lucida",
 };
 
-// All font classes (for removal when switching fonts)
-export const ALL_FONT_CLASSES = [
-  "font-mono",
-  "font-inter",
-  "font-roboto",
-  "font-opensans",
-  "font-lato",
-  "font-sourcesans",
-  "font-nunito",
-  "font-paper",
-  "font-handwritten",
-  "font-caveat",
-  "font-lora",
-  "font-poppins",
-  "font-playfair",
-  "font-ebgaramond",
-  "font-cormorant",
-  "font-crimson",
-  "font-space",
-  "font-sourcecodepro",
-  "font-firacode",
-  "font-inconsolata",
-  "font-orbitron",
-  "font-amatic",
-  "font-indieflower",
-  "font-greatvibes",
-  "font-lucida",
-];
+// All font classes (auto-generated from FONT_CLASS_MAP)
+export const ALL_FONT_CLASSES = Object.values(FONT_CLASS_MAP);
 
 // Helper function to apply a font to the document root
 export const applyFont = (fontId) => {

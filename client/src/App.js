@@ -60,12 +60,11 @@ function App() {
     setCurrentUser(null);
     localStorage.removeItem("currentUser");
 
-    // Reset to default theme
+    // Reset to default theme and apply immediately
     localStorage.setItem("settings:selected", "zero");
     localStorage.setItem("settings:font", "zero");
-
-    // Trigger custom event to update theme
-    window.dispatchEvent(new Event("themeChange"));
+    applyTheme("zero");
+    applyFont("zero");
   };
 
   // Save activeTab to localStorage whenever it changes
@@ -77,14 +76,13 @@ function App() {
     }
   }, [activeTab]);
 
-  // Initialize theme and font on app startup and whenever tab changes
+  // Initialize theme and font on app startup
   useEffect(() => {
-    // Apply current theme and font from localStorage
     const savedTheme = localStorage.getItem("settings:selected") || "zero";
     const savedFont = localStorage.getItem("settings:font") || "mono";
     applyTheme(savedTheme);
     applyFont(savedFont);
-  }, [activeTab]);
+  }, []);
 
   // Fetch settings from server when user is logged in (on mount and periodically)
   useEffect(() => {
