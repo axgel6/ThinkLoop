@@ -1,6 +1,6 @@
 .navbar {
   position: fixed;
-  bottom: 20px;
+  bottom: 24px;
   left: 50%;
   transform: translateX(-50%);
   display: flex;
@@ -8,7 +8,7 @@
   z-index: 1000;
   pointer-events: none;
   width: auto;
-  max-width: calc(100% - 24px);
+  max-width: calc(100% - 32px);
 }
 
 .navbar ul {
@@ -39,8 +39,8 @@
 .navbar li button {
   display: flex;
   align-items: center;
-  gap: 4px;
-  padding: 4px 10px;
+  gap: 6px;
+  padding: 6px 12px;
   background: transparent;
   border: 1px solid transparent;
   border-radius: 12px;

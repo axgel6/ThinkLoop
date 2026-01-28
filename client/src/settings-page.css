@@ -5,72 +5,20 @@
   -webkit-backdrop-filter: blur(4px);
   backdrop-filter: blur(4px);
   box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.24);
-  padding: 24px;
-  margin-bottom: 16px;
+  padding: 32px;
+  margin-bottom: 20px;
   transition: all 0.3s ease;
   overflow: visible;
   position: relative;
   z-index: 1;
-  /* Prevent container overflow on small screens */
   width: 100%;
   max-width: 100%;
   box-sizing: border-box;
   animation: fadeInUp 0.1s ease-out backwards;
-  padding: 30px;
 }
-
-
 
 .settings-section {
-  padding: 0;
-}
-
-/* Ensure controls in the display section have spacing between them */
-.settings-section .controls-row {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 12px;
-  /* Allow items to wrap to new lines to avoid horizontal overflow */
-  flex-wrap: wrap;
-}
-
-/* Ensure flex children can shrink and not overflow their container */
-.settings-section .controls-row > * {
-  min-width: 0;
-}
-
-/* Responsive adjustments for small screens */
-@media (max-width: 640px) {
-  .settings-section .controls-row {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 10px;
-  }
-
-  .settings-section .controls-row label {
-    margin: 0; /* remove left/right margins when stacked */
-  }
-
-  /* Make dropdowns take full width when stacked */
-  .settings-section .controls-row .custom-select,
-  .settings-section .controls-row .custom-select-button {
-    width: 100%;
-    max-width: 100%;
-    box-sizing: border-box;
-  }
-}
-
-/* Spacing for checklist / grouped items */
-.settings-checklist {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin-top: 8px;
-}
-
-.settings-section:first-child {
-  padding-top: 0;
+  padding: 0 0 24px 0;
 }
 
 .settings-section:last-child {
@@ -80,9 +28,10 @@
 .settings-section h2 {
   color: var(--fg, #e0e0e0);
   margin-top: 0;
-  margin-bottom: 12px;
-  font-size: 1.3em;
+  margin-bottom: 16px;
+  font-size: 1.4em;
   font-weight: 600;
+  letter-spacing: 0.5px;
 }
 
 .settings-section label {

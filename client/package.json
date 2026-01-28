@@ -18,7 +18,7 @@
   "scripts": {
     "predeploy": "npm run build",
     "deploy": "gh-pages -d build",
-    "dev": "react-scripts start",
+    "dev": "BROWSER=none react-scripts start & sleep 2 && open -a Safari http://localhost:3000",
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",

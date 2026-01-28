@@ -71,33 +71,87 @@ const NotesHandler = ({ currentUser }) => {
   useEffect(() => {
     const fetchNotes = async () => {
       try {
-        const url = currentUser
-          ? `${API_URL}/notes?userId=${currentUser.id}`
-          : `${API_URL}/notes`;
+        // If logged out, load local notes from localStorage
+        if (!currentUser) {
+          try {
+            const localNotes = localStorage.getItem("localNotes");
+            if (localNotes) {
+              setNotes(JSON.parse(localNotes));
+            } else {
+              setNotes([]);
+            }
+          } catch (e) {
+            setNotes([]);
+          }
+          setLoading(false);
+          return;
+        }
 
+        // If logged in, fetch from server
+        const url = `${API_URL}/notes?userId=${currentUser.id}`;
         const response = await fetch(url);
         if (response.ok) {
-          const data = await response.json();
-          setNotes(data);
+          const serverNotes = await response.json();
+
+          // Check if there are local notes to merge
+          const localNotes = localStorage.getItem("localNotes");
+          if (localNotes) {
+            const parsedLocalNotes = JSON.parse(localNotes);
+
+            // Upload each local note to the server
+            for (const localNote of parsedLocalNotes) {
+              try {
+                const noteToUpload = {
+                  ...localNote,
+                  userId: currentUser.id,
+                };
+                delete noteToUpload.id; // Remove local ID
+
+                await fetch(`${API_URL}/notes`, {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify(noteToUpload),
+                });
+              } catch (error) {
+                console.error("Failed to upload local note:", error);
+              }
+            }
+
+            // Clear local notes after uploading
+            localStorage.removeItem("localNotes");
+
+            // Re-fetch to get all notes including newly uploaded ones
+            const refreshResponse = await fetch(url);
+            if (refreshResponse.ok) {
+              const allNotes = await refreshResponse.json();
+              setNotes(allNotes);
+            } else {
+              setNotes(serverNotes);
+            }
+          } else {
+            setNotes(serverNotes);
+          }
         }
       } catch (error) {
         console.error("Failed to fetch notes:", error);
-        // Fallback to localStorage if server is unavailable
-        try {
-          const raw = localStorage.getItem("notes");
-          if (raw) {
-            const parsed = JSON.parse(raw);
-            setNotes(Array.isArray(parsed) ? parsed : []);
-          }
-        } catch (e) {
-          setNotes([]);
-        }
+        setNotes([]);
       } finally {
         setLoading(false);
       }
     };
     fetchNotes();
   }, [currentUser]);
+
+  // Persist local notes to localStorage when logged out
+  useEffect(() => {
+    if (!loading && !currentUser && notes.length >= 0) {
+      try {
+        localStorage.setItem("localNotes", JSON.stringify(notes));
+      } catch (e) {
+        console.error("Failed to save local notes:", e);
+      }
+    }
+  }, [notes, currentUser, loading]);
 
   const handleNewNote = useCallback(async () => {
     const newNote = {
@@ -109,6 +163,19 @@ const NotesHandler = ({ currentUser }) => {
       userId: currentUser ? currentUser.id : null,
     };
 
+    // If logged out, only create locally
+    if (!currentUser) {
+      const localNote = {
+        ...newNote,
+        id: Date.now().toString(),
+        createdAt: Date.now(),
+        lastModified: Date.now(),
+      };
+      setNotes((prev) => [localNote, ...prev]);
+      return;
+    }
+
+    // If logged in, create on server
     try {
       const response = await fetch(`${API_URL}/notes`, {
         method: "POST",
@@ -122,117 +189,152 @@ const NotesHandler = ({ currentUser }) => {
       }
     } catch (error) {
       console.error("Failed to create note:", error);
-      // Fallback to local state
-      const localNote = {
-        ...newNote,
-        id: Date.now(),
-        createdAt: Date.now(),
-        lastModified: Date.now(),
-      };
-      setNotes((prev) => [localNote, ...prev]);
     }
   }, [currentUser]);
 
-  const handleRemove = useCallback(async (id) => {
-    try {
-      await fetch(`${API_URL}/notes/${id}`, { method: "DELETE" });
+  const handleRemove = useCallback(
+    async (id) => {
+      // Always delete locally
       setNotes((prev) => prev.filter((n) => n.id !== id));
-    } catch (error) {
-      console.error("Failed to delete note:", error);
-    }
-  }, []);
 
-  const updateNoteContent = useCallback(async (id, content) => {
-    setNotes((prev) =>
-      prev.map((n) =>
-        n.id === id ? { ...n, content, lastModified: Date.now() } : n,
-      ),
-    );
+      // Only delete from server if logged in
+      if (!currentUser) return;
 
-    try {
-      await fetch(`${API_URL}/notes/${id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ content }),
-      });
-    } catch (error) {
-      console.error("Failed to update note content:", error);
-    }
-  }, []);
+      try {
+        await fetch(`${API_URL}/notes/${id}`, { method: "DELETE" });
+      } catch (error) {
+        console.error("Failed to delete note:", error);
+      }
+    },
+    [currentUser],
+  );
 
-  const updateNoteTitle = useCallback(async (id, title) => {
-    setNotes((prev) =>
-      prev.map((n) =>
-        n.id === id ? { ...n, title, lastModified: Date.now() } : n,
-      ),
-    );
+  const updateNoteContent = useCallback(
+    async (id, content) => {
+      // Always update locally
+      setNotes((prev) =>
+        prev.map((n) =>
+          n.id === id ? { ...n, content, lastModified: Date.now() } : n,
+        ),
+      );
 
-    try {
-      await fetch(`${API_URL}/notes/${id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title }),
-      });
-    } catch (error) {
-      console.error("Failed to update note title:", error);
-    }
-  }, []);
+      // Only update server if logged in
+      if (!currentUser) return;
 
-  const updateNoteFont = useCallback(async (id, font) => {
-    setNotes((prev) =>
-      prev.map((n) =>
-        n.id === id ? { ...n, font, lastModified: Date.now() } : n,
-      ),
-    );
+      try {
+        await fetch(`${API_URL}/notes/${id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ content }),
+        });
+      } catch (error) {
+        console.error("Failed to update note content:", error);
+      }
+    },
+    [currentUser],
+  );
 
-    try {
-      await fetch(`${API_URL}/notes/${id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ font }),
-      });
-    } catch (error) {
-      console.error("Failed to update note font:", error);
-    }
-  }, []);
+  const updateNoteTitle = useCallback(
+    async (id, title) => {
+      // Always update locally
+      setNotes((prev) =>
+        prev.map((n) =>
+          n.id === id ? { ...n, title, lastModified: Date.now() } : n,
+        ),
+      );
 
-  const updateNoteTheme = useCallback(async (id, theme) => {
-    setNotes((prev) =>
-      prev.map((n) =>
-        n.id === id ? { ...n, theme, lastModified: Date.now() } : n,
-      ),
-    );
+      // Only update server if logged in
+      if (!currentUser) return;
 
-    try {
-      await fetch(`${API_URL}/notes/${id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ theme }),
-      });
-    } catch (error) {
-      console.error("Failed to update note theme:", error);
-    }
-  }, []);
+      try {
+        await fetch(`${API_URL}/notes/${id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ title }),
+        });
+      } catch (error) {
+        console.error("Failed to update note title:", error);
+      }
+    },
+    [currentUser],
+  );
 
-  const updateNoteFontSize = useCallback(async (id, fontSize) => {
-    setNotes((prev) =>
-      prev.map((n) =>
-        n.id === id
-          ? { ...n, fontSize: Number(fontSize), lastModified: Date.now() }
-          : n,
-      ),
-    );
+  const updateNoteFont = useCallback(
+    async (id, font) => {
+      // Always update locally
+      setNotes((prev) =>
+        prev.map((n) =>
+          n.id === id ? { ...n, font, lastModified: Date.now() } : n,
+        ),
+      );
 
-    try {
-      await fetch(`${API_URL}/notes/${id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ fontSize: Number(fontSize) }),
-      });
-    } catch (error) {
-      console.error("Failed to update note font size:", error);
-    }
-  }, []);
+      // Only update server if logged in
+      if (!currentUser) return;
+
+      try {
+        await fetch(`${API_URL}/notes/${id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ font }),
+        });
+      } catch (error) {
+        console.error("Failed to update note font:", error);
+      }
+    },
+    [currentUser],
+  );
+
+  const updateNoteTheme = useCallback(
+    async (id, theme) => {
+      // Always update locally
+      setNotes((prev) =>
+        prev.map((n) =>
+          n.id === id ? { ...n, theme, lastModified: Date.now() } : n,
+        ),
+      );
+
+      // Only update server if logged in
+      if (!currentUser) return;
+
+      try {
+        await fetch(`${API_URL}/notes/${id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ theme }),
+        });
+      } catch (error) {
+        console.error("Failed to update note theme:", error);
+      }
+    },
+    [currentUser],
+  );
+
+  const updateNoteFontSize = useCallback(
+    async (id, fontSize) => {
+      // Always update locally
+      setNotes((prev) =>
+        prev.map((n) =>
+          n.id === id
+            ? { ...n, fontSize: Number(fontSize), lastModified: Date.now() }
+            : n,
+        ),
+      );
+
+      // Only update server if logged in
+      if (!currentUser) return;
+
+      try {
+        await fetch(`${API_URL}/notes/${id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ fontSize: Number(fontSize) }),
+        });
+      } catch (error) {
+        console.error("Failed to update note font size:", error);
+      }
+    },
+    [currentUser],
+  );
 
   // Persist to localStorage as backup
   useEffect(() => {
