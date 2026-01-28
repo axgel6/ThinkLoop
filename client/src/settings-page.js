@@ -51,28 +51,78 @@ const Settings = ({ onOpenLoginModal, currentUser, onLogout }) => {
   const [deletePassword, setDeletePassword] = useState("");
   const [accountError, setAccountError] = useState("");
   const [accountSuccess, setAccountSuccess] = useState("");
+  const [isLoadingSettings, setIsLoadingSettings] = useState(false);
+
+  // Load theme settings from server when user logs in
+  React.useEffect(() => {
+    const loadUserSettings = async () => {
+      if (!currentUser) return;
+
+      setIsLoadingSettings(true);
+      try {
+        const response = await fetch(
+          `${API_URL}/auth/user/${currentUser.id}/settings`,
+        );
+        if (response.ok) {
+          const settings = await response.json();
+          setVal(settings.colorTheme || "zero");
+          setFontVal(settings.fontTheme || "zero");
+        }
+      } catch (error) {
+        console.error("Failed to load user settings:", error);
+      } finally {
+        setIsLoadingSettings(false);
+      }
+    };
+
+    loadUserSettings();
+  }, [currentUser]);
 
   // persist selection and apply theme
   React.useEffect(() => {
+    // Skip syncing during initial settings load
+    if (isLoadingSettings) return;
+
     try {
       localStorage.setItem("settings:selected", val);
       // Apply theme immediately using helper function
       applyTheme(val);
+
+      // Sync to server if logged in
+      if (currentUser) {
+        fetch(`${API_URL}/auth/user/${currentUser.id}/settings`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ colorTheme: val }),
+        }).catch((err) => console.error("Failed to sync color theme:", err));
+      }
     } catch (e) {
       /* ignore */
     }
-  }, [val]);
+  }, [val, currentUser, isLoadingSettings]);
 
   // Persist and apply font theme
   React.useEffect(() => {
+    // Skip syncing during initial settings load
+    if (isLoadingSettings) return;
+
     try {
       localStorage.setItem("settings:font", fontVal);
       // Apply font immediately using helper function
       applyFont(fontVal);
+
+      // Sync to server if logged in
+      if (currentUser) {
+        fetch(`${API_URL}/auth/user/${currentUser.id}/settings`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ fontTheme: fontVal }),
+        }).catch((err) => console.error("Failed to sync font theme:", err));
+      }
     } catch (e) {
       /* ignore */
     }
-  }, [fontVal]);
+  }, [fontVal, currentUser, isLoadingSettings]);
 
   const handleUpdateName = async () => {
     if (!currentUser || !newName) return;

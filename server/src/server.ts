@@ -167,10 +167,10 @@ app.post("/auth/register", async (req, res) => {
   try {
     const { username, password, name } = req.body;
 
-    if (!username || !password || !name) {
+    if (!username || !password) {
       return res
         .status(400)
-        .json({ error: "Username, password, and name required" });
+        .json({ error: "Username and password required" });
     }
 
     // Check if user already exists
@@ -187,7 +187,7 @@ app.post("/auth/register", async (req, res) => {
     const newUser = {
       username,
       password: hashedPassword,
-      name,
+      name: name || username,
       createdAt: Date.now(),
     };
 
@@ -397,6 +397,50 @@ app.delete("/auth/user/:userId", async (req, res) => {
     res.json({ message: "Account deleted successfully" });
   } catch (error) {
     res.status(500).json({ error: "Failed to delete account" });
+  }
+});
+
+// Get user settings (themes, fonts)
+app.get("/auth/user/:userId/settings", async (req, res) => {
+  try {
+    const user = await userInfoCollection.findOne({
+      _id: new ObjectId(req.params.userId),
+    });
+
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    res.json({
+      colorTheme: user.colorTheme || "zero",
+      fontTheme: user.fontTheme || "zero",
+    });
+  } catch (error) {
+    res.status(500).json({ error: "Failed to fetch settings" });
+  }
+});
+
+// Update user settings (themes, fonts)
+app.put("/auth/user/:userId/settings", async (req, res) => {
+  try {
+    const { colorTheme, fontTheme } = req.body;
+
+    const updateFields: any = {};
+    if (colorTheme !== undefined) updateFields.colorTheme = colorTheme;
+    if (fontTheme !== undefined) updateFields.fontTheme = fontTheme;
+
+    const result = await userInfoCollection.updateOne(
+      { _id: new ObjectId(req.params.userId) },
+      { $set: updateFields },
+    );
+
+    if (result.matchedCount === 0) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    res.json({ message: "Settings updated successfully" });
+  } catch (error) {
+    res.status(500).json({ error: "Failed to update settings" });
   }
 });
 
