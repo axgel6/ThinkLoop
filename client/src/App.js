@@ -5,6 +5,10 @@ import NotesHandler from "./NotesHandler";
 import Settings from "./settings-page";
 import NotFound from "./NotFound";
 import LoginModal from "./Login";
+import { applyTheme } from "./themes";
+import { applyFont } from "./fonts";
+
+const API_URL = process.env.REACT_APP_API_URL || "http://localhost:3000";
 
 function App() {
   // Initialize activeTab from localStorage or default to "notes"
@@ -60,35 +64,8 @@ function App() {
     localStorage.setItem("settings:selected", "zero");
     localStorage.setItem("settings:font", "zero");
 
-    // Apply default theme immediately
-    const root = document.documentElement;
-    root.classList.remove(
-      "theme-default",
-      "theme-dark",
-      "theme-blue",
-      "theme-gray",
-      "theme-cream",
-      "theme-purple",
-      "theme-pink",
-      "theme-skyblue",
-      "theme-sage",
-      "theme-brown",
-      "theme-sunset",
-      "theme-burgundy",
-      "theme-forestgreen",
-      "theme-gold",
-      "theme-ai",
-      "theme-snowleopard",
-    );
-    root.classList.add("theme-default");
-
-    // Trigger storage event to update settings page
-    window.dispatchEvent(
-      new StorageEvent("storage", {
-        key: "settings:selected",
-        newValue: "zero",
-      }),
-    );
+    // Trigger custom event to update theme
+    window.dispatchEvent(new Event("themeChange"));
   };
 
   // Save activeTab to localStorage whenever it changes
@@ -100,109 +77,68 @@ function App() {
     }
   }, [activeTab]);
 
-  // Initialize theme on app startup and listen for changes
+  // Initialize theme and font on app startup and whenever tab changes
   useEffect(() => {
-    const applyTheme = () => {
-      const savedTheme = localStorage.getItem("settings:selected") || "zero";
-      const root = document.documentElement;
-      root.classList.remove(
-        "theme-default",
-        "theme-dark",
-        "theme-blue",
-        "theme-gray",
-        "theme-cream",
-        "theme-purple",
-        "theme-pink",
-        "theme-skyblue",
-        "theme-sage",
-        "theme-brown",
-        "theme-sunset",
-        "theme-burgundy",
-        "theme-forestgreen",
-        "theme-gold",
-        "theme-ai",
-        "theme-snowleopard",
-      );
+    // Apply current theme and font from localStorage
+    const savedTheme = localStorage.getItem("settings:selected") || "zero";
+    const savedFont = localStorage.getItem("settings:font") || "mono";
+    applyTheme(savedTheme);
+    applyFont(savedFont);
+  }, [activeTab]);
 
-      if (savedTheme === "zero") root.classList.add("theme-default");
-      else if (savedTheme === "one") root.classList.add("theme-dark");
-      else if (savedTheme === "two") root.classList.add("theme-blue");
-      else if (savedTheme === "three") root.classList.add("theme-gray");
-      else if (savedTheme === "four") root.classList.add("theme-cream");
-      else if (savedTheme === "five") root.classList.add("theme-purple");
-      else if (savedTheme === "six") root.classList.add("theme-pink");
-      else if (savedTheme === "seven") root.classList.add("theme-skyblue");
-      else if (savedTheme === "eight") root.classList.add("theme-sage");
-      else if (savedTheme === "nine") root.classList.add("theme-brown");
-      else if (savedTheme === "ten") root.classList.add("theme-sunset");
-      else if (savedTheme === "eleven") root.classList.add("theme-burgundy");
-      else if (savedTheme === "twelve") root.classList.add("theme-forestgreen");
-      else if (savedTheme === "thirteen") root.classList.add("theme-gold");
-      else if (savedTheme === "fourteen") root.classList.add("theme-ai");
-      else if (savedTheme === "fifteen")
-        root.classList.add("theme-snowleopard");
+  // Fetch settings from server when user is logged in (on mount and periodically)
+  useEffect(() => {
+    const fetchSettingsFromServer = async () => {
+      if (!currentUser) return;
+
+      try {
+        const response = await fetch(
+          `${API_URL}/auth/user/${currentUser.id}/settings`,
+        );
+        if (response.ok) {
+          const settings = await response.json();
+          const newTheme = settings.colorTheme || "zero";
+          const newFont = settings.fontTheme || "zero";
+
+          // Update localStorage and apply if changed
+          const currentTheme = localStorage.getItem("settings:selected");
+          const currentFont = localStorage.getItem("settings:font");
+
+          if (newTheme !== currentTheme) {
+            localStorage.setItem("settings:selected", newTheme);
+            applyTheme(newTheme);
+          }
+          if (newFont !== currentFont) {
+            localStorage.setItem("settings:font", newFont);
+            applyFont(newFont);
+          }
+        }
+      } catch (error) {
+        console.error("Failed to fetch settings:", error);
+      }
     };
 
-    // Apply theme on mount
-    applyTheme();
+    // Fetch immediately on mount
+    fetchSettingsFromServer();
 
-    // Listen for storage changes (when theme changes in Settings)
+    // Poll every 5 seconds for updates from other devices
+    const interval = setInterval(fetchSettingsFromServer, 5000);
+
+    return () => clearInterval(interval);
+  }, [currentUser]);
+
+  // Listen for storage changes from other browser tabs
+  useEffect(() => {
     const handleStorageChange = (e) => {
       if (e.key === "settings:selected") {
-        applyTheme();
+        applyTheme(e.newValue || "zero");
+      } else if (e.key === "settings:font") {
+        applyFont(e.newValue || "mono");
       }
     };
+
     window.addEventListener("storage", handleStorageChange);
-
-    return () => {
-      window.removeEventListener("storage", handleStorageChange);
-    };
-  }, []);
-
-  // Initialize font theme on app startup and listen for changes
-  useEffect(() => {
-    const applyFont = () => {
-      const savedFont = localStorage.getItem("settings:font") || "mono";
-      const root = document.documentElement;
-      // A list of all possible font theme classes
-      const fontClasses = [
-        "font-mono",
-        "font-inter",
-        "font-paper",
-        "font-handwritten",
-        "font-lora",
-        "font-poppins",
-        "font-cormorant",
-        "font-space",
-        "font-orbitron",
-        "font-amatic",
-        "font-greatvibes",
-      ];
-      root.classList.remove(...fontClasses);
-
-      if (savedFont) {
-        root.classList.add(`font-${savedFont}`);
-      }
-    };
-
-    // Apply font on mount
-    applyFont();
-
-    // Listen for storage changes (when font changes in Settings)
-    const handleStorageChange = (e) => {
-      if (e.key === "settings:font") {
-        applyFont();
-      }
-    };
-    window.addEventListener("storage", handleStorageChange);
-
-    // Also listen for the custom 'fontchange' event from the settings page
-    window.addEventListener("fontchange", applyFont);
-
-    return () => {
-      window.removeEventListener("storage", handleStorageChange);
-      window.removeEventListener("fontchange", applyFont);
-    };
+    return () => window.removeEventListener("storage", handleStorageChange);
   }, []);
 
   return (

@@ -35,8 +35,7 @@ export const FONT_MAP = {
     '"Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif',
   opensans:
     '"Open Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif',
-  lato:
-    '"Lato", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif',
+  lato: '"Lato", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif',
   sourcesans:
     '"Source Sans Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif',
   nunito:
@@ -44,31 +43,27 @@ export const FONT_MAP = {
   paper: '"Merriweather", Georgia, "Times New Roman", serif',
   handwritten:
     '"Patrick Hand", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
-  caveat:
-    '"Caveat", "Comic Sans MS", cursive',
+  caveat: '"Caveat", "Comic Sans MS", cursive',
   lora: '"Lora", Georgia, "Times New Roman", serif',
   poppins:
     '"Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif',
-  playfair:
-    '"Playfair Display", Georgia, "Times New Roman", serif',
-  ebgaramond:
-    '"EB Garamond", Georgia, "Times New Roman", serif',
+  playfair: '"Playfair Display", Georgia, "Times New Roman", serif',
+  ebgaramond: '"EB Garamond", Georgia, "Times New Roman", serif',
   cormorant: '"Cormorant Garamond", Georgia, "Times New Roman", serif',
-  crimson:
-    '"Crimson Text", Georgia, "Times New Roman", serif',
+  crimson: '"Crimson Text", Georgia, "Times New Roman", serif',
   space:
     "'Space Grotesk', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial",
   sourcecodepro:
     '"Source Code Pro", Menlo, Monaco, Consolas, "Courier New", monospace',
-  firacode:
-    '"Fira Code", Menlo, Monaco, Consolas, "Courier New", monospace',
+  firacode: '"Fira Code", Menlo, Monaco, Consolas, "Courier New", monospace',
   inconsolata:
     '"Inconsolata", Menlo, Monaco, Consolas, "Courier New", monospace',
   orbitron: "Orbitron, 'Segoe UI', Roboto, Arial, sans-serif",
   amatic: "'Amatic SC', 'Comic Sans MS', cursive",
   indieflower: "'Indie Flower', 'Comic Sans MS', cursive",
   greatvibes: "'Great Vibes', cursive",
-  lucida: '"Lucida Grande", "Lucida Sans Unicode", "Lucida Sans", Arial, sans-serif',
+  lucida:
+    '"Lucida Grande", "Lucida Sans Unicode", "Lucida Sans", Arial, sans-serif',
 };
 
 // Mapping of font IDs to CSS class names
@@ -133,17 +128,10 @@ export const ALL_FONT_CLASSES = [
 export const applyFont = (fontId) => {
   const root = document.documentElement;
   root.classList.remove(...ALL_FONT_CLASSES);
-  
+
   const fontClass = FONT_CLASS_MAP[fontId];
   if (fontClass) {
     root.classList.add(fontClass);
-  }
-  
-  // Notify other UI components that fonts changed
-  try {
-    window.dispatchEvent(new Event("fontchange"));
-  } catch (e) {
-    /* ignore */
   }
 };
 
