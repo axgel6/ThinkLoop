@@ -285,9 +285,9 @@ const Settings = ({ onOpenLoginModal, currentUser, onLogout }) => {
             {currentUser ? (
               <>
                 <p style={{ marginBottom: 12, color: "var(--muted, #9a9a9a)" }}>
-                  Hello,{" "}
+                  Signed in as,{" "}
                   <strong style={{ color: "var(--fg, #dcdcdc)" }}>
-                    {currentUser.name || currentUser.username}
+                    {currentUser.username}
                   </strong>
                   !
                 </p>
