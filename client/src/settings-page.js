@@ -251,7 +251,7 @@ const Settings = ({ onOpenLoginModal, currentUser, onLogout }) => {
 
   return (
     console.warn(
-      "User accounts are not implemented yet. All data is stored locally.",
+      "This application is not intended for production use therefore it is recommended to not store sensitive information. Please use at your own risk.",
     ),
     (
       <div style={{ padding: 16 }}>
