@@ -23,7 +23,7 @@ export const COLOR_OPTIONS = [
   { id: "eighteen", label: "Mint" },
   { id: "nineteen", label: "Coral" },
   { id: "twenty", label: "Slate" },
-  { id: "twentyone", label: "Mocha" },
+  { id: "twentyOne", label: "Mocha" },
 ];
 
 // Mapping of color option IDs to CSS theme classes
@@ -49,7 +49,7 @@ export const THEME_CLASS_MAP = {
   eighteen: "theme-mint",
   nineteen: "theme-coral",
   twenty: "theme-slate",
-  twentyone: "theme-mocha",
+  twentyOne: "theme-mocha",
 };
 
 // All theme classes (auto-generated from THEME_CLASS_MAP)
