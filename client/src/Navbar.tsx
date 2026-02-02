@@ -1,7 +1,7 @@
 import React from "react";
 import "./Navbar.css";
 
-type TabKey = "notes" | "tasks" | "settings";
+type TabKey = "home" | "notes" | "tasks" | "settings";
 
 interface NavbarProps {
   activeTab?: TabKey;
@@ -9,12 +9,21 @@ interface NavbarProps {
 }
 
 const Navbar: React.FC<NavbarProps> = ({
-  activeTab = "notes",
+  activeTab = "home",
   onChangeTab = () => {},
 }) => {
   return (
     <nav className="navbar">
       <ul className="nav-links">
+        <li>
+          <button
+            className={activeTab === "home" ? "active" : ""}
+            onClick={() => onChangeTab("home")}
+            aria-pressed={activeTab === "home"}
+          >
+            Home
+          </button>
+        </li>
         <li>
           <button
             className={activeTab === "notes" ? "active" : ""}

@@ -1,0 +1,7 @@
+#home-content h1 {
+  text-align: center;
+  color: var(--fg, #dcdcdc);
+  width: max-content;
+  margin: 0 auto;
+  border-radius: 30px;
+}

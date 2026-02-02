@@ -7,16 +7,17 @@ import NotFound from "./NotFound";
 import LoginModal from "./Login";
 import { applyTheme } from "./themes";
 import { applyFont } from "./fonts";
+import Home from "./Home";
 
 const API_URL = process.env.REACT_APP_API_URL || "http://localhost:3000";
 
 function App() {
-  // Initialize activeTab from localStorage or default to "notes"
+  // Initialize activeTab from localStorage or default to "home"
   const [activeTab, setActiveTab] = useState(() => {
     try {
-      return localStorage.getItem("activeTab") || "notes";
+      return localStorage.getItem("activeTab") || "home";
     } catch (e) {
-      return "notes";
+      return "home";
     }
   });
 
@@ -31,6 +32,7 @@ function App() {
   });
 
   const titles = {
+    home: "Home",
     notes: "Notes",
     tasks: "Tasks",
     settings: "Settings",
@@ -151,6 +153,7 @@ function App() {
           {"Hello, " + user + "!"}
         </h1>
       </div>
+      {activeTab === "home" && <Home />}
       {activeTab === "notes" && <NotesHandler currentUser={currentUser} />}
       {activeTab === "tasks" && <Tasks />}
       {activeTab === "settings" && (
@@ -160,7 +163,9 @@ function App() {
           onLogout={handleLogout}
         />
       )}
-      {!["notes", "tasks", "settings"].includes(activeTab) && <NotFound />}
+      {!["home", "notes", "tasks", "settings"].includes(activeTab) && (
+        <NotFound />
+      )}
 
       <LoginModal
         isOpen={isLoginModalOpen}
