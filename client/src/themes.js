@@ -18,6 +18,12 @@ export const COLOR_OPTIONS = [
   { id: "thirteen", label: "Golden" },
   { id: "fourteen", label: "Intelligence" },
   { id: "fifteen", label: "Snow Leopard" },
+  { id: "sixteen", label: "Ocean" },
+  { id: "seventeen", label: "Lavender" },
+  { id: "eighteen", label: "Mint" },
+  { id: "nineteen", label: "Coral" },
+  { id: "twenty", label: "Slate" },
+  { id: "twentyOne", label: "Mocha" },
 ];
 
 // Mapping of color option IDs to CSS theme classes
@@ -38,6 +44,12 @@ export const THEME_CLASS_MAP = {
   thirteen: "theme-gold",
   fourteen: "theme-ai",
   fifteen: "theme-snowleopard",
+  sixteen: "theme-ocean",
+  seventeen: "theme-lavender",
+  eighteen: "theme-mint",
+  nineteen: "theme-coral",
+  twenty: "theme-slate",
+  twentyOne: "theme-mocha",
 };
 
 // All theme classes (auto-generated from THEME_CLASS_MAP)
@@ -61,6 +73,12 @@ export const NOTE_THEME_OPTIONS = [
   { id: "gold", label: "Gold" },
   { id: "ai", label: "Intelligence" },
   { id: "snowleopard", label: "Snow Leopard" },
+  { id: "ocean", label: "Ocean" },
+  { id: "lavender", label: "Lavender" },
+  { id: "mint", label: "Mint" },
+  { id: "coral", label: "Coral" },
+  { id: "slate", label: "Slate" },
+  { id: "mocha", label: "Mocha" },
 ];
 
 // CSS custom properties for each theme (used for per-note theming)
@@ -226,6 +244,66 @@ export const THEME_VARS = {
     "--panel-bg-solid": "rgba(0, 0, 0, 0.9)",
     "--glass-bg":
       "linear-gradient(135deg, rgba(20, 20, 20, 0.7), rgba(0, 0, 0, 0.6))",
+  },
+  ocean: {
+    "--bg": "#0a1929",
+    "--fg": "#e3f5ff",
+    "--muted": "#66b2ff",
+    "--panel-bg": "rgba(10, 40, 80, 0.6)",
+    "--panel-border": "rgba(102, 178, 255, 0.3)",
+    "--panel-bg-solid": "#132f4c",
+    "--glass-bg":
+      "linear-gradient(135deg, rgba(10, 40, 80, 0.7), rgba(102, 178, 255, 0.08))",
+  },
+  lavender: {
+    "--bg": "#f3f0ff",
+    "--fg": "#2e1a47",
+    "--muted": "#9775fa",
+    "--panel-bg": "rgba(240, 235, 255, 0.7)",
+    "--panel-border": "rgba(151, 117, 250, 0.25)",
+    "--panel-bg-solid": "#ebe4ff",
+    "--glass-bg":
+      "linear-gradient(135deg, rgba(240, 235, 255, 0.9), rgba(151, 117, 250, 0.05))",
+  },
+  mint: {
+    "--bg": "#e6fcf5",
+    "--fg": "#0c4a3a",
+    "--muted": "#20c997",
+    "--panel-bg": "rgba(220, 250, 240, 0.7)",
+    "--panel-border": "rgba(32, 201, 151, 0.25)",
+    "--panel-bg-solid": "#d3f9e9",
+    "--glass-bg":
+      "linear-gradient(135deg, rgba(220, 250, 240, 0.9), rgba(32, 201, 151, 0.05))",
+  },
+  coral: {
+    "--bg": "#fff5f5",
+    "--fg": "#5c1a1a",
+    "--muted": "#ff6b6b",
+    "--panel-bg": "rgba(255, 240, 240, 0.7)",
+    "--panel-border": "rgba(255, 107, 107, 0.25)",
+    "--panel-bg-solid": "#ffe8e8",
+    "--glass-bg":
+      "linear-gradient(135deg, rgba(255, 240, 240, 0.9), rgba(255, 107, 107, 0.05))",
+  },
+  slate: {
+    "--bg": "#1e293b",
+    "--fg": "#f1f5f9",
+    "--muted": "#94a3b8",
+    "--panel-bg": "rgba(30, 41, 59, 0.6)",
+    "--panel-border": "rgba(148, 163, 184, 0.25)",
+    "--panel-bg-solid": "#334155",
+    "--glass-bg":
+      "linear-gradient(135deg, rgba(30, 41, 59, 0.7), rgba(148, 163, 184, 0.05))",
+  },
+  mocha: {
+    "--bg": "#3d2817",
+    "--fg": "#f5e6d3",
+    "--muted": "#d4a574",
+    "--panel-bg": "rgba(80, 50, 30, 0.6)",
+    "--panel-border": "rgba(212, 165, 116, 0.25)",
+    "--panel-bg-solid": "#52341f",
+    "--glass-bg":
+      "linear-gradient(135deg, rgba(80, 50, 30, 0.7), rgba(212, 165, 116, 0.06))",
   },
 };
 
