@@ -34,6 +34,7 @@
 
 .view-mode .note-header:hover {
   background: var(--panel-bg, rgba(30, 30, 30, 0.4));
+  border-radius: 25px 25px 0 0;
 }
 
 .note-header-content {
@@ -324,19 +325,33 @@
 
 /* Samples using the same font stacks as index.css so users can preview */
 .sample-mono {
-  font-family: "JetBrains Mono", Menlo, Monaco, Consolas, "Courier New",
-    monospace;
+  font-family:
+    "JetBrains Mono", Menlo, Monaco, Consolas, "Courier New", monospace;
 }
 .sample-inter {
-  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-    "Helvetica Neue", Arial, sans-serif;
+  font-family:
+    "Inter",
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    "Helvetica Neue",
+    Arial,
+    sans-serif;
 }
 .sample-paper {
   font-family: "Merriweather", Georgia, "Times New Roman", serif;
 }
 .sample-handwritten {
-  font-family: "Patrick Hand", -apple-system, BlinkMacSystemFont, "Segoe UI",
-    Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-family:
+    "Patrick Hand",
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    "Helvetica Neue",
+    Arial,
+    sans-serif;
 }
 
 .sample-slab {
@@ -344,8 +359,14 @@
 }
 
 .sample-rounded {
-  font-family: "Rubik", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-    Arial, sans-serif;
+  font-family:
+    "Rubik",
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    Arial,
+    sans-serif;
 }
 
 .sample-display {
@@ -353,13 +374,25 @@
 }
 
 .sample-space {
-  font-family: "Space Grotesk", -apple-system, BlinkMacSystemFont, "Segoe UI",
-    Roboto, Arial, sans-serif;
+  font-family:
+    "Space Grotesk",
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    Arial,
+    sans-serif;
 }
 
 .sample-orbitron {
-  font-family: "Orbitron", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-    Arial, sans-serif;
+  font-family:
+    "Orbitron",
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    Arial,
+    sans-serif;
 }
 
 .sample-amatic {

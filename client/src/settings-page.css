@@ -50,3 +50,23 @@
   margin: 24px 0;
   opacity: 0.6;
 }
+
+.theme-windowsxp .settings-toggles {
+  background: linear-gradient(#f7fbff 0%, #e3efff 100%);
+  border: 1px solid #7f9db9;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+}
+
+.theme-windowsxp .settings-section h2,
+.theme-windowsxp .settings-section label {
+  color: #0b1f3a;
+}
+
+.theme-windowsxp .settings-divider {
+  background: linear-gradient(
+    to right,
+    transparent,
+    rgba(127, 157, 185, 0.8),
+    transparent
+  );
+}

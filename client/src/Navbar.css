@@ -72,6 +72,44 @@
   background: var(--accent-bg, rgba(150, 150, 150, 0.25));
 }
 
+.theme-windowsxp .navbar ul {
+  background: linear-gradient(180deg, #4f86d6 0%, #2f6fc2 55%, #1f5fb6 100%);
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.45),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.25),
+    0 6px 16px rgba(0, 0, 0, 0.35);
+  backdrop-filter: none;
+}
+
+.theme-windowsxp .navbar li button {
+  color: #eaf3ff;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.35);
+  border-radius: 16px;
+}
+
+.theme-windowsxp .navbar li button:hover {
+  border-color: rgba(255, 255, 255, 0.6);
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.25) 0%,
+    rgba(255, 255, 255, 0.1) 100%
+  );
+}
+
+.theme-windowsxp .navbar li button.active {
+  color: #0a2a0a;
+  border-color: rgba(255, 255, 255, 0.6);
+  background: linear-gradient(180deg, #b7f08a 0%, #7fda4c 55%, #4ea32f 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.6),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.25);
+}
+
+.theme-windowsxp .navbar li button.active:hover {
+  background: linear-gradient(180deg, #c7f7a2 0%, #8be65a 55%, #55b035 100%);
+}
+
 /* Mobile responsiveness */
 @media (max-width: 768px) {
   .navbar ul {

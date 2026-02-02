@@ -968,6 +968,20 @@ pre {
   );
 }
 
+.theme-windowsxp {
+  --bg: #3b6fb3;
+  --fg: #0b1f3a;
+  --muted: #365a8c;
+  --panel-bg: rgba(20, 70, 150, 0.4);
+  --panel-border: rgba(255, 255, 255, 0.5);
+  --panel-bg-solid: #2f5fa5;
+  --glass-bg: linear-gradient(
+    135deg,
+    rgba(190, 230, 255, 0.55),
+    rgba(255, 255, 255, 0.15)
+  );
+}
+
 .theme-snowleopard body {
   background:
     radial-gradient(2px 2px at 20% 30%, white, transparent),
@@ -1036,88 +1050,28 @@ pre {
   background-color: #000000;
 }
 
-.theme-ocean {
-  --bg: #0a1929;
-  --fg: #e3f5ff;
-  --muted: #66b2ff;
-  --panel-bg: rgba(10, 40, 80, 0.6);
-  --panel-border: rgba(102, 178, 255, 0.3);
-  --panel-bg-solid: #132f4c;
-  --glass-bg: linear-gradient(
-    135deg,
-    rgba(10, 40, 80, 0.7),
-    rgba(102, 178, 255, 0.08)
-  );
-}
-
-.theme-lavender {
-  --bg: #f3f0ff;
-  --fg: #2e1a47;
-  --muted: #9775fa;
-  --panel-bg: rgba(240, 235, 255, 0.7);
-  --panel-border: rgba(151, 117, 250, 0.25);
-  --panel-bg-solid: #ebe4ff;
-  --glass-bg: linear-gradient(
-    135deg,
-    rgba(240, 235, 255, 0.9),
-    rgba(151, 117, 250, 0.05)
-  );
-}
-
-.theme-mint {
-  --bg: #e6fcf5;
-  --fg: #0c4a3a;
-  --muted: #20c997;
-  --panel-bg: rgba(220, 250, 240, 0.7);
-  --panel-border: rgba(32, 201, 151, 0.25);
-  --panel-bg-solid: #d3f9e9;
-  --glass-bg: linear-gradient(
-    135deg,
-    rgba(220, 250, 240, 0.9),
-    rgba(32, 201, 151, 0.05)
-  );
-}
-
-.theme-coral {
-  --bg: #fff5f5;
-  --fg: #5c1a1a;
-  --muted: #ff6b6b;
-  --panel-bg: rgba(255, 240, 240, 0.7);
-  --panel-border: rgba(255, 107, 107, 0.25);
-  --panel-bg-solid: #ffe8e8;
-  --glass-bg: linear-gradient(
-    135deg,
-    rgba(255, 240, 240, 0.9),
-    rgba(255, 107, 107, 0.05)
-  );
-}
-
-.theme-slate {
-  --bg: #1e293b;
-  --fg: #f1f5f9;
-  --muted: #94a3b8;
-  --panel-bg: rgba(30, 41, 59, 0.6);
-  --panel-border: rgba(148, 163, 184, 0.25);
-  --panel-bg-solid: #334155;
-  --glass-bg: linear-gradient(
-    135deg,
-    rgba(30, 41, 59, 0.7),
-    rgba(148, 163, 184, 0.05)
-  );
-}
-
-.theme-mocha {
-  --bg: #3d2817;
-  --fg: #f5e6d3;
-  --muted: #d4a574;
-  --panel-bg: rgba(80, 50, 30, 0.6);
-  --panel-border: rgba(212, 165, 116, 0.25);
-  --panel-bg-solid: #52341f;
-  --glass-bg: linear-gradient(
-    135deg,
-    rgba(80, 50, 30, 0.7),
-    rgba(212, 165, 116, 0.06)
-  );
+.theme-windowsxp body {
+  background:
+    radial-gradient(
+      ellipse at 70% 18%,
+      rgba(255, 255, 255, 0.75) 0%,
+      rgba(255, 255, 255, 0) 55%
+    ),
+    radial-gradient(
+      circle at 20% 35%,
+      rgba(255, 255, 255, 0.5) 0%,
+      rgba(255, 255, 255, 0) 50%
+    ),
+    linear-gradient(
+      180deg,
+      #5fa4e5 0%,
+      #3b78c5 45%,
+      #2e6cc0 55%,
+      #5fa64a 72%,
+      #4f8d3d 100%
+    );
+  background-attachment: fixed;
+  background-repeat: no-repeat;
 }
 
 .theme-snowleopard .text-field {
@@ -1243,6 +1197,151 @@ pre {
   );
   color: white;
   border-radius: 25px;
+}
+
+.theme-windowsxp .text-field {
+  border: 1px solid #7f9db9;
+  border-radius: 12px;
+  background: linear-gradient(#f7fbff 0%, #dfeaf9 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.12),
+    0 6px 16px rgba(0, 0, 0, 0.2);
+}
+
+.theme-windowsxp .note-header,
+.theme-windowsxp .view-mode .note-header:hover {
+  border-radius: 12px 12px 0 0;
+}
+
+.theme-windowsxp .note-header,
+.theme-windowsxp .toolbar {
+  background: linear-gradient(#f3f7ff 0%, #d6e4f7 100%);
+  border-bottom: 1px solid #7f9db9;
+}
+
+.theme-windowsxp .note-title-display {
+  color: #0b1f3a;
+}
+
+.theme-windowsxp .note-last-modified-header {
+  color: #365a8c;
+}
+
+.theme-windowsxp .toolbar button,
+.theme-windowsxp .btn,
+.theme-windowsxp .login-submit-btn,
+.theme-windowsxp .settings-toggles button,
+.theme-windowsxp .toolbar-actions .undo-btn,
+.theme-windowsxp .toolbar-actions .redo-btn,
+.theme-windowsxp .toolbar-actions .done-btn {
+  background: linear-gradient(#ffffff 0%, #e2ecfb 100%);
+  border: 1px solid #7f9db9;
+  border-radius: 6px;
+  color: #0b1f3a;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.12);
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
+  backdrop-filter: none;
+}
+
+.theme-windowsxp .toolbar button:hover,
+.theme-windowsxp .btn:hover,
+.theme-windowsxp .login-submit-btn:hover,
+.theme-windowsxp .settings-toggles button:hover,
+.theme-windowsxp .toolbar-actions .undo-btn:hover,
+.theme-windowsxp .toolbar-actions .redo-btn:hover,
+.theme-windowsxp .toolbar-actions .done-btn:hover {
+  background: linear-gradient(#fff7d6 0%, #f5d889 100%);
+  border-color: #5b7fb5;
+  transform: none;
+}
+
+.theme-windowsxp .toolbar button:active,
+.theme-windowsxp .btn:active,
+.theme-windowsxp .login-submit-btn:active,
+.theme-windowsxp .settings-toggles button:active,
+.theme-windowsxp .toolbar-actions .undo-btn:active,
+.theme-windowsxp .toolbar-actions .redo-btn:active,
+.theme-windowsxp .toolbar-actions .done-btn:active {
+  background: linear-gradient(#dbe7f8 0%, #ffffff 100%);
+  box-shadow: inset 0 2px 3px rgba(0, 0, 0, 0.15);
+}
+
+.theme-windowsxp .custom-select-button {
+  background: linear-gradient(#ffffff 0%, #e2ecfb 100%);
+  border: 1px solid #7f9db9;
+  border-radius: 6px;
+  color: #0b1f3a;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  backdrop-filter: none;
+}
+
+.theme-windowsxp .custom-select-button:hover {
+  background: linear-gradient(#fff7d6 0%, #f5d889 100%);
+  border-color: #5b7fb5;
+  transform: none;
+}
+
+.theme-windowsxp .custom-select-list {
+  background: #f7fbff;
+  border: 1px solid #7f9db9;
+  border-radius: 6px;
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.25);
+  backdrop-filter: none;
+}
+
+.theme-windowsxp .custom-select-option {
+  color: #0b1f3a;
+  border-radius: 4px;
+  text-shadow: none;
+}
+
+.theme-windowsxp .custom-select-option.highlight,
+.theme-windowsxp .custom-select-option:hover {
+  background: linear-gradient(#cfe3ff 0%, #9fc2f5 100%);
+  color: #0b1f3a;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  transform: none;
+}
+
+.theme-windowsxp .modal-content {
+  background: linear-gradient(#f7fbff 0%, #e3efff 100%);
+  border: 1px solid #7f9db9;
+  border-radius: 10px;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.35);
+  backdrop-filter: none;
+}
+
+.theme-windowsxp .modal-content h1 {
+  color: #0b1f3a;
+}
+
+.theme-windowsxp .form-group input,
+.theme-windowsxp .checklist-input {
+  background: #ffffff;
+  border: 1px solid #7f9db9;
+  border-radius: 4px;
+  color: #0b1f3a;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.theme-windowsxp .form-group input:focus,
+.theme-windowsxp .checklist-input:focus {
+  border-color: #3b73c8;
+  box-shadow: 0 0 0 1px rgba(59, 115, 200, 0.35);
+}
+
+.theme-windowsxp .modal-close {
+  background: radial-gradient(circle at 50% 30%, #ff9b9b, #c30000 70%);
+  border: 1px solid #7d1c1c;
+  color: #fff0f0;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+.theme-windowsxp .modal-close:hover {
+  background: radial-gradient(circle at 50% 30%, #ffb3b3, #a00000 70%);
 }
 
 .theme-ai body {
