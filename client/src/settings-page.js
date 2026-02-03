@@ -7,6 +7,29 @@ import { COLOR_OPTIONS, applyTheme } from "./themes";
 
 const API_URL = process.env.REACT_APP_API_URL || "http://localhost:3000";
 
+const CITY_OPTIONS = [
+  { id: "Atlanta", label: "Atlanta" },
+  { id: "New York", label: "New York" },
+  { id: "Los Angeles", label: "Los Angeles" },
+  { id: "Chicago", label: "Chicago" },
+  { id: "Houston", label: "Houston" },
+  { id: "Phoenix", label: "Phoenix" },
+  { id: "Philadelphia", label: "Philadelphia" },
+  { id: "San Antonio", label: "San Antonio" },
+  { id: "San Diego", label: "San Diego" },
+  { id: "Dallas", label: "Dallas" },
+  { id: "San Francisco", label: "San Francisco" },
+  { id: "Seattle", label: "Seattle" },
+  { id: "Denver", label: "Denver" },
+  { id: "Boston", label: "Boston" },
+  { id: "Miami", label: "Miami" },
+  { id: "London", label: "London" },
+  { id: "Paris", label: "Paris" },
+  { id: "Tokyo", label: "Tokyo" },
+  { id: "Sydney", label: "Sydney" },
+  { id: "Toronto", label: "Toronto" },
+];
+
 const Settings = ({ onOpenLoginModal, currentUser, onLogout }) => {
   // Safely stringify JSON for export: escape characters/sequences that can
   // cause issues if the JSON is later embedded in HTML or a <script> tag.
@@ -43,6 +66,8 @@ const Settings = ({ onOpenLoginModal, currentUser, onLogout }) => {
     }
   });
 
+  const [weatherCity, setWeatherCity] = React.useState("Atlanta");
+
   const [showAccountModal, setShowAccountModal] = useState(false);
   const [newName, setNewName] = useState("");
   const [newUsername, setNewUsername] = useState("");
@@ -67,6 +92,7 @@ const Settings = ({ onOpenLoginModal, currentUser, onLogout }) => {
           const settings = await response.json();
           setVal(settings.colorTheme || "zero");
           setFontVal(settings.fontTheme || "zero");
+          setWeatherCity(settings.weatherCity || "Atlanta");
         }
       } catch (error) {
         console.error("Failed to load user settings:", error);
@@ -121,6 +147,29 @@ const Settings = ({ onOpenLoginModal, currentUser, onLogout }) => {
       /* ignore */
     }
   }, [fontVal, currentUser, isLoadingSettings]);
+
+  // Persist weather city setting
+  React.useEffect(() => {
+    // Skip syncing during initial settings load
+    if (isLoadingSettings) return;
+
+    try {
+      localStorage.setItem("settings:weatherCity", weatherCity);
+      // Dispatch custom event to notify Weather component
+      window.dispatchEvent(new Event("weatherCityChanged"));
+
+      // Sync to server if logged in
+      if (currentUser) {
+        fetch(`${API_URL}/auth/user/${currentUser.id}/settings`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ weatherCity }),
+        }).catch((err) => console.error("Failed to sync weather city:", err));
+      }
+    } catch (e) {
+      /* ignore */
+    }
+  }, [weatherCity, currentUser, isLoadingSettings]);
 
   const handleUpdateName = async () => {
     if (!currentUser || !newName) return;
@@ -276,6 +325,16 @@ const Settings = ({ onOpenLoginModal, currentUser, onLogout }) => {
                 fontMap={FONT_MAP}
               />
             </div>
+            {currentUser && (
+              <div style={{ marginTop: 12 }} className="controls-row">
+                <label style={{ marginRight: 8 }}>Weather City:</label>
+                <Dropdown
+                  options={CITY_OPTIONS}
+                  value={weatherCity}
+                  onChange={(v) => setWeatherCity(v)}
+                />
+              </div>
+            )}
           </div>
 
           <hr className="settings-divider" />

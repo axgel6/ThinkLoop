@@ -1,0 +1,23 @@
+/* Weather - Minimal text style */
+.weather-text {
+  margin: 0;
+  color: var(--fg, #dcdcdc);
+  font-size: inherit;
+  font-family: inherit;
+  letter-spacing: 0.02em;
+  text-align: center;
+  margin-top: 10px;
+}
+
+.weather-separator {
+  color: var(--muted, #9a9a9a);
+  margin: 0 0.3em;
+}
+
+.weather-text.weather-loading {
+  color: var(--muted, #9a9a9a);
+}
+
+.weather-text.weather-error {
+  color: #ff6b6b;
+}

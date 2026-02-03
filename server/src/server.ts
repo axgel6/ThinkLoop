@@ -398,7 +398,7 @@ app.delete("/auth/user/:userId", async (req, res) => {
   }
 });
 
-// Get user settings (themes, fonts)
+// Get user settings (themes, fonts, weather)
 app.get("/auth/user/:userId/settings", async (req, res) => {
   try {
     const user = await userInfoCollection.findOne({
@@ -412,20 +412,22 @@ app.get("/auth/user/:userId/settings", async (req, res) => {
     res.json({
       colorTheme: user.colorTheme || "zero",
       fontTheme: user.fontTheme || "zero",
+      weatherCity: user.weatherCity || "Atlanta",
     });
   } catch (error) {
     res.status(500).json({ error: "Failed to fetch settings" });
   }
 });
 
-// Update user settings (themes, fonts)
+// Update user settings (themes, fonts, weather)
 app.put("/auth/user/:userId/settings", async (req, res) => {
   try {
-    const { colorTheme, fontTheme } = req.body;
+    const { colorTheme, fontTheme, weatherCity } = req.body;
 
     const updateFields: any = {};
     if (colorTheme !== undefined) updateFields.colorTheme = colorTheme;
     if (fontTheme !== undefined) updateFields.fontTheme = fontTheme;
+    if (weatherCity !== undefined) updateFields.weatherCity = weatherCity;
 
     const result = await userInfoCollection.updateOne(
       { _id: new ObjectId(req.params.userId) },

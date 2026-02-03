@@ -30,6 +30,13 @@ function App() {
       return null;
     }
   });
+  const [weatherCity, setWeatherCity] = useState(() => {
+    try {
+      return localStorage.getItem("settings:weatherCity") || "Atlanta";
+    } catch (e) {
+      return "Atlanta";
+    }
+  });
 
   const titles = {
     home: "Home",
@@ -65,8 +72,10 @@ function App() {
     // Reset to default theme and apply immediately
     localStorage.setItem("settings:selected", "zero");
     localStorage.setItem("settings:font", "zero");
+    localStorage.setItem("settings:weatherCity", "Atlanta");
     applyTheme("zero");
     applyFont("zero");
+    setWeatherCity("Atlanta");
   };
 
   // Save activeTab to localStorage whenever it changes
@@ -99,10 +108,12 @@ function App() {
           const settings = await response.json();
           const newTheme = settings.colorTheme || "zero";
           const newFont = settings.fontTheme || "zero";
+          const newCity = settings.weatherCity || "Atlanta";
 
           // Update localStorage and apply if changed
           const currentTheme = localStorage.getItem("settings:selected");
           const currentFont = localStorage.getItem("settings:font");
+          const currentCity = localStorage.getItem("settings:weatherCity");
 
           if (newTheme !== currentTheme) {
             localStorage.setItem("settings:selected", newTheme);
@@ -111,6 +122,11 @@ function App() {
           if (newFont !== currentFont) {
             localStorage.setItem("settings:font", newFont);
             applyFont(newFont);
+          }
+          if (newCity !== currentCity) {
+            localStorage.setItem("settings:weatherCity", newCity);
+            setWeatherCity(newCity);
+            window.dispatchEvent(new Event("weatherCityChanged"));
           }
         }
       } catch (error) {
@@ -134,6 +150,8 @@ function App() {
         applyTheme(e.newValue || "zero");
       } else if (e.key === "settings:font") {
         applyFont(e.newValue || "mono");
+      } else if (e.key === "settings:weatherCity") {
+        setWeatherCity(e.newValue || "Atlanta");
       }
     };
 
@@ -153,7 +171,7 @@ function App() {
           {"Hello, " + user + "!"}
         </h1>
       </div>
-      {activeTab === "home" && <Home />}
+      {activeTab === "home" && <Home weatherCity={weatherCity} />}
       {activeTab === "notes" && <NotesHandler currentUser={currentUser} />}
       {activeTab === "tasks" && <Tasks />}
       {activeTab === "settings" && (

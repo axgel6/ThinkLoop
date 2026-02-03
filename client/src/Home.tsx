@@ -1,7 +1,12 @@
 import React, { useState, useEffect } from "react";
+import Weather from "./Weather";
 import "./Home.css";
 
-export default function Home() {
+interface HomeProps {
+  weatherCity?: string;
+}
+
+export default function Home({ weatherCity }: HomeProps) {
   const [currentTime, setCurrentTime] = useState<string>("");
 
   const getCurrentTime = () => {
@@ -25,6 +30,7 @@ export default function Home() {
   return (
     <div id="home-content">
       <h1>{currentTime}</h1>
+      <Weather city={weatherCity} />
     </div>
   );
 }
