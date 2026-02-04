@@ -16,7 +16,7 @@
   gap: 12px;
   padding: 12px 14px;
   margin-bottom: 16px;
-  border-radius: 18px;
+  border-radius: 30px;
   border: 1px solid var(--panel-border, rgba(255, 255, 255, 0.08));
   background: var(--panel-bg, rgba(25, 25, 25, 0.5));
   -webkit-backdrop-filter: blur(6px) saturate(150%);
@@ -39,7 +39,7 @@
   width: 100%;
   max-width: 420px;
   padding: 10px 12px;
-  border-radius: 14px;
+  border-radius: 30px;
   border: 1px solid rgba(255, 255, 255, 0.14);
   background: rgba(255, 255, 255, 0.06);
   color: var(--fg, #ffffff);

@@ -68,7 +68,9 @@ export default function LoginModal({
           className="modal-close"
           onClick={onClose}
           aria-label="Close"
-        ></button>
+        >
+          ✕
+        </button>
         <h1>{isRegister ? "Sign Up" : "Sign In"}</h1>
         {error && (
           <div

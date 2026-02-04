@@ -19,6 +19,12 @@ export default function Home({ weatherCity, currentUser }: HomeProps) {
       lastModified?: number;
     }>
   >([]);
+  const [expandedNote, setExpandedNote] = useState<{
+    id: string;
+    title?: string;
+    content?: string;
+    lastModified?: number;
+  } | null>(null);
 
   const getCurrentTime = () => {
     const options: Intl.DateTimeFormatOptions = {
@@ -150,7 +156,11 @@ export default function Home({ weatherCity, currentUser }: HomeProps) {
         ) : (
           <div className="home-pinned-list">
             {pinnedNotes.map((note) => (
-              <div key={note.id} className="home-pinned-card">
+              <div
+                key={note.id}
+                className="home-pinned-card"
+                onClick={() => setExpandedNote(note)}
+              >
                 <div className="home-pinned-title">
                   {note.title?.trim() || "Untitled"}
                 </div>
@@ -163,6 +173,41 @@ export default function Home({ weatherCity, currentUser }: HomeProps) {
           </div>
         )}
       </div>
+
+      {expandedNote && (
+        <div
+          className="note-modal-overlay"
+          onClick={() => setExpandedNote(null)}
+        >
+          <div
+            className="note-modal-popup"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              className="modal-close-btn"
+              onClick={() => setExpandedNote(null)}
+              aria-label="Close note"
+            >
+              ✕
+            </button>
+            <div className="modal-note-title">
+              {expandedNote.title?.trim() || "Untitled"}
+            </div>
+            <div
+              className="modal-note-content"
+              dangerouslySetInnerHTML={{
+                __html: expandedNote.content || "(No content)",
+              }}
+            />
+            {expandedNote.lastModified && (
+              <div className="modal-note-footer">
+                Last modified:{" "}
+                {new Date(expandedNote.lastModified).toLocaleString()}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

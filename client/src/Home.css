@@ -51,6 +51,14 @@
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.08);
   color: var(--fg, #dcdcdc);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.home-pinned-card:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.14);
+  transform: translateY(-2px);
 }
 
 .home-pinned-title {
@@ -63,4 +71,162 @@
   font-size: 13px;
   color: var(--muted, #b5b5b5);
   line-height: 1.4;
+}
+
+/* Modal Overlay */
+.note-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+  padding: 20px;
+  -webkit-backdrop-filter: blur(2px);
+  backdrop-filter: blur(2px);
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Modal Popup */
+.note-modal-popup {
+  background: var(--panel-bg-solid, rgba(55, 55, 55, 0.95));
+  border: 1px solid var(--panel-border, rgba(255, 255, 255, 0.12));
+  border-radius: 28px;
+  padding: 32px;
+  max-width: 600px;
+  width: 100%;
+  max-height: 80vh;
+  overflow-y: auto;
+  position: relative;
+  z-index: 1000;
+  -webkit-backdrop-filter: blur(10px) saturate(150%);
+  backdrop-filter: blur(10px) saturate(150%);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  animation: slideUp 0.3s ease;
+  color: var(--fg, #dcdcdc);
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.modal-close-btn {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--fg, #dcdcdc);
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  font-size: 20px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.modal-close-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.2);
+  transform: scale(1.1);
+}
+
+.modal-close-btn:active {
+  transform: scale(0.95);
+}
+
+.modal-note-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--fg, #dcdcdc);
+  margin-bottom: 16px;
+  margin-top: 4px;
+  word-wrap: break-word;
+}
+
+.modal-note-content {
+  font-size: 15px;
+  color: var(--fg, #dcdcdc);
+  line-height: 1.6;
+  word-wrap: break-word;
+  margin-bottom: 16px;
+}
+
+/* Style HTML content inside the modal */
+.modal-note-content h1,
+.modal-note-content h2,
+.modal-note-content h3,
+.modal-note-content h4,
+.modal-note-content h5,
+.modal-note-content h6 {
+  color: var(--fg, #dcdcdc);
+  margin-top: 12px;
+  margin-bottom: 8px;
+}
+
+.modal-note-content p {
+  margin-bottom: 10px;
+}
+
+.modal-note-content ul,
+.modal-note-content ol {
+  margin-left: 20px;
+  margin-bottom: 10px;
+}
+
+.modal-note-content a {
+  color: #7ba3e1;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.modal-note-content a:hover {
+  color: #a8c7ff;
+  text-decoration: underline;
+}
+
+.modal-note-content code {
+  background: rgba(255, 255, 255, 0.06);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: monospace;
+  color: #b5b5b5;
+}
+
+.modal-note-content blockquote {
+  border-left: 3px solid rgba(255, 255, 255, 0.2);
+  padding-left: 12px;
+  color: var(--muted, #b5b5b5);
+  margin: 10px 0;
+}
+
+.modal-note-footer {
+  font-size: 12px;
+  color: var(--muted, #9a9a9a);
+  margin-top: 20px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.04);
 }

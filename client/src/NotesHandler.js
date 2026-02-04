@@ -251,12 +251,28 @@ const NotesHandler = ({ currentUser }) => {
 
   const handleTogglePin = useCallback((id) => {
     const stringId = String(id);
+    const isPinned = pinnedIds.includes(stringId);
+    
+    // Update local state
     setPinnedIds((prev) =>
-      prev.includes(stringId)
+      isPinned
         ? prev.filter((p) => p !== stringId)
         : [stringId, ...prev],
     );
-  }, []);
+
+    // Only update server if logged in
+    if (!currentUser) return;
+
+    try {
+      fetch(`${API_URL}/notes/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ isPinned: !isPinned }),
+      });
+    } catch (error) {
+      console.error("Failed to update pin status:", error);
+    }
+  }, [currentUser, pinnedIds]);
 
   const updateNoteContent = useCallback(
     async (id, content) => {
@@ -407,6 +423,13 @@ const NotesHandler = ({ currentUser }) => {
       })
     : notes;
 
+  // Sort to show pinned notes at the top
+  const sortedNotes = [...visibleNotes].sort((a, b) => {
+    const aIsPinned = pinnedIds.includes(String(a.id)) ? 1 : 0;
+    const bIsPinned = pinnedIds.includes(String(b.id)) ? 1 : 0;
+    return bIsPinned - aIsPinned;
+  });
+
   const hasSearch = normalizedQuery.length > 0;
 
   return (
@@ -487,7 +510,7 @@ const NotesHandler = ({ currentUser }) => {
           </p>
         </div>
       ) : (
-        visibleNotes.map((n) => (
+        sortedNotes.map((n) => (
           <NoteItem
             key={n.id}
             note={n}

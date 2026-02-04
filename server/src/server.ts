@@ -58,7 +58,7 @@ app.get("/notes", async (req, res) => {
 
     const notes = await notesCollection
       .find(filter)
-      .sort({ createdAt: -1 })
+      .sort({ isPinned: -1, createdAt: -1 })
       .toArray();
 
     // Transform MongoDB _id to id for client compatibility
@@ -72,6 +72,7 @@ app.get("/notes", async (req, res) => {
       createdAt: note.createdAt || Date.now(),
       lastModified: note.lastModified || note.createdAt || Date.now(),
       userId: note.userId || null,
+      isPinned: note.isPinned || false,
     }));
 
     res.json(transformedNotes);
@@ -98,7 +99,7 @@ app.get("/notes/:id", async (req, res) => {
 // Create note
 app.post("/notes", async (req, res) => {
   try {
-    const { title, content, font, fontSize, theme, userId } = req.body;
+    const { title, content, font, fontSize, theme, userId, isPinned } = req.body;
     const now = Date.now();
     const newNote = {
       title: title || "",
@@ -107,6 +108,7 @@ app.post("/notes", async (req, res) => {
       fontSize: fontSize || 16,
       theme: theme || "default",
       userId: userId || null,
+      isPinned: isPinned || false,
       createdAt: now,
       lastModified: now,
     };
@@ -123,7 +125,7 @@ app.post("/notes", async (req, res) => {
 // Update note
 app.put("/notes/:id", async (req, res) => {
   try {
-    const { title, content, font, fontSize, theme } = req.body;
+    const { title, content, font, fontSize, theme, isPinned } = req.body;
     const updateFields: any = {
       lastModified: Date.now(),
     };
@@ -133,6 +135,7 @@ app.put("/notes/:id", async (req, res) => {
     if (font !== undefined) updateFields.font = font;
     if (fontSize !== undefined) updateFields.fontSize = fontSize;
     if (theme !== undefined) updateFields.theme = theme;
+    if (isPinned !== undefined) updateFields.isPinned = isPinned;
 
     const result = await notesCollection.updateOne(
       { _id: new ObjectId(req.params.id) },

@@ -37,6 +37,9 @@ const TextField = ({
   onFontSizeChange,
   isPinned = false,
   onTogglePin,
+  isFullScreen = false,
+  onFullScreenChange,
+  noteId,
 }) => {
   // keep a ticking clock to refresh relative-time labels every minute
   const [now, setNow] = useState(Date.now());
@@ -395,6 +398,20 @@ const TextField = ({
   // Prepare inline variables for the selected theme (or undefined for default)
   const themeVars = noteTheme === "default" ? undefined : THEME_VARS[noteTheme];
 
+  // Handle Escape key to close full-screen
+  useEffect(() => {
+    if (!isFullScreen) return;
+
+    const handleEscape = (e) => {
+      if (e.key === "Escape") {
+        onFullScreenChange?.(null);
+      }
+    };
+
+    window.addEventListener("keydown", handleEscape);
+    return () => window.removeEventListener("keydown", handleEscape);
+  }, [isFullScreen, onFullScreenChange]);
+
   return (
     <div
       className={`text-field ${isEditMode ? "edit-mode" : "view-mode"}`}
@@ -609,6 +626,30 @@ const TextField = ({
               </Button>
             )}
 
+            {onFullScreenChange && (
+              <Button
+                className="fullscreen-btn"
+                onClick={() => onFullScreenChange(String(noteId))}
+                aria-label="Fullscreen note"
+                title="Fullscreen note"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" />
+                </svg>
+              </Button>
+            )}
+
             {onRemove && (
               <Button
                 className="remove-btn"
@@ -635,6 +676,49 @@ const TextField = ({
                 </svg>
               </Button>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Full-screen modal */}
+      {isFullScreen && (
+        <div className="fullscreen-modal">
+          <div className="fullscreen-modal-overlay" onClick={() => onFullScreenChange?.(null)} />
+          <div className="fullscreen-modal-content" style={themeVars}>
+            <div className="fullscreen-header">
+              <div className="fullscreen-title">{noteTitle || "Untitled"}</div>
+              <Button
+                className="fullscreen-close-btn"
+                onClick={() => onFullScreenChange?.(null)}
+                aria-label="Close fullscreen"
+                title="Close fullscreen (Esc)"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden="true"
+                >
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+              </Button>
+            </div>
+            <div
+              ref={editorRef}
+              className="fullscreen-editor"
+              style={{
+                fontSize: `${noteFontSize}px`,
+                fontFamily: FONT_MAP[noteFont] || "monospace",
+              }}
+              dangerouslySetInnerHTML={{ __html: value }}
+            />
           </div>
         </div>
       )}

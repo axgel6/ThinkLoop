@@ -3,7 +3,8 @@
 // Color theme options for settings
 export const COLOR_OPTIONS = [
   { id: "zero", label: "Default" },
-  { id: "one", label: "Black" },
+  { id: "one", label: "Dark" },
+  { id: "light", label: "Light" },
   { id: "two", label: "Blue" },
   { id: "three", label: "Gray" },
   { id: "four", label: "Cream" },
@@ -19,12 +20,14 @@ export const COLOR_OPTIONS = [
   { id: "fourteen", label: "Intelligence" },
   { id: "fifteen", label: "Snow Leopard" },
   { id: "sixteen", label: "eXPerience" },
+  { id: "seventeen", label: "Bright Red" },
 ];
 
 // Mapping of color option IDs to CSS theme classes
 export const THEME_CLASS_MAP = {
   zero: "theme-default",
   one: "theme-dark",
+  light: "theme-light",
   two: "theme-blue",
   three: "theme-gray",
   four: "theme-cream",
@@ -40,6 +43,7 @@ export const THEME_CLASS_MAP = {
   fourteen: "theme-ai",
   fifteen: "theme-snowleopard",
   sixteen: "theme-windowsxp",
+  seventeen: "theme-brightred",
 };
 
 // All theme classes (auto-generated from THEME_CLASS_MAP)
@@ -49,6 +53,7 @@ export const ALL_THEME_CLASSES = Object.values(THEME_CLASS_MAP);
 export const NOTE_THEME_OPTIONS = [
   { id: "default", label: "Match Theme" },
   { id: "dark", label: "Dark" },
+  { id: "light", label: "Light" },
   { id: "brown", label: "Brown" },
   { id: "blue", label: "Blue" },
   { id: "gray", label: "Gray" },
@@ -64,6 +69,7 @@ export const NOTE_THEME_OPTIONS = [
   { id: "ai", label: "Intelligence" },
   { id: "snowleopard", label: "Snow Leopard" },
   { id: "windowsxp", label: "eXPerience" },
+  { id: "brightred", label: "Bright Red" },
 ];
 
 // CSS custom properties for each theme (used for per-note theming)
@@ -87,6 +93,16 @@ export const THEME_VARS = {
     "--panel-bg-solid": "rgb(20, 20, 20)",
     "--glass-bg":
       "linear-gradient(135deg, rgba(0, 0, 0, 0.195), rgba(255, 255, 255, 0.05))",
+  },
+  light: {
+    "--bg": "#ffffff",
+    "--fg": "#1a1a1a",
+    "--muted": "#666666",
+    "--panel-bg": "rgba(240, 240, 240, 0.8)",
+    "--panel-border": "rgba(0, 0, 0, 0.1)",
+    "--panel-bg-solid": "rgb(250, 250, 250)",
+    "--glass-bg":
+      "linear-gradient(135deg, rgba(255, 255, 255, 0.8), rgba(200, 200, 200, 0.1))",
   },
   blue: {
     "--bg": "#0a1628",
@@ -239,6 +255,16 @@ export const THEME_VARS = {
     "--panel-bg-solid": "#2f5fa5",
     "--glass-bg":
       "linear-gradient(135deg, rgba(190, 230, 255, 0.55), rgba(255, 255, 255, 0.15))",
+  },
+  brightred: {
+    "--bg": "#8B1A1A",
+    "--fg": "#FFFFFF",
+    "--muted": "#F4A8A8",
+    "--panel-bg": "rgba(180, 50, 50, 0.3)",
+    "--panel-border": "rgba(255, 170, 170, 0.4)",
+    "--panel-bg-solid": "#A52A2A",
+    "--glass-bg":
+      "linear-gradient(135deg, rgba(220, 80, 80, 0.3), rgba(139, 26, 26, 0.5))",
   },
 };
 

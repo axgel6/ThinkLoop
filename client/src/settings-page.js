@@ -377,7 +377,9 @@ const Settings = ({ onOpenLoginModal, currentUser, onLogout }) => {
                   className="modal-close"
                   onClick={() => setShowAccountModal(false)}
                   aria-label="Close"
-                ></button>
+                >
+                  ✕
+                </button>
                 <h1>Manage Account</h1>
 
                 {accountError && (
