@@ -43,50 +43,61 @@ const Checklist: React.FC<ChecklistProps> = ({ currentUser }) => {
           return;
         }
 
+        const mergeKey = `tasksmerged:${currentUser.id}`;
+        const alreadyMerged = localStorage.getItem(mergeKey) === "true";
+
         const url = `${API_URL}/tasks?userId=${currentUser.id}`;
         const response = await fetch(url);
         if (response.ok) {
           const serverTasks = await response.json();
 
-          // Check if there are local tasks to merge
-          const localTasks = localStorage.getItem(STORAGE_KEY);
-          if (localTasks) {
-            const parsedLocalTasks = JSON.parse(localTasks);
+          // Only merge local tasks once per user
+          if (!alreadyMerged) {
+            const localTasks = localStorage.getItem(STORAGE_KEY);
+            if (localTasks) {
+              const parsedLocalTasks = JSON.parse(localTasks);
 
-            // Upload each local task to the server
-            for (const localTask of parsedLocalTasks) {
-              try {
-                const taskToUpload: any = {
-                  text: localTask.text,
-                  completed: localTask.completed,
-                  userId: currentUser.id,
-                };
-                if (localTask.completedAt) {
-                  taskToUpload.completedAt = localTask.completedAt;
+              // Upload each local task to the server
+              for (const localTask of parsedLocalTasks) {
+                try {
+                  const taskToUpload: any = {
+                    text: localTask.text,
+                    completed: localTask.completed,
+                    userId: currentUser.id,
+                  };
+                  if (localTask.completedAt) {
+                    taskToUpload.completedAt = localTask.completedAt;
+                  }
+
+                  await fetch(`${API_URL}/tasks`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(taskToUpload),
+                  });
+                } catch (error) {
+                  console.error("Failed to upload local task:", error);
                 }
-
-                await fetch(`${API_URL}/tasks`, {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify(taskToUpload),
-                });
-              } catch (error) {
-                console.error("Failed to upload local task:", error);
               }
-            }
 
-            // Clear local tasks after uploading
-            localStorage.removeItem(STORAGE_KEY);
+              // Clear local tasks after uploading
+              localStorage.removeItem(STORAGE_KEY);
 
-            // Re-fetch to get all tasks including newly uploaded ones
-            const refreshResponse = await fetch(url);
-            if (refreshResponse.ok) {
-              const allTasks = await refreshResponse.json();
-              setItems(allTasks);
+              // Re-fetch to get all tasks including newly uploaded ones
+              const refreshResponse = await fetch(url);
+              if (refreshResponse.ok) {
+                const allTasks = await refreshResponse.json();
+                setItems(allTasks);
+              } else {
+                setItems(serverTasks);
+              }
             } else {
               setItems(serverTasks);
             }
+
+            // Mark as merged for this user
+            localStorage.setItem(mergeKey, "true");
           } else {
+            // Already merged, just load server tasks
             setItems(serverTasks);
           }
         }
