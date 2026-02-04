@@ -249,30 +249,31 @@ const NotesHandler = ({ currentUser }) => {
     [currentUser],
   );
 
-  const handleTogglePin = useCallback((id) => {
-    const stringId = String(id);
-    const isPinned = pinnedIds.includes(stringId);
-    
-    // Update local state
-    setPinnedIds((prev) =>
-      isPinned
-        ? prev.filter((p) => p !== stringId)
-        : [stringId, ...prev],
-    );
+  const handleTogglePin = useCallback(
+    (id) => {
+      const stringId = String(id);
+      const isPinned = pinnedIds.includes(stringId);
 
-    // Only update server if logged in
-    if (!currentUser) return;
+      // Update local state
+      setPinnedIds((prev) =>
+        isPinned ? prev.filter((p) => p !== stringId) : [stringId, ...prev],
+      );
 
-    try {
-      fetch(`${API_URL}/notes/${id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ isPinned: !isPinned }),
-      });
-    } catch (error) {
-      console.error("Failed to update pin status:", error);
-    }
-  }, [currentUser, pinnedIds]);
+      // Only update server if logged in
+      if (!currentUser) return;
+
+      try {
+        fetch(`${API_URL}/notes/${id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ isPinned: !isPinned }),
+        });
+      } catch (error) {
+        console.error("Failed to update pin status:", error);
+      }
+    },
+    [currentUser, pinnedIds],
+  );
 
   const updateNoteContent = useCallback(
     async (id, content) => {

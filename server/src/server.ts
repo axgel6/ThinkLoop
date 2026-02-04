@@ -99,7 +99,8 @@ app.get("/notes/:id", async (req, res) => {
 // Create note
 app.post("/notes", async (req, res) => {
   try {
-    const { title, content, font, fontSize, theme, userId, isPinned } = req.body;
+    const { title, content, font, fontSize, theme, userId, isPinned } =
+      req.body;
     const now = Date.now();
     const newNote = {
       title: title || "",

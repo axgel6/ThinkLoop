@@ -64,25 +64,16 @@ export default function LoginModal({
   return (
     <div className="modal-backdrop" onClick={handleBackdropClick}>
       <div className="modal-content">
-        <button
-          className="modal-close"
-          onClick={onClose}
-          aria-label="Close"
-        >
+        <button className="modal-close" onClick={onClose} aria-label="Close">
           ✕
         </button>
         <h1>{isRegister ? "Sign Up" : "Sign In"}</h1>
-        {error && (
-          <div
-            style={{
-              color: "#ff6b6b",
-              marginBottom: "16px",
-              textAlign: "center",
-            }}
-          >
-            {error}
-          </div>
-        )}
+        <p>
+          {isRegister
+            ? "Create a new account to get started"
+            : "Welcome back to ThinkLoop"}
+        </p>
+        {error && <div className="error-message">{error}</div>}
         <form onSubmit={handleSubmit} className="login-form">
           {isRegister && (
             <div className="form-group">
@@ -123,23 +114,12 @@ export default function LoginModal({
             {loading ? "Please wait..." : isRegister ? "Register" : "Login"}
           </button>
         </form>
-        <p
-          style={{
-            textAlign: "center",
-            marginTop: "16px",
-            color: "var(--muted, #9a9a9a)",
-          }}
-        >
+        <p className="auth-toggle">
           {isRegister ? "Already have an account? " : "Don't have an account? "}
           <span
             onClick={() => {
               setIsRegister(!isRegister);
               setError("");
-            }}
-            style={{
-              color: "var(--fg, #dcdcdc)",
-              cursor: "pointer",
-              textDecoration: "underline",
             }}
           >
             {isRegister ? "Sign In" : "Sign Up"}
