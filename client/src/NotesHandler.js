@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import TextField from "./TextField";
 import "./NotesHandler.css";
 import Button from "./Button";
@@ -66,8 +66,81 @@ const API_URL = process.env.REACT_APP_API_URL || "http://localhost:3000";
 const NotesHandler = ({ currentUser }) => {
   const [notes, setNotes] = useState([]);
   const [loading, setLoading] = useState(true);
+  const lastSyncTime = useRef(0);
+  const isEditing = useRef(false);
+  const editTimeout = useRef(null);
 
-  // Fetch notes from server on mount
+  // Track when user is actively editing to avoid overwriting their changes
+  const markEditing = useCallback(() => {
+    isEditing.current = true;
+    if (editTimeout.current) clearTimeout(editTimeout.current);
+    // Consider editing done after 2 seconds of inactivity
+    editTimeout.current = setTimeout(() => {
+      isEditing.current = false;
+    }, 2000);
+  }, []);
+
+  // Fetch notes from server
+  const fetchNotesFromServer = useCallback(async (isPolling = false) => {
+    if (!currentUser) return null;
+
+    try {
+      const url = `${API_URL}/notes?userId=${currentUser.id}`;
+      const response = await fetch(url);
+      if (response.ok) {
+        const serverNotes = await response.json();
+        return serverNotes;
+      }
+    } catch (error) {
+      if (!isPolling) {
+        console.error("Failed to fetch notes:", error);
+      }
+    }
+    return null;
+  }, [currentUser]);
+
+  // Merge server notes with local state intelligently
+  const mergeNotes = useCallback((serverNotes, localNotes) => {
+    if (!serverNotes) return localNotes;
+
+    const serverMap = new Map(serverNotes.map(n => [n.id, n]));
+    const localMap = new Map(localNotes.map(n => [n.id, n]));
+    const merged = [];
+
+    // Add all server notes, preferring newer versions
+    for (const serverNote of serverNotes) {
+      const localNote = localMap.get(serverNote.id);
+      if (localNote) {
+        // Keep whichever was modified more recently
+        if (serverNote.lastModified >= localNote.lastModified) {
+          merged.push(serverNote);
+        } else {
+          merged.push(localNote);
+        }
+      } else {
+        merged.push(serverNote);
+      }
+    }
+
+    // Add any local notes that aren't on server (newly created)
+    for (const localNote of localNotes) {
+      if (!serverMap.has(localNote.id)) {
+        // This note was deleted on another device, don't add it back
+        // Unless it was created very recently (within last 10 seconds)
+        const isNewlyCreated = Date.now() - localNote.createdAt < 10000;
+        if (isNewlyCreated) {
+          merged.push(localNote);
+        }
+      }
+    }
+
+    // Sort by createdAt descending (newest first)
+    merged.sort((a, b) => b.createdAt - a.createdAt);
+
+    return merged;
+  }, []);
+
+  // Initial fetch on mount
   useEffect(() => {
     const fetchNotes = async () => {
       try {
@@ -142,6 +215,58 @@ const NotesHandler = ({ currentUser }) => {
     fetchNotes();
   }, [currentUser]);
 
+  // Poll for updates from server every 5 seconds (like theming)
+  useEffect(() => {
+    if (!currentUser) return;
+
+    const pollForUpdates = async () => {
+      // Don't poll while user is actively editing
+      if (isEditing.current) return;
+
+      const serverNotes = await fetchNotesFromServer(true);
+      if (serverNotes) {
+        setNotes((prevNotes) => {
+          const merged = mergeNotes(serverNotes, prevNotes);
+          // Only update if there are actual changes
+          const prevIds = prevNotes
+            .map((n) => `${n.id}-${n.lastModified}`)
+            .join(",");
+          const mergedIds = merged
+            .map((n) => `${n.id}-${n.lastModified}`)
+            .join(",");
+          if (prevIds !== mergedIds) {
+            lastSyncTime.current = Date.now();
+            return merged;
+          }
+          return prevNotes;
+        });
+      }
+    };
+
+    // Poll every 5 seconds
+    const interval = setInterval(pollForUpdates, 5000);
+
+    return () => clearInterval(interval);
+  }, [currentUser, fetchNotesFromServer, mergeNotes]);
+
+  // Listen for visibility changes to sync when tab becomes active
+  useEffect(() => {
+    if (!currentUser) return;
+
+    const handleVisibilityChange = async () => {
+      if (document.visibilityState === "visible" && !isEditing.current) {
+        const serverNotes = await fetchNotesFromServer(true);
+        if (serverNotes) {
+          setNotes((prevNotes) => mergeNotes(serverNotes, prevNotes));
+        }
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () =>
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+  }, [currentUser, fetchNotesFromServer, mergeNotes]);
+
   // Persist local notes to localStorage when logged out
   useEffect(() => {
     if (!loading && !currentUser && notes.length >= 0) {
@@ -211,6 +336,7 @@ const NotesHandler = ({ currentUser }) => {
 
   const updateNoteContent = useCallback(
     async (id, content) => {
+      markEditing(); // Prevent polling from overwriting
       // Always update locally
       setNotes((prev) =>
         prev.map((n) =>
@@ -231,11 +357,12 @@ const NotesHandler = ({ currentUser }) => {
         console.error("Failed to update note content:", error);
       }
     },
-    [currentUser],
+    [currentUser, markEditing],
   );
 
   const updateNoteTitle = useCallback(
     async (id, title) => {
+      markEditing(); // Prevent polling from overwriting
       // Always update locally
       setNotes((prev) =>
         prev.map((n) =>
@@ -256,7 +383,7 @@ const NotesHandler = ({ currentUser }) => {
         console.error("Failed to update note title:", error);
       }
     },
-    [currentUser],
+    [currentUser, markEditing],
   );
 
   const updateNoteFont = useCallback(
