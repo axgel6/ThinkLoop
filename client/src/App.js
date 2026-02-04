@@ -171,9 +171,11 @@ function App() {
           {"Hello, " + user + "!"}
         </h1>
       </div>
-      {activeTab === "home" && <Home weatherCity={weatherCity} />}
+      {activeTab === "home" && (
+        <Home weatherCity={weatherCity} currentUser={currentUser} />
+      )}
       {activeTab === "notes" && <NotesHandler currentUser={currentUser} />}
-      {activeTab === "tasks" && <Tasks />}
+      {activeTab === "tasks" && <Tasks currentUser={currentUser} />}
       {activeTab === "settings" && (
         <Settings
           onOpenLoginModal={() => setIsLoginModalOpen(true)}

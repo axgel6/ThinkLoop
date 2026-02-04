@@ -1,7 +1,7 @@
 import React from "react";
 import Checklist from "./Checklist";
 
-const Tasks = () => {
+const Tasks = ({ currentUser }) => {
   return (
     <div
       style={{
@@ -9,7 +9,7 @@ const Tasks = () => {
         minHeight: "100vh",
       }}
     >
-      <Checklist />
+      <Checklist currentUser={currentUser} />
     </div>
   );
 };

@@ -35,6 +35,8 @@ const TextField = ({
   // optional per-note fontSize (pixels) and change handler
   fontSize,
   onFontSizeChange,
+  isPinned = false,
+  onTogglePin,
 }) => {
   // keep a ticking clock to refresh relative-time labels every minute
   const [now, setNow] = useState(Date.now());
@@ -73,7 +75,7 @@ const TextField = ({
   // per-note font size in pixels
   const [noteFontSize, setNoteFontSize] = useState(
     // prefer explicit prop, fallback to 16
-    typeof fontSize !== "undefined" ? fontSize : 16
+    typeof fontSize !== "undefined" ? fontSize : 16,
   );
   // Default per-note theme is 'default' which uses global variables
   const [noteTheme, setNoteTheme] = useState(themeProp ?? "default");
@@ -85,7 +87,7 @@ const TextField = ({
   const redoStackRef = useRef([]);
   const lastSnapshotTimeRef = useRef(Date.now());
   const lastSnapshotTextRef = useRef(
-    String(initialValue || "").replace(/<[^>]+>/g, "")
+    String(initialValue || "").replace(/<[^>]+>/g, ""),
   );
 
   // Undo/redo stacks for the title (plain strings)
@@ -311,7 +313,7 @@ const TextField = ({
     // try to restore selection; fall back to lastEditorRangeRef
     setTimeout(
       () => restoreEditorSelection(savedRange || lastEditorRangeRef.current),
-      0
+      0,
     );
   };
 
@@ -354,7 +356,7 @@ const TextField = ({
     lastSnapshotTimeRef.current = Date.now();
     setTimeout(
       () => restoreEditorSelection(savedRange || lastEditorRangeRef.current),
-      0
+      0,
     );
   };
 
@@ -579,30 +581,61 @@ const TextField = ({
             ) : null}
           </div>
 
-          {onRemove && (
-            <Button
-              className="remove-btn"
-              onClick={onRemove}
-              aria-label="Remove note"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
+          <div className="note-footer-actions">
+            {onTogglePin && (
+              <Button
+                className={`pin-btn${isPinned ? " active" : ""}`}
+                onClick={onTogglePin}
+                aria-label={isPinned ? "Unpin note" : "Pin note"}
+                title={isPinned ? "Unpin note" : "Pin note"}
               >
-                <path d="M3 6h18" />
-                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-                <line x1="10" y1="11" x2="10" y2="17" />
-                <line x1="14" y1="11" x2="14" y2="17" />
-              </svg>
-            </Button>
-          )}
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="M12 17v5" />
+                  <path d="M9 7V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v3" />
+                  <path d="M5 9h14" />
+                  <path d="M7 9l-2 7h14l-2-7" />
+                </svg>
+              </Button>
+            )}
+
+            {onRemove && (
+              <Button
+                className="remove-btn"
+                onClick={onRemove}
+                aria-label="Remove note"
+                title="Remove note"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="M3 6h18" />
+                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                  <line x1="10" y1="11" x2="10" y2="17" />
+                  <line x1="14" y1="11" x2="14" y2="17" />
+                </svg>
+              </Button>
+            )}
+          </div>
         </div>
       )}
     </div>

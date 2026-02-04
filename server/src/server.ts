@@ -29,6 +29,7 @@ const client = new MongoClient(uri, {
 
 let db: any;
 let notesCollection: any;
+let tasksCollection: any;
 let userInfoCollection: any;
 
 // Connect to MongoDB
@@ -39,6 +40,7 @@ async function connectDB() {
 
     db = client.db("ThinkLoop");
     notesCollection = db.collection("notes");
+    tasksCollection = db.collection("tasks");
     userInfoCollection = db.collection("users");
   } catch (error) {
     console.error("MongoDB connection error:", error);
@@ -157,6 +159,107 @@ app.delete("/notes/:id", async (req, res) => {
     res.json({ message: "Note deleted successfully" });
   } catch (error) {
     res.status(500).json({ error: "Failed to delete note" });
+  }
+});
+
+// Routes for tasks
+
+// Get all tasks (filtered by user if userId provided)
+app.get("/tasks", async (req, res) => {
+  try {
+    const { userId } = req.query;
+    const filter = userId ? { userId } : {};
+
+    const tasks = await tasksCollection
+      .find(filter)
+      .sort({ createdAt: -1 })
+      .toArray();
+
+    res.json(
+      tasks.map((task: any) => ({
+        id: task._id.toString(),
+        ...task,
+      })),
+    );
+  } catch (error) {
+    res.status(500).json({ error: "Failed to fetch tasks" });
+  }
+});
+
+// Get single task
+app.get("/tasks/:id", async (req, res) => {
+  try {
+    const task = await tasksCollection.findOne({
+      _id: new ObjectId(req.params.id),
+    });
+    if (!task) {
+      return res.status(404).json({ error: "Task not found" });
+    }
+    res.json({ id: task._id.toString(), ...task });
+  } catch (error) {
+    res.status(500).json({ error: "Failed to fetch task" });
+  }
+});
+
+// Create task
+app.post("/tasks", async (req, res) => {
+  try {
+    const { text, completed, userId } = req.body;
+    const now = Date.now();
+    const newTask = {
+      text: text || "",
+      completed: completed || false,
+      userId: userId || null,
+      createdAt: now,
+      completedAt: completed ? now : null,
+    };
+    const result = await tasksCollection.insertOne(newTask);
+    res.status(201).json({
+      id: result.insertedId.toString(),
+      ...newTask,
+    });
+  } catch (error) {
+    res.status(500).json({ error: "Failed to create task" });
+  }
+});
+
+// Update task
+app.put("/tasks/:id", async (req, res) => {
+  try {
+    const { text, completed } = req.body;
+    const updateData: any = {};
+    if (typeof text !== "undefined") updateData.text = text;
+    if (typeof completed !== "undefined") {
+      updateData.completed = completed;
+      updateData.completedAt = completed ? Date.now() : null;
+    }
+
+    const result = await tasksCollection.updateOne(
+      { _id: new ObjectId(req.params.id) },
+      { $set: updateData },
+    );
+
+    if (result.matchedCount === 0) {
+      return res.status(404).json({ error: "Task not found" });
+    }
+    res.json({ message: "Task updated successfully" });
+  } catch (error) {
+    res.status(500).json({ error: "Failed to update task" });
+  }
+});
+
+// Delete task
+app.delete("/tasks/:id", async (req, res) => {
+  try {
+    const result = await tasksCollection.deleteOne({
+      _id: new ObjectId(req.params.id),
+    });
+    if (result.deletedCount === 0) {
+      return res.status(404).json({ error: "Task not found" });
+    }
+    res.json({ message: "Task deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ error: "Failed to delete task" });
   }
 });
 

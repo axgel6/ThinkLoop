@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import TextField from "./TextField";
 import "./NotesHandler.css";
 import Button from "./Button";
@@ -14,6 +14,8 @@ const NoteItem = React.memo(function NoteItem({
   updateNoteTheme,
   updateNoteFontSize,
   handleRemove,
+  isPinned,
+  onTogglePin,
 }) {
   const onChange = useCallback(
     (val) => updateNoteContent(note.id, val),
@@ -56,6 +58,8 @@ const NoteItem = React.memo(function NoteItem({
         onFontSizeChange={onFontSizeChange}
         onThemeChange={onThemeChange}
         onRemove={onRemove}
+        isPinned={isPinned}
+        onTogglePin={() => onTogglePin(note.id)}
       />
     </div>
   );
@@ -66,206 +70,115 @@ const API_URL = process.env.REACT_APP_API_URL || "http://localhost:3000";
 const NotesHandler = ({ currentUser }) => {
   const [notes, setNotes] = useState([]);
   const [loading, setLoading] = useState(true);
-  const lastSyncTime = useRef(0);
-  const isEditing = useRef(false);
-  const editTimeout = useRef(null);
-
-  // Track when user is actively editing to avoid overwriting their changes
-  const markEditing = useCallback(() => {
-    isEditing.current = true;
-    if (editTimeout.current) clearTimeout(editTimeout.current);
-    // Consider editing done after 2 seconds of inactivity
-    editTimeout.current = setTimeout(() => {
-      isEditing.current = false;
-    }, 2000);
-  }, []);
-
-  // Fetch notes from server
-  const fetchNotesFromServer = useCallback(async (isPolling = false) => {
-    if (!currentUser) return null;
-
+  const [searchQuery, setSearchQuery] = useState("");
+  const pinnedStorageKey = currentUser
+    ? `pinnedNotes:${currentUser.id}`
+    : "pinnedNotes:guest";
+  const [pinnedIds, setPinnedIds] = useState(() => {
     try {
+      const raw = localStorage.getItem(pinnedStorageKey);
+      return raw ? JSON.parse(raw) : [];
+    } catch (e) {
+      return [];
+    }
+  });
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(pinnedStorageKey);
+      setPinnedIds(raw ? JSON.parse(raw) : []);
+    } catch (e) {
+      setPinnedIds([]);
+    }
+  }, [pinnedStorageKey]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(pinnedStorageKey, JSON.stringify(pinnedIds));
+    } catch (e) {
+      // ignore quota errors
+    }
+  }, [pinnedIds, pinnedStorageKey]);
+
+  const fetchNotes = useCallback(async () => {
+    setLoading(true);
+    try {
+      // If logged out, load local notes from localStorage
+      if (!currentUser) {
+        try {
+          const localNotes = localStorage.getItem("localNotes");
+          if (localNotes) {
+            setNotes(JSON.parse(localNotes));
+          } else {
+            setNotes([]);
+          }
+        } catch (e) {
+          setNotes([]);
+        }
+        return;
+      }
+
+      // If logged in, fetch from server
       const url = `${API_URL}/notes?userId=${currentUser.id}`;
       const response = await fetch(url);
       if (response.ok) {
         const serverNotes = await response.json();
-        return serverNotes;
-      }
-    } catch (error) {
-      if (!isPolling) {
-        console.error("Failed to fetch notes:", error);
-      }
-    }
-    return null;
-  }, [currentUser]);
 
-  // Merge server notes with local state intelligently
-  const mergeNotes = useCallback((serverNotes, localNotes) => {
-    if (!serverNotes) return localNotes;
+        // Check if there are local notes to merge
+        const localNotes = localStorage.getItem("localNotes");
+        if (localNotes) {
+          const parsedLocalNotes = JSON.parse(localNotes);
 
-    const serverMap = new Map(serverNotes.map(n => [n.id, n]));
-    const localMap = new Map(localNotes.map(n => [n.id, n]));
-    const merged = [];
+          // Upload each local note to the server
+          for (const localNote of parsedLocalNotes) {
+            try {
+              const noteToUpload = {
+                ...localNote,
+                userId: currentUser.id,
+              };
+              delete noteToUpload.id; // Remove local ID
 
-    // Add all server notes, preferring newer versions
-    for (const serverNote of serverNotes) {
-      const localNote = localMap.get(serverNote.id);
-      if (localNote) {
-        // Keep whichever was modified more recently
-        if (serverNote.lastModified >= localNote.lastModified) {
-          merged.push(serverNote);
-        } else {
-          merged.push(localNote);
-        }
-      } else {
-        merged.push(serverNote);
-      }
-    }
-
-    // Add any local notes that aren't on server (newly created)
-    for (const localNote of localNotes) {
-      if (!serverMap.has(localNote.id)) {
-        // This note was deleted on another device, don't add it back
-        // Unless it was created very recently (within last 10 seconds)
-        const isNewlyCreated = Date.now() - localNote.createdAt < 10000;
-        if (isNewlyCreated) {
-          merged.push(localNote);
-        }
-      }
-    }
-
-    // Sort by createdAt descending (newest first)
-    merged.sort((a, b) => b.createdAt - a.createdAt);
-
-    return merged;
-  }, []);
-
-  // Initial fetch on mount
-  useEffect(() => {
-    const fetchNotes = async () => {
-      try {
-        // If logged out, load local notes from localStorage
-        if (!currentUser) {
-          try {
-            const localNotes = localStorage.getItem("localNotes");
-            if (localNotes) {
-              setNotes(JSON.parse(localNotes));
-            } else {
-              setNotes([]);
+              await fetch(`${API_URL}/notes`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(noteToUpload),
+              });
+            } catch (error) {
+              console.error("Failed to upload local note:", error);
             }
-          } catch (e) {
-            setNotes([]);
           }
-          setLoading(false);
-          return;
-        }
 
-        // If logged in, fetch from server
-        const url = `${API_URL}/notes?userId=${currentUser.id}`;
-        const response = await fetch(url);
-        if (response.ok) {
-          const serverNotes = await response.json();
+          // Clear local notes after uploading
+          localStorage.removeItem("localNotes");
 
-          // Check if there are local notes to merge
-          const localNotes = localStorage.getItem("localNotes");
-          if (localNotes) {
-            const parsedLocalNotes = JSON.parse(localNotes);
-
-            // Upload each local note to the server
-            for (const localNote of parsedLocalNotes) {
-              try {
-                const noteToUpload = {
-                  ...localNote,
-                  userId: currentUser.id,
-                };
-                delete noteToUpload.id; // Remove local ID
-
-                await fetch(`${API_URL}/notes`, {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify(noteToUpload),
-                });
-              } catch (error) {
-                console.error("Failed to upload local note:", error);
-              }
-            }
-
-            // Clear local notes after uploading
-            localStorage.removeItem("localNotes");
-
-            // Re-fetch to get all notes including newly uploaded ones
-            const refreshResponse = await fetch(url);
-            if (refreshResponse.ok) {
-              const allNotes = await refreshResponse.json();
-              setNotes(allNotes);
-            } else {
-              setNotes(serverNotes);
-            }
+          // Re-fetch to get all notes including newly uploaded ones
+          const refreshResponse = await fetch(url);
+          if (refreshResponse.ok) {
+            const allNotes = await refreshResponse.json();
+            setNotes(allNotes);
           } else {
             setNotes(serverNotes);
           }
+        } else {
+          setNotes(serverNotes);
         }
-      } catch (error) {
-        console.error("Failed to fetch notes:", error);
-        setNotes([]);
-      } finally {
-        setLoading(false);
       }
-    };
-    fetchNotes();
+    } catch (error) {
+      console.error("Failed to fetch notes:", error);
+      setNotes([]);
+    } finally {
+      setLoading(false);
+    }
   }, [currentUser]);
 
-  // Poll for updates from server every 5 seconds (like theming)
+  // Fetch notes from server on mount
   useEffect(() => {
-    if (!currentUser) return;
+    fetchNotes();
+  }, [fetchNotes]);
 
-    const pollForUpdates = async () => {
-      // Don't poll while user is actively editing
-      if (isEditing.current) return;
-
-      const serverNotes = await fetchNotesFromServer(true);
-      if (serverNotes) {
-        setNotes((prevNotes) => {
-          const merged = mergeNotes(serverNotes, prevNotes);
-          // Only update if there are actual changes
-          const prevIds = prevNotes
-            .map((n) => `${n.id}-${n.lastModified}`)
-            .join(",");
-          const mergedIds = merged
-            .map((n) => `${n.id}-${n.lastModified}`)
-            .join(",");
-          if (prevIds !== mergedIds) {
-            lastSyncTime.current = Date.now();
-            return merged;
-          }
-          return prevNotes;
-        });
-      }
-    };
-
-    // Poll every 5 seconds
-    const interval = setInterval(pollForUpdates, 5000);
-
-    return () => clearInterval(interval);
-  }, [currentUser, fetchNotesFromServer, mergeNotes]);
-
-  // Listen for visibility changes to sync when tab becomes active
-  useEffect(() => {
-    if (!currentUser) return;
-
-    const handleVisibilityChange = async () => {
-      if (document.visibilityState === "visible" && !isEditing.current) {
-        const serverNotes = await fetchNotesFromServer(true);
-        if (serverNotes) {
-          setNotes((prevNotes) => mergeNotes(serverNotes, prevNotes));
-        }
-      }
-    };
-
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-    return () =>
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
-  }, [currentUser, fetchNotesFromServer, mergeNotes]);
+  const handleRefresh = useCallback(() => {
+    fetchNotes();
+  }, [fetchNotes]);
 
   // Persist local notes to localStorage when logged out
   useEffect(() => {
@@ -319,6 +232,8 @@ const NotesHandler = ({ currentUser }) => {
 
   const handleRemove = useCallback(
     async (id) => {
+      const stringId = String(id);
+      setPinnedIds((prev) => prev.filter((p) => p !== stringId));
       // Always delete locally
       setNotes((prev) => prev.filter((n) => n.id !== id));
 
@@ -334,9 +249,17 @@ const NotesHandler = ({ currentUser }) => {
     [currentUser],
   );
 
+  const handleTogglePin = useCallback((id) => {
+    const stringId = String(id);
+    setPinnedIds((prev) =>
+      prev.includes(stringId)
+        ? prev.filter((p) => p !== stringId)
+        : [stringId, ...prev],
+    );
+  }, []);
+
   const updateNoteContent = useCallback(
     async (id, content) => {
-      markEditing(); // Prevent polling from overwriting
       // Always update locally
       setNotes((prev) =>
         prev.map((n) =>
@@ -357,12 +280,11 @@ const NotesHandler = ({ currentUser }) => {
         console.error("Failed to update note content:", error);
       }
     },
-    [currentUser, markEditing],
+    [currentUser],
   );
 
   const updateNoteTitle = useCallback(
     async (id, title) => {
-      markEditing(); // Prevent polling from overwriting
       // Always update locally
       setNotes((prev) =>
         prev.map((n) =>
@@ -383,7 +305,7 @@ const NotesHandler = ({ currentUser }) => {
         console.error("Failed to update note title:", error);
       }
     },
-    [currentUser, markEditing],
+    [currentUser],
   );
 
   const updateNoteFont = useCallback(
@@ -474,17 +396,98 @@ const NotesHandler = ({ currentUser }) => {
     }
   }, [notes, loading]);
 
+  const normalizedQuery = searchQuery.trim().toLowerCase();
+  const visibleNotes = normalizedQuery
+    ? notes.filter((note) => {
+        const title = (note.title || "").toLowerCase();
+        const content = (note.content || "").toLowerCase();
+        return (
+          title.includes(normalizedQuery) || content.includes(normalizedQuery)
+        );
+      })
+    : notes;
+
+  const hasSearch = normalizedQuery.length > 0;
+
   return (
     <>
-      {notes.length === 0 ? (
+      <div className="notes-toolbar">
+        <div className="notes-toolbar-left">
+          <input
+            className="notes-search"
+            type="search"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search notes"
+            aria-label="Search notes"
+          />
+        </div>
+        <div className="notes-toolbar-right">
+          <Button
+            onClick={handleNewNote}
+            className="icon-button"
+            aria-label="New note"
+            title="New note"
+          >
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 50 50"
+              xmlns="http://www.w3.org/2000/svg"
+              aria-hidden="true"
+            >
+              <line
+                x1="25"
+                y1="5"
+                x2="25"
+                y2="45"
+                stroke="var(--fg, white)"
+                strokeWidth="10"
+              />
+              <line
+                x1="5"
+                y1="25"
+                x2="45"
+                y2="25"
+                stroke="var(--fg, white)"
+                strokeWidth="10"
+              />
+            </svg>
+          </Button>
+          <Button
+            onClick={handleRefresh}
+            className="icon-button"
+            aria-label="Refresh notes"
+            title="Refresh notes"
+          >
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M21 12a9 9 0 1 1-2.64-6.36" />
+              <polyline points="21 3 21 9 15 9" />
+            </svg>
+          </Button>
+        </div>
+      </div>
+
+      {visibleNotes.length === 0 ? (
         <div className="empty-state">
-          <p>No notes yet</p>
+          <p>{hasSearch ? "No matching notes" : "No notes yet"}</p>
           <p className="empty-state-subtitle">
-            Click "New Note" below to begin
+            {hasSearch ? "Try a different search" : 'Click "New Note" to begin'}
           </p>
         </div>
       ) : (
-        notes.map((n) => (
+        visibleNotes.map((n) => (
           <NoteItem
             key={n.id}
             note={n}
@@ -494,38 +497,11 @@ const NotesHandler = ({ currentUser }) => {
             updateNoteTheme={updateNoteTheme}
             updateNoteFontSize={updateNoteFontSize}
             handleRemove={handleRemove}
+            isPinned={pinnedIds.includes(String(n.id))}
+            onTogglePin={handleTogglePin}
           />
         ))
       )}
-
-      <div style={{ textAlign: "center", marginTop: 8 }}>
-        <Button className="primary" onClick={handleNewNote}>
-          {" "}
-          <svg
-            width="15"
-            height="15"
-            viewBox="0 0 50 50"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <line
-              x1="25"
-              y1="5"
-              x2="25"
-              y2="45"
-              stroke="var(--fg, white)"
-              strokeWidth="10"
-            />
-            <line
-              x1="5"
-              y1="25"
-              x2="45"
-              y2="25"
-              stroke="var(--fg, white)"
-              strokeWidth="10"
-            />
-          </svg>
-        </Button>
-      </div>
     </>
   );
 };
