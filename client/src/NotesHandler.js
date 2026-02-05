@@ -1,6 +1,8 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
+import { createWorker } from "tesseract.js";
 import TextField from "./TextField";
 import "./NotesHandler.css";
+import "./ocr-styles.css";
 import Button from "./Button";
 
 // Stable NoteItem component defined outside the parent to avoid remounts on each render.
@@ -71,6 +73,11 @@ const NotesHandler = ({ currentUser }) => {
   const [notes, setNotes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [showOCRModal, setShowOCRModal] = useState(false);
+  const [ocrImage, setOcrImage] = useState(null);
+  const [ocrText, setOcrText] = useState("");
+  const [ocrLoading, setOcrLoading] = useState(false);
+  const [ocrError, setOcrError] = useState("");
   const pinnedStorageKey = currentUser
     ? `pinnedNotes:${currentUser.id}`
     : "pinnedNotes:guest";
@@ -221,14 +228,141 @@ const NotesHandler = ({ currentUser }) => {
         body: JSON.stringify(newNote),
       });
 
-      if (response.ok) {
-        const createdNote = await response.json();
-        setNotes((prev) => [createdNote, ...prev]);
-      }
+      if (!response.ok) throw new Error("Failed to create note");
+      const createdNote = await response.json();
+      setNotes((prev) => [createdNote, ...prev]);
     } catch (error) {
       console.error("Failed to create note:", error);
     }
   }, [currentUser]);
+
+  const workerRef = useRef(null);
+
+  const handleOCRImageSelect = useCallback(async (e) => {
+    const file = e.target?.files?.[0];
+    if (!file) return;
+
+    // Validate file type and size (max 10MB)
+    if (!file.type.startsWith("image/")) {
+      setOcrError("Please select a valid image file");
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      setOcrError("Image file is too large. Maximum size is 10MB.");
+      return;
+    }
+
+    setOcrError("");
+    setOcrLoading(true);
+    setOcrText("");
+
+    try {
+      const reader = new FileReader();
+      reader.onload = async (event) => {
+        try {
+          const imageData = event.target?.result;
+          setOcrImage(imageData);
+
+          // Create Tesseract worker if not already created
+          if (!workerRef.current) {
+            workerRef.current = await createWorker();
+          }
+
+          // Extract text using Tesseract.js
+          const result = await workerRef.current.recognize(imageData);
+
+          setOcrText(result.data.text || "");
+        } catch (error) {
+          console.error("OCR Error:", error);
+          setOcrError(
+            "Failed to extract text from image. Please try another image.",
+          );
+        } finally {
+          setOcrLoading(false);
+        }
+      };
+      reader.onerror = () => {
+        setOcrError("Failed to read file");
+        setOcrLoading(false);
+      };
+      reader.readAsDataURL(file);
+    } catch (error) {
+      console.error("File read error:", error);
+      setOcrError("Failed to read file");
+      setOcrLoading(false);
+    }
+  }, []);
+
+  const handleOCRCancel = useCallback(() => {
+    setShowOCRModal(false);
+    setOcrImage(null);
+    setOcrText("");
+    setOcrError("");
+  }, []);
+
+  const handleOCRCreateNote = useCallback(async () => {
+    const trimmedText = ocrText.trim();
+    if (!trimmedText) {
+      setOcrError("No text to extract");
+      return;
+    }
+
+    setOcrLoading(true);
+    try {
+      const newNote = {
+        content: trimmedText,
+        title: "OCR Scan",
+        font: "inter",
+        fontSize: 16,
+        theme: "default",
+        userId: currentUser ? currentUser.id : null,
+      };
+
+      // If logged out, only create locally
+      if (!currentUser) {
+        const localNote = {
+          ...newNote,
+          id: Date.now().toString(),
+          createdAt: Date.now(),
+          lastModified: Date.now(),
+        };
+        setNotes((prev) => [localNote, ...prev]);
+        handleOCRCancel();
+        return;
+      }
+
+      // If logged in, create on server
+      const response = await fetch(`${API_URL}/notes`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newNote),
+      });
+
+      if (!response.ok) throw new Error("Failed to create note");
+
+      const createdNote = await response.json();
+      setNotes((prev) => [createdNote, ...prev]);
+      handleOCRCancel();
+    } catch (error) {
+      console.error("Failed to create note from OCR:", error);
+      setOcrError(
+        error instanceof Error ? error.message : "Failed to create note",
+      );
+    } finally {
+      setOcrLoading(false);
+    }
+  }, [ocrText, currentUser, handleOCRCancel]);
+
+  // Cleanup OCR worker on unmount
+  useEffect(() => {
+    return () => {
+      if (workerRef.current) {
+        workerRef.current.terminate().catch(() => {
+          // Worker cleanup error, ignore
+        });
+      }
+    };
+  }, []);
 
   const handleRemove = useCallback(
     async (id) => {
@@ -448,6 +582,28 @@ const NotesHandler = ({ currentUser }) => {
         </div>
         <div className="notes-toolbar-right">
           <Button
+            onClick={() => setShowOCRModal(true)}
+            className="icon-button"
+            aria-label="Scan image"
+            title="Scan image"
+          >
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+              <circle cx="12" cy="13" r="4" />
+            </svg>
+          </Button>
+          <Button
             onClick={handleNewNote}
             className="icon-button"
             aria-label="New note"
@@ -525,6 +681,109 @@ const NotesHandler = ({ currentUser }) => {
             onTogglePin={handleTogglePin}
           />
         ))
+      )}
+
+      {showOCRModal && (
+        <div className="ocr-modal-overlay">
+          <div className="ocr-modal-popup">
+            <div className="ocr-modal-header">
+              <h2>Scan Image to Text</h2>
+              <button
+                className="ocr-modal-close"
+                onClick={handleOCRCancel}
+                aria-label="Close"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="ocr-modal-content">
+              {!ocrText ? (
+                <div className="ocr-upload-section">
+                  <label className="ocr-upload-label">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleOCRImageSelect}
+                      disabled={ocrLoading}
+                      style={{ display: "none" }}
+                    />
+                    <div className="ocr-upload-box">
+                      {ocrLoading ? (
+                        <div className="ocr-loading">
+                          <div className="ocr-spinner"></div>
+                          <p>Extracting text...</p>
+                        </div>
+                      ) : (
+                        <>
+                          <svg
+                            width="48"
+                            height="48"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                          >
+                            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+                            <circle cx="12" cy="13" r="4" />
+                          </svg>
+                          <p>Click to upload image</p>
+                          <p className="ocr-upload-hint">or drag and drop</p>
+                        </>
+                      )}
+                    </div>
+                  </label>
+                </div>
+              ) : (
+                <div className="ocr-preview-section">
+                  {ocrImage && (
+                    <div className="ocr-image-preview">
+                      <img src={ocrImage} alt="OCR Source" />
+                    </div>
+                  )}
+                  <div className="ocr-text-preview">
+                    <label htmlFor="ocr-text-area">Extracted Text:</label>
+                    <textarea
+                      id="ocr-text-area"
+                      className="ocr-text-area"
+                      value={ocrText}
+                      onChange={(e) => setOcrText(e.target.value)}
+                      placeholder="Extracted text will appear here"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {ocrError && <div className="ocr-error">{ocrError}</div>}
+            </div>
+
+            <div className="ocr-modal-footer">
+              <Button onClick={handleOCRCancel} className="ocr-button-cancel">
+                Cancel
+              </Button>
+              {ocrText && (
+                <Button
+                  onClick={handleOCRCreateNote}
+                  className="ocr-button-create"
+                  disabled={ocrLoading}
+                >
+                  Create Note
+                </Button>
+              )}
+              {!ocrText && (
+                <Button
+                  onClick={() =>
+                    document.querySelector('input[type="file"]')?.click()
+                  }
+                  className="ocr-button-upload"
+                  disabled={ocrLoading}
+                >
+                  Choose Image
+                </Button>
+              )}
+            </div>
+          </div>
+        </div>
       )}
     </>
   );

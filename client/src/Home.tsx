@@ -68,32 +68,20 @@ export default function Home({ weatherCity, currentUser }: HomeProps) {
   const currentDateLabel = getCurrentDateLabel();
 
   const getPinnedNotes = useCallback(async () => {
+    if (!currentUser?.id) return [];
     try {
-      if (currentUser?.id) {
-        const response = await fetch(
-          `${API_URL}/notes?userId=${currentUser.id}`,
-        );
-        if (response.ok) {
-          const serverNotes = await response.json();
-          return serverNotes.filter((note: any) => note.isPinned);
-        }
-      }
+      const response = await fetch(`${API_URL}/notes?userId=${currentUser.id}`);
+      if (!response.ok) throw new Error("Failed to fetch notes");
 
-      const rawNotes = localStorage.getItem("notes");
-      const rawLocalNotes = localStorage.getItem("localNotes");
-      const notes = [
-        ...(rawNotes ? JSON.parse(rawNotes) : []),
-        ...(rawLocalNotes ? JSON.parse(rawLocalNotes) : []),
-      ];
-
-      const pinnedKey = currentUser?.id
-        ? `pinnedNotes:${currentUser.id}`
-        : "pinnedNotes:guest";
-      const rawPinned = localStorage.getItem(pinnedKey);
-      const pinnedIds: string[] = rawPinned ? JSON.parse(rawPinned) : [];
-
-      return notes.filter((note: any) => pinnedIds.includes(String(note.id)));
+      const serverNotes = await response.json();
+      return (serverNotes.filter((note: any) => note.isPinned) || []) as Array<{
+        id: string;
+        title?: string;
+        content?: string;
+        lastModified?: number;
+      }>;
     } catch (e) {
+      console.error("Failed to fetch pinned notes:", e);
       return [];
     }
   }, [currentUser]);

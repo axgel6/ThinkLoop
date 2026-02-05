@@ -35,21 +35,14 @@ const Settings = ({ onOpenLoginModal, currentUser, onLogout }) => {
   // cause issues if the JSON is later embedded in HTML or a <script> tag.
   // This prevents JSON injection by neutralizing </script>, U+2028/U+2029,
   // and HTML comment openers.
-  const safeJSONStringify = (obj) =>
-    JSON.stringify(
-      obj,
-      (k, v) => {
-        if (typeof v === "string") {
-          return v
-            .replace(/\u2028/g, "\\u2028")
-            .replace(/\u2029/g, "\\u2029")
-            .replace(/<\/script/gi, "<\\/script")
-            .replace(/<!--/g, "<\\!--");
-        }
-        return v;
-      },
-      2,
-    );
+  // Safe JSON stringify that escapes problematic sequences
+  const safeJSONStringify = (obj) => {
+    const json = JSON.stringify(obj, null, 2);
+    // Escape </script> and HTML comments for safety
+    return json
+      .replace(/<\/script/gi, "<\\\/script")
+      .replace(/<!--/g, "<\\!--");
+  };
   const [val, setVal] = React.useState(() => {
     try {
       return localStorage.getItem("settings:selected") ?? COLOR_OPTIONS[0].id;

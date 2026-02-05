@@ -47,7 +47,7 @@ function App() {
 
   const user = currentUser ? currentUser.name || currentUser.username : "Guest";
 
-  // Save current user to localStorage
+  // Save current user to localStorage when it changes
   useEffect(() => {
     try {
       if (currentUser) {

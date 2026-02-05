@@ -32,14 +32,12 @@ const Checklist: React.FC<ChecklistProps> = ({ currentUser }) => {
 
   const [text, setText] = React.useState("");
   const [currentTime, setCurrentTime] = React.useState(new Date());
-  const [, setLoading] = React.useState(true);
 
   // Fetch tasks from server on mount
   React.useEffect(() => {
     const fetchTasks = async () => {
       try {
         if (!currentUser) {
-          setLoading(false);
           return;
         }
 
@@ -103,8 +101,6 @@ const Checklist: React.FC<ChecklistProps> = ({ currentUser }) => {
         }
       } catch (error) {
         console.error("Failed to fetch tasks:", error);
-      } finally {
-        setLoading(false);
       }
     };
     fetchTasks();
