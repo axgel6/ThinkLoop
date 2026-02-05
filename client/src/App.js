@@ -38,6 +38,14 @@ function App() {
     }
   });
 
+  // Pomodoro timer state
+  const [pomodoroTime, setPomodoroTime] = useState(25 * 60);
+  const [isRunning, setIsRunning] = useState(false);
+  const [isWorkSession, setIsWorkSession] = useState(true);
+  const [fullScreenPomodoro, setFullScreenPomodoro] = useState(false);
+  const [workDuration, setWorkDuration] = useState(25);
+  const [breakDuration, setBreakDuration] = useState(5);
+
   const titles = {
     home: "Home",
     notes: "Notes",
@@ -94,6 +102,52 @@ function App() {
     applyTheme(savedTheme);
     applyFont(savedFont);
   }, []);
+
+  // Pomodoro timer effect
+  useEffect(() => {
+    let intervalId;
+
+    if (isRunning && pomodoroTime > 0) {
+      intervalId = setInterval(() => {
+        setPomodoroTime((prev) => {
+          if (prev <= 1) {
+            setIsRunning(false);
+            if (isWorkSession) {
+              setIsWorkSession(false);
+              return breakDuration * 60;
+            } else {
+              setIsWorkSession(true);
+              return workDuration * 60;
+            }
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    }
+
+    return () => clearInterval(intervalId);
+  }, [isRunning, pomodoroTime, isWorkSession, workDuration, breakDuration]);
+
+  const handlePomodoroToggle = () => {
+    setIsRunning(!isRunning);
+  };
+
+  const handlePomodoroReset = () => {
+    setIsRunning(false);
+    setIsWorkSession(true);
+    setPomodoroTime(workDuration * 60);
+  };
+
+  const handlePomodoroSkip = () => {
+    setIsRunning(false);
+    if (isWorkSession) {
+      setIsWorkSession(false);
+      setPomodoroTime(breakDuration * 60);
+    } else {
+      setIsWorkSession(true);
+      setPomodoroTime(workDuration * 60);
+    }
+  };
 
   // Fetch settings from server when user is logged in (on mount and periodically)
   useEffect(() => {
@@ -172,7 +226,23 @@ function App() {
         </h1>
       </div>
       {activeTab === "home" && (
-        <Home weatherCity={weatherCity} currentUser={currentUser} />
+        <Home
+          weatherCity={weatherCity}
+          currentUser={currentUser}
+          pomodoroTime={pomodoroTime}
+          isRunning={isRunning}
+          isWorkSession={isWorkSession}
+          fullScreenPomodoro={fullScreenPomodoro}
+          workDuration={workDuration}
+          breakDuration={breakDuration}
+          setPomodoroTime={setPomodoroTime}
+          setFullScreenPomodoro={setFullScreenPomodoro}
+          setWorkDuration={setWorkDuration}
+          setBreakDuration={setBreakDuration}
+          handlePomodoroToggle={handlePomodoroToggle}
+          handlePomodoroReset={handlePomodoroReset}
+          handlePomodoroSkip={handlePomodoroSkip}
+        />
       )}
       {activeTab === "notes" && <NotesHandler currentUser={currentUser} />}
       {activeTab === "tasks" && <Tasks currentUser={currentUser} />}

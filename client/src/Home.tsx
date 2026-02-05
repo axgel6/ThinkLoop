@@ -7,9 +7,38 @@ const API_URL = process.env.REACT_APP_API_URL || "http://localhost:3000";
 interface HomeProps {
   weatherCity?: string;
   currentUser?: { id?: string | number } | null;
+  pomodoroTime?: number;
+  isRunning?: boolean;
+  isWorkSession?: boolean;
+  fullScreenPomodoro?: boolean;
+  workDuration?: number;
+  breakDuration?: number;
+  setPomodoroTime?: (value: number) => void;
+  setFullScreenPomodoro?: (value: boolean) => void;
+  setWorkDuration?: (value: number) => void;
+  setBreakDuration?: (value: number) => void;
+  handlePomodoroToggle?: () => void;
+  handlePomodoroReset?: () => void;
+  handlePomodoroSkip?: () => void;
 }
 
-export default function Home({ weatherCity, currentUser }: HomeProps) {
+export default function Home({
+  weatherCity,
+  currentUser,
+  pomodoroTime = 25 * 60,
+  isRunning = false,
+  isWorkSession = true,
+  fullScreenPomodoro = false,
+  workDuration = 25,
+  breakDuration = 5,
+  setPomodoroTime = () => {},
+  setFullScreenPomodoro = () => {},
+  setWorkDuration = () => {},
+  setBreakDuration = () => {},
+  handlePomodoroToggle = () => {},
+  handlePomodoroReset = () => {},
+  handlePomodoroSkip = () => {},
+}: HomeProps) {
   const [currentTime, setCurrentTime] = useState<string>("");
   const [pinnedNotes, setPinnedNotes] = useState<
     Array<{
@@ -25,14 +54,6 @@ export default function Home({ weatherCity, currentUser }: HomeProps) {
     content?: string;
     lastModified?: number;
   } | null>(null);
-
-  // Pomodoro timer state
-  const [pomodoroTime, setPomodoroTime] = useState(25 * 60); // 25 minutes in seconds
-  const [isRunning, setIsRunning] = useState(false);
-  const [isWorkSession, setIsWorkSession] = useState(true); // true = work, false = break
-  const [fullScreenPomodoro, setFullScreenPomodoro] = useState(false);
-  const [workDuration, setWorkDuration] = useState(25);
-  const [breakDuration, setBreakDuration] = useState(5);
 
   const getCurrentTime = () => {
     const options: Intl.DateTimeFormatOptions = {
@@ -97,55 +118,6 @@ export default function Home({ weatherCity, currentUser }: HomeProps) {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
-  };
-
-  // Pomodoro timer effect
-  useEffect(() => {
-    let intervalId: NodeJS.Timeout;
-
-    if (isRunning && pomodoroTime > 0) {
-      intervalId = setInterval(() => {
-        setPomodoroTime((prev) => {
-          if (prev <= 1) {
-            // Session ended
-            setIsRunning(false);
-            if (isWorkSession) {
-              // Switch to break
-              setIsWorkSession(false);
-              return breakDuration * 60;
-            } else {
-              // Switch to work
-              setIsWorkSession(true);
-              return workDuration * 60;
-            }
-          }
-          return prev - 1;
-        });
-      }, 1000);
-    }
-
-    return () => clearInterval(intervalId);
-  }, [isRunning, pomodoroTime, isWorkSession, workDuration, breakDuration]);
-
-  const handlePomodoroToggle = () => {
-    setIsRunning(!isRunning);
-  };
-
-  const handlePomodoroReset = () => {
-    setIsRunning(false);
-    setIsWorkSession(true);
-    setPomodoroTime(workDuration * 60);
-  };
-
-  const handlePomodoroSkip = () => {
-    setIsRunning(false);
-    if (isWorkSession) {
-      setIsWorkSession(false);
-      setPomodoroTime(breakDuration * 60);
-    } else {
-      setIsWorkSession(true);
-      setPomodoroTime(workDuration * 60);
-    }
   };
 
   useEffect(() => {
