@@ -421,7 +421,7 @@ const TextField = ({
       {!isEditMode && (
         <div className="note-header" onClick={() => setIsEditMode(true)}>
           <div className="note-header-content">
-            <div className="note-title-display">{noteTitle || "New Note"}</div>
+            <div className="note-title-display">{noteTitle || "New note"}</div>
             {lastModified && (
               <div className="note-last-modified-header">
                 Last modified: {formatRelative(lastModified)}
@@ -582,7 +582,7 @@ const TextField = ({
             className="note-title-input"
             value={noteTitle}
             onChange={handleTitleChange}
-            placeholder="Untitled"
+            placeholder="Type here to rename note"
             aria-label="Note title"
           />
 
@@ -683,7 +683,10 @@ const TextField = ({
       {/* Full-screen modal */}
       {isFullScreen && (
         <div className="fullscreen-modal">
-          <div className="fullscreen-modal-overlay" onClick={() => onFullScreenChange?.(null)} />
+          <div
+            className="fullscreen-modal-overlay"
+            onClick={() => onFullScreenChange?.(null)}
+          />
           <div className="fullscreen-modal-content" style={themeVars}>
             <div className="fullscreen-header">
               <div className="fullscreen-title">{noteTitle || "Untitled"}</div>

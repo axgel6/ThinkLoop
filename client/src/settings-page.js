@@ -39,9 +39,7 @@ const Settings = ({ onOpenLoginModal, currentUser, onLogout }) => {
   const safeJSONStringify = (obj) => {
     const json = JSON.stringify(obj, null, 2);
     // Escape </script> and HTML comments for safety
-    return json
-      .replace(/<\/script/gi, "<\\\/script")
-      .replace(/<!--/g, "<\\!--");
+    return json.replace(/<\/script/gi, "<\\/script").replace(/<!--/g, "<\\!--");
   };
   const [val, setVal] = React.useState(() => {
     try {

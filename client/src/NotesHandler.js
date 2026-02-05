@@ -311,7 +311,7 @@ const NotesHandler = ({ currentUser }) => {
     try {
       const newNote = {
         content: trimmedText,
-        title: "OCR Scan",
+        title: `OCR Scan ${new Date().toLocaleString()}`,
         font: "inter",
         fontSize: 16,
         theme: "default",
