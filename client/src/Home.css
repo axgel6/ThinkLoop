@@ -11,6 +11,7 @@
   text-align: center;
   color: var(--muted, #9a9a9a);
   font-size: 14px;
+  padding-bottom: 30px;
 }
 
 .home-pinned {
