@@ -14,7 +14,7 @@ if (!uri) {
   throw new Error("MONGODB_URI is not defined in environment variables");
 }
 
-// Storage limits 
+// Storage limits
 const LIMITS = {
   MAX_NOTES_PER_USER: 500,
   MAX_TASKS_PER_USER: 1000,
@@ -694,6 +694,9 @@ app.get("/server/limits", async (req, res) => {
     },
   });
 });
+
+// Get user settings (themes, fonts, weather)
+app.get("/auth/user/:userId/settings", async (req, res) => {
   try {
     const user = await userInfoCollection.findOne({
       _id: new ObjectId(req.params.userId),
