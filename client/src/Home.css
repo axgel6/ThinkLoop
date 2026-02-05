@@ -6,12 +6,55 @@
   border-radius: 30px;
 }
 
+.home-info {
+  margin: 18px auto 0;
+  max-width: 720px;
+  width: 100%;
+  padding: 12px 14px 35px;
+  border-radius: 18px;
+  border: 1px solid var(--panel-border, rgba(255, 255, 255, 0.08));
+  background: var(--panel-bg, rgba(25, 25, 25, 0.4));
+  -webkit-backdrop-filter: blur(6px) saturate(150%);
+  backdrop-filter: blur(6px) saturate(150%);
+  text-align: center;
+}
+
+.home-info h2 {
+  margin: 4px 0 10px;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--fg, #dcdcdc);
+  text-align: left;
+}
+
+.home-info-time {
+  font-size: 44px;
+  font-weight: 700;
+  color: var(--fg, #dcdcdc);
+  margin: 6px 0 4px 0;
+  line-height: 1;
+  text-align: center;
+}
+
+.home-info-date {
+  font-size: 13px;
+  color: var(--muted, #9a9a9a);
+  margin: 4px 0 0 0;
+  line-height: 1.4;
+  text-align: center;
+}
+
+.home-info .weather-text {
+  font-size: 14px;
+  margin: 4px 0 0 0 !important;
+  text-align: center;
+}
+
 .home-date {
   margin: 8px auto 0;
   text-align: center;
   color: var(--muted, #9a9a9a);
   font-size: 14px;
-  padding-bottom: 30px;
 }
 
 .home-pinned {
@@ -291,9 +334,7 @@
 .pomodoro-time {
   font-size: 44px;
   font-weight: 700;
-  font-family: "Courier New", monospace;
   color: var(--fg, #dcdcdc);
-  letter-spacing: 1px;
 }
 
 .pomodoro-controls {
@@ -388,9 +429,7 @@
 .pomodoro-modal-time {
   font-size: 72px;
   font-weight: 700;
-  font-family: "Courier New", monospace;
   color: var(--fg, #dcdcdc);
-  letter-spacing: 2px;
 }
 
 .pomodoro-modal-controls {
@@ -475,4 +514,460 @@
 
 .setting-group input[type="number"] {
   -moz-appearance: textfield;
+}
+
+/* Today Modal */
+.today-modal-popup {
+  background: var(--panel-bg-solid, rgba(55, 55, 55, 0.95));
+  border: 1px solid var(--panel-border, rgba(255, 255, 255, 0.12));
+  border-radius: 28px;
+  padding: 40px;
+  max-width: 500px;
+  width: 90%;
+  max-height: 85vh;
+  overflow-y: auto;
+  position: relative;
+  z-index: 1000;
+  -webkit-backdrop-filter: blur(10px) saturate(150%);
+  backdrop-filter: blur(10px) saturate(150%);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  animation: slideUp 0.3s ease;
+  color: var(--fg, #dcdcdc);
+}
+
+.today-modal-header {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.today-modal-header h1 {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--fg, #dcdcdc);
+}
+
+.today-modal-content {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  text-align: center;
+}
+
+.today-modal-time {
+  font-size: 72px;
+  font-weight: 700;
+  color: var(--fg, #dcdcdc);
+  line-height: 1;
+}
+
+.today-modal-date {
+  font-size: 18px;
+  color: var(--muted, #9a9a9a);
+  font-weight: 500;
+}
+
+.today-modal-weather {
+  font-size: 16px;
+  color: var(--fg, #dcdcdc);
+  margin-top: 12px;
+}
+
+.today-modal-weather .weather-text {
+  margin: 0 !important;
+  font-size: 16px;
+}
+
+/* Mobile Optimization */
+@media (max-width: 768px) {
+  #home-content {
+    padding: 0 12px;
+  }
+
+  .home-info {
+    margin: 12px auto 0;
+    padding: 10px 12px 20px;
+    border-radius: 16px;
+  }
+
+  .home-info h2 {
+    font-size: 14px;
+    margin: 2px 0 8px;
+  }
+
+  .home-info-time {
+    font-size: 36px;
+    margin: 4px 0 2px 0;
+  }
+
+  .home-info-date {
+    font-size: 12px;
+    margin: 3px 0 0 0;
+  }
+
+  .home-info .weather-text {
+    font-size: 12px;
+    margin: 3px 0 0 0 !important;
+  }
+
+  .home-pinned {
+    margin: 12px auto 0;
+    padding: 10px 12px 12px;
+    border-radius: 16px;
+  }
+
+  .home-pinned h2,
+  .home-pomodoro h2 {
+    font-size: 14px;
+    margin: 2px 0 8px;
+  }
+
+  .home-pinned-list {
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 10px;
+  }
+
+  .home-pinned-card {
+    padding: 10px;
+    border-radius: 12px;
+  }
+
+  .home-pinned-title {
+    font-size: 13px;
+    margin-bottom: 5px;
+  }
+
+  .home-pinned-content {
+    font-size: 12px;
+  }
+
+  .home-pomodoro {
+    margin: 12px auto 0;
+    padding: 10px 12px 12px;
+    border-radius: 16px;
+  }
+
+  .pomodoro-widget {
+    padding: 16px;
+  }
+
+  .pomodoro-display {
+    padding: 12px;
+    margin-bottom: 16px;
+  }
+
+  .pomodoro-time {
+    font-size: 36px;
+  }
+
+  .pomodoro-controls {
+    gap: 8px;
+  }
+
+  .pomodoro-btn {
+    width: 44px;
+    height: 44px;
+    font-size: 16px;
+  }
+
+  .pomodoro-settings h3 {
+    font-size: 12px;
+  }
+
+  .setting-group label {
+    font-size: 12px;
+  }
+
+  .setting-group input {
+    width: 60px;
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+
+  /* Note Modal */
+  .note-modal-popup {
+    padding: 24px;
+    max-width: calc(100vw - 24px);
+    border-radius: 20px;
+  }
+
+  .modal-note-title {
+    font-size: 20px;
+    margin-bottom: 12px;
+  }
+
+  .modal-note-content {
+    font-size: 14px;
+    margin-bottom: 12px;
+  }
+
+  .modal-close-btn {
+    width: 32px;
+    height: 32px;
+    font-size: 18px;
+    top: 12px;
+    right: 12px;
+  }
+
+  /* Pomodoro Modal */
+  .pomodoro-modal-popup {
+    padding: 24px;
+    max-width: calc(100vw - 24px);
+    border-radius: 20px;
+  }
+
+  .pomodoro-modal-header h1 {
+    font-size: 22px;
+    margin-bottom: 20px;
+  }
+
+  .pomodoro-modal-display {
+    padding: 20px;
+    margin-bottom: 20px;
+  }
+
+  .pomodoro-modal-time {
+    font-size: 48px;
+  }
+
+  .pomodoro-modal-session {
+    font-size: 12px;
+    margin-bottom: 12px;
+  }
+
+  .pomodoro-modal-btn {
+    padding: 10px 20px;
+    font-size: 14px;
+  }
+
+  .pomodoro-settings {
+    padding-top: 16px;
+  }
+
+  /* Today Modal */
+  .today-modal-popup {
+    padding: 24px;
+    max-width: calc(100vw - 24px);
+    border-radius: 20px;
+  }
+
+  .today-modal-header h1 {
+    font-size: 22px;
+    margin-bottom: 20px;
+  }
+
+  .today-modal-time {
+    font-size: 48px;
+  }
+
+  .today-modal-date {
+    font-size: 14px;
+  }
+
+  .today-modal-weather {
+    font-size: 14px;
+  }
+
+  .today-modal-weather .weather-text {
+    font-size: 14px;
+  }
+
+  .note-modal-content {
+    font-size: 14px;
+  }
+
+  .note-modal-content h1,
+  .note-modal-content h2,
+  .note-modal-content h3 {
+    font-size: 16px;
+    margin-top: 10px;
+    margin-bottom: 6px;
+  }
+}
+
+@media (max-width: 480px) {
+  #home-content {
+    padding: 0 8px;
+  }
+
+  .home-info {
+    margin: 10px auto 0;
+    padding: 10px 10px 16px;
+  }
+
+  .home-info h2 {
+    font-size: 13px;
+    margin: 2px 0 6px;
+  }
+
+  .home-info-time {
+    font-size: 32px;
+    margin: 3px 0 2px 0;
+  }
+
+  .home-info-date {
+    font-size: 11px;
+  }
+
+  .home-info .weather-text {
+    font-size: 11px;
+  }
+
+  .home-pinned,
+  .home-pomodoro {
+    margin: 10px auto 0;
+    padding: 10px;
+  }
+
+  .home-pinned h2,
+  .home-pomodoro h2 {
+    font-size: 13px;
+    margin: 2px 0 6px;
+  }
+
+  .home-pinned-list {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .home-pinned-card {
+    padding: 8px;
+  }
+
+  .home-pinned-title {
+    font-size: 12px;
+  }
+
+  .home-pinned-content {
+    font-size: 11px;
+  }
+
+  .pomodoro-widget {
+    padding: 12px;
+  }
+
+  .pomodoro-display {
+    padding: 10px;
+    margin-bottom: 12px;
+  }
+
+  .pomodoro-time {
+    font-size: 32px;
+  }
+
+  .pomodoro-btn {
+    width: 40px;
+    height: 40px;
+    font-size: 14px;
+  }
+
+  .pomodoro-controls {
+    gap: 6px;
+  }
+
+  .setting-group {
+    margin-bottom: 12px;
+  }
+
+  .setting-group label {
+    font-size: 11px;
+    gap: 8px;
+  }
+
+  .setting-group input {
+    width: 50px;
+    padding: 5px 8px;
+    font-size: 11px;
+  }
+
+  /* Note Modal */
+  .note-modal-popup {
+    padding: 20px;
+    max-width: calc(100vw - 20px);
+    border-radius: 16px;
+    max-height: 90vh;
+  }
+
+  .modal-note-title {
+    font-size: 18px;
+    margin-bottom: 10px;
+  }
+
+  .modal-note-content {
+    font-size: 13px;
+  }
+
+  .modal-close-btn {
+    width: 30px;
+    height: 30px;
+    font-size: 16px;
+    top: 10px;
+    right: 10px;
+  }
+
+  /* Pomodoro Modal */
+  .pomodoro-modal-popup {
+    padding: 20px;
+    max-width: calc(100vw - 20px);
+    border-radius: 16px;
+  }
+
+  .pomodoro-modal-header h1 {
+    font-size: 20px;
+    margin-bottom: 16px;
+  }
+
+  .pomodoro-modal-display {
+    padding: 16px;
+    margin-bottom: 16px;
+  }
+
+  .pomodoro-modal-time {
+    font-size: 40px;
+  }
+
+  .pomodoro-modal-session {
+    font-size: 11px;
+  }
+
+  .pomodoro-modal-btn {
+    padding: 10px 16px;
+    font-size: 13px;
+  }
+
+  .pomodoro-settings {
+    padding-top: 12px;
+  }
+
+  /* Today Modal */
+  .today-modal-popup {
+    padding: 20px;
+    max-width: calc(100vw - 20px);
+    border-radius: 16px;
+  }
+
+  .today-modal-header h1 {
+    font-size: 20px;
+    margin-bottom: 16px;
+  }
+
+  .today-modal-time {
+    font-size: 40px;
+  }
+
+  .today-modal-date {
+    font-size: 13px;
+  }
+
+  .today-modal-weather {
+    font-size: 13px;
+  }
+
+  .today-modal-weather .weather-text {
+    font-size: 13px;
+  }
+
+  .note-modal-content {
+    font-size: 13px;
+  }
 }

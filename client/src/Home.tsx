@@ -40,6 +40,8 @@ export default function Home({
   handlePomodoroSkip = () => {},
 }: HomeProps) {
   const [currentTime, setCurrentTime] = useState<string>("");
+  const [currentTimeWithSeconds, setCurrentTimeWithSeconds] =
+    useState<string>("");
   const [pinnedNotes, setPinnedNotes] = useState<
     Array<{
       id: string;
@@ -54,11 +56,21 @@ export default function Home({
     content?: string;
     lastModified?: number;
   } | null>(null);
+  const [expandedToday, setExpandedToday] = useState<boolean>(false);
 
   const getCurrentTime = () => {
     const options: Intl.DateTimeFormatOptions = {
       hour: "2-digit",
       minute: "2-digit",
+    };
+    return new Date().toLocaleTimeString(undefined, options);
+  };
+
+  const getCurrentTimeWithSeconds = () => {
+    const options: Intl.DateTimeFormatOptions = {
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
     };
     return new Date().toLocaleTimeString(undefined, options);
   };
@@ -83,7 +95,7 @@ export default function Home({
     const weekday = now.toLocaleDateString(undefined, { weekday: "long" });
     const month = now.toLocaleDateString(undefined, { month: "long" });
     const day = now.getDate();
-    return `Today is ${weekday} ${month} ${day}${getOrdinalSuffix(day)}`;
+    return `${weekday} ${month} ${day}${getOrdinalSuffix(day)}`;
   };
 
   const currentDateLabel = getCurrentDateLabel();
@@ -122,9 +134,11 @@ export default function Home({
 
   useEffect(() => {
     setCurrentTime(getCurrentTime());
+    setCurrentTimeWithSeconds(getCurrentTimeWithSeconds());
 
     const intervalId = setInterval(() => {
       setCurrentTime(getCurrentTime());
+      setCurrentTimeWithSeconds(getCurrentTimeWithSeconds());
     }, 1000);
 
     return () => clearInterval(intervalId);
@@ -152,9 +166,16 @@ export default function Home({
 
   return (
     <div id="home-content">
-      <h1>{currentTime}</h1>
-      <Weather city={weatherCity} />
-      <p className="home-date">{currentDateLabel}</p>
+      <div
+        className="home-info"
+        onClick={() => setExpandedToday(true)}
+        style={{ cursor: "pointer" }}
+      >
+        <h2>Today</h2>
+        <div className="home-info-time">{currentTime}</div>
+        <Weather city={weatherCity} />
+        <div className="home-info-date">{currentDateLabel}</div>
+      </div>
 
       <div className="home-pinned">
         <h2>Pinned Notes</h2>
@@ -354,6 +375,38 @@ export default function Home({
                     }}
                   />
                 </label>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {expandedToday && (
+        <div
+          className="note-modal-overlay"
+          onClick={() => setExpandedToday(false)}
+        >
+          <div
+            className="today-modal-popup"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              className="modal-close-btn"
+              onClick={() => setExpandedToday(false)}
+              aria-label="Close"
+            >
+              ✕
+            </button>
+
+            <div className="today-modal-header">
+              <h1>Today</h1>
+            </div>
+
+            <div className="today-modal-content">
+              <div className="today-modal-time">{currentTimeWithSeconds}</div>
+              <div className="today-modal-date">{currentDateLabel}</div>
+              <div className="today-modal-weather">
+                <Weather city={weatherCity} />
               </div>
             </div>
           </div>
