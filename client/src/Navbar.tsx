@@ -6,12 +6,23 @@ type TabKey = "home" | "notes" | "tasks" | "settings";
 interface NavbarProps {
   activeTab?: TabKey;
   onChangeTab?: (tab: TabKey) => void;
+  pomodoroTime?: number;
+  isRunning?: boolean;
 }
 
 const Navbar: React.FC<NavbarProps> = ({
   activeTab = "home",
   onChangeTab = () => {},
+  pomodoroTime = 0,
+  isRunning = false,
 }) => {
+  // Format seconds to MM:SS
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
+  };
+
   return (
     <nav className="navbar">
       <ul className="nav-links">
@@ -21,7 +32,7 @@ const Navbar: React.FC<NavbarProps> = ({
             onClick={() => onChangeTab("home")}
             aria-pressed={activeTab === "home"}
           >
-            Home
+            {isRunning ? formatTime(pomodoroTime) : "Home"}
           </button>
         </li>
         <li>

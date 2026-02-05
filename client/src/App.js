@@ -263,7 +263,12 @@ function App() {
         onLogin={handleLogin}
       />
 
-      <Navbar activeTab={activeTab} onChangeTab={setActiveTab} />
+      <Navbar
+        activeTab={activeTab}
+        onChangeTab={setActiveTab}
+        pomodoroTime={pomodoroTime}
+        isRunning={isRunning}
+      />
     </div>
   );
 }
