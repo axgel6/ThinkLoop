@@ -32,7 +32,7 @@ const Checklist: React.FC<ChecklistProps> = ({ currentUser }) => {
 
   const [text, setText] = React.useState("");
   const [currentTime, setCurrentTime] = React.useState(new Date());
-  const [loading, setLoading] = React.useState(true);
+  const [, setLoading] = React.useState(true);
 
   // Fetch tasks from server on mount
   React.useEffect(() => {

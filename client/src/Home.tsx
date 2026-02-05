@@ -61,24 +61,13 @@ export default function Home({ weatherCity, currentUser }: HomeProps) {
 
   const getPinnedNotes = useCallback(async () => {
     try {
-      const pinnedKey = currentUser?.id
-        ? `pinnedNotes:${currentUser.id}`
-        : "pinnedNotes:guest";
-      const rawPinned = localStorage.getItem(pinnedKey);
-      const pinnedIds: string[] = rawPinned ? JSON.parse(rawPinned) : [];
-
       if (currentUser?.id) {
         const response = await fetch(
           `${API_URL}/notes?userId=${currentUser.id}`,
         );
         if (response.ok) {
           const serverNotes = await response.json();
-          const serverMap = new Map<string, any>(
-            serverNotes.map((note: any) => [String(note.id), note]),
-          );
-          return pinnedIds
-            .map((id) => serverMap.get(String(id)))
-            .filter(Boolean);
+          return serverNotes.filter((note: any) => note.isPinned);
         }
       }
 
@@ -89,19 +78,13 @@ export default function Home({ weatherCity, currentUser }: HomeProps) {
         ...(rawLocalNotes ? JSON.parse(rawLocalNotes) : []),
       ];
 
-      const mergedMap = new Map<string, any>();
-      for (const note of notes) {
-        const id = String(note.id);
-        const existing = mergedMap.get(id);
-        if (
-          !existing ||
-          (note.lastModified || 0) > (existing.lastModified || 0)
-        ) {
-          mergedMap.set(id, note);
-        }
-      }
+      const pinnedKey = currentUser?.id
+        ? `pinnedNotes:${currentUser.id}`
+        : "pinnedNotes:guest";
+      const rawPinned = localStorage.getItem(pinnedKey);
+      const pinnedIds: string[] = rawPinned ? JSON.parse(rawPinned) : [];
 
-      return pinnedIds.map((id) => mergedMap.get(String(id))).filter(Boolean);
+      return notes.filter((note: any) => pinnedIds.includes(String(note.id)));
     } catch (e) {
       return [];
     }
