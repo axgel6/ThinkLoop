@@ -370,9 +370,8 @@ const Settings = ({ onOpenLoginModal, currentUser, onLogout }) => {
               onClick={() => setShowAccountModal(false)}
             >
               <div
-                className="modal-content"
+                className="modal-content account-modal-content"
                 onClick={(e) => e.stopPropagation()}
-                style={{ maxHeight: "80vh", overflowY: "auto" }}
               >
                 <button
                   className="modal-close"
@@ -381,276 +380,119 @@ const Settings = ({ onOpenLoginModal, currentUser, onLogout }) => {
                 >
                   ✕
                 </button>
-                <h1 style={{ fontSize: 26, fontWeight: 700, margin: "0 0 8px 0", color: "var(--fg, #dcdcdc)" }}>Manage Account</h1>
-                <p style={{ textAlign: "center", color: "var(--muted, #9a9a9a)", fontSize: 13, margin: "0 0 24px 0" }}>
-                  Update your account details below
-                </p>
+
+                <div className="account-modal-header">
+                  <h1>Manage Account</h1>
+                  <p>Update your account details below</p>
+                </div>
 
                 {accountError && (
-                  <div className="error-message">{accountError}</div>
+                  <div className="account-alert account-alert-error">
+                    {accountError}
+                  </div>
                 )}
                 {accountSuccess && (
-                  <div
-                    style={{
-                      background: "rgba(81, 207, 102, 0.1)",
-                      border: "1px solid rgba(81, 207, 102, 0.25)",
-                      color: "#51cf66",
-                      padding: "12px 14px",
-                      borderRadius: "10px",
-                      marginBottom: "16px",
-                      fontSize: "13px",
-                      textAlign: "center",
-                    }}
-                  >
+                  <div className="account-alert account-alert-success">
                     {accountSuccess}
                   </div>
                 )}
 
-                <div style={{ marginBottom: 20 }}>
-                  <label
-                    style={{
-                      display: "block",
-                      marginBottom: 8,
-                      color: "var(--fg, #dcdcdc)",
-                      fontSize: 13,
-                      fontWeight: 600,
-                    }}
-                  >
-                    Change Name
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="New name"
-                    value={newName}
-                    onChange={(e) => setNewName(e.target.value)}
-                    style={{
-                      width: "100%",
-                      padding: "11px 14px",
-                      marginBottom: 12,
-                      background: "rgba(255, 255, 255, 0.04)",
-                      border: "1px solid rgba(255, 255, 255, 0.1)",
-                      borderRadius: 12,
-                      color: "var(--fg, #dcdcdc)",
-                      fontSize: 15,
-                      outline: "none",
-                      transition: "all 0.2s ease",
-                      boxSizing: "border-box",
-                    }}
-                    onFocus={(e) => {
-                      e.target.style.background = "rgba(255, 255, 255, 0.08)";
-                      e.target.style.borderColor = "rgba(255, 255, 255, 0.2)";
-                    }}
-                    onBlur={(e) => {
-                      e.target.style.background = "rgba(255, 255, 255, 0.04)";
-                      e.target.style.borderColor = "rgba(255, 255, 255, 0.1)";
-                    }}
-                  />
-                  <Button
-                    onClick={handleUpdateName}
-                    style={{
-                      background: "rgba(100, 150, 255, 0.15)",
-                      border: "1px solid rgba(100, 150, 255, 0.3)",
-                      color: "#dcdcdc",
-                    }}
-                  >
-                    Update Name
-                  </Button>
+                <div className="account-form-section">
+                  <h3>Change Name</h3>
+                  <div className="account-form-group">
+                    <input
+                      type="text"
+                      placeholder="Enter new name"
+                      value={newName}
+                      onChange={(e) => setNewName(e.target.value)}
+                    />
+                    <Button
+                      onClick={handleUpdateName}
+                      style={{
+                        background: "rgba(100, 150, 255, 0.15)",
+                        border: "1px solid rgba(100, 150, 255, 0.3)",
+                        color: "#dcdcdc",
+                      }}
+                    >
+                      Update Name
+                    </Button>
+                  </div>
                 </div>
 
-                <div style={{ marginBottom: 20 }}>
-                  <label
-                    style={{
-                      display: "block",
-                      marginBottom: 8,
-                      color: "var(--fg, #dcdcdc)",
-                      fontSize: 13,
-                      fontWeight: 600,
-                    }}
-                  >
-                    Change Username
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="New username"
-                    value={newUsername}
-                    onChange={(e) => setNewUsername(e.target.value)}
-                    style={{
-                      width: "100%",
-                      padding: "11px 14px",
-                      marginBottom: 12,
-                      background: "rgba(255, 255, 255, 0.04)",
-                      border: "1px solid rgba(255, 255, 255, 0.1)",
-                      borderRadius: 12,
-                      color: "var(--fg, #dcdcdc)",
-                      fontSize: 15,
-                      outline: "none",
-                      transition: "all 0.2s ease",
-                      boxSizing: "border-box",
-                    }}
-                    onFocus={(e) => {
-                      e.target.style.background = "rgba(255, 255, 255, 0.08)";
-                      e.target.style.borderColor = "rgba(255, 255, 255, 0.2)";
-                    }}
-                    onBlur={(e) => {
-                      e.target.style.background = "rgba(255, 255, 255, 0.04)";
-                      e.target.style.borderColor = "rgba(255, 255, 255, 0.1)";
-                    }}
-                  />
-                  <Button
-                    onClick={handleUpdateUsername}
-                    style={{
-                      background: "rgba(100, 150, 255, 0.15)",
-                      border: "1px solid rgba(100, 150, 255, 0.3)",
-                      color: "#dcdcdc",
-                    }}
-                  >
-                    Update Username
-                  </Button>
+                <div className="account-form-section">
+                  <h3>Change Username</h3>
+                  <div className="account-form-group">
+                    <input
+                      type="text"
+                      placeholder="Enter new username"
+                      value={newUsername}
+                      onChange={(e) => setNewUsername(e.target.value)}
+                    />
+                    <Button
+                      onClick={handleUpdateUsername}
+                      style={{
+                        background: "rgba(100, 150, 255, 0.15)",
+                        border: "1px solid rgba(100, 150, 255, 0.3)",
+                        color: "#dcdcdc",
+                      }}
+                    >
+                      Update Username
+                    </Button>
+                  </div>
                 </div>
 
-                <div style={{ marginBottom: 20 }}>
-                  <label
-                    style={{
-                      display: "block",
-                      marginBottom: 8,
-                      color: "var(--fg, #dcdcdc)",
-                      fontSize: 13,
-                      fontWeight: 600,
-                    }}
-                  >
-                    Change Password
-                  </label>
-                  <input
-                    type="password"
-                    placeholder="Current password"
-                    value={currentPassword}
-                    onChange={(e) => setCurrentPassword(e.target.value)}
-                    style={{
-                      width: "100%",
-                      padding: "11px 14px",
-                      marginBottom: 10,
-                      background: "rgba(255, 255, 255, 0.04)",
-                      border: "1px solid rgba(255, 255, 255, 0.1)",
-                      borderRadius: 12,
-                      color: "var(--fg, #dcdcdc)",
-                      fontSize: 15,
-                      outline: "none",
-                      transition: "all 0.2s ease",
-                      boxSizing: "border-box",
-                    }}
-                    onFocus={(e) => {
-                      e.target.style.background = "rgba(255, 255, 255, 0.08)";
-                      e.target.style.borderColor = "rgba(255, 255, 255, 0.2)";
-                    }}
-                    onBlur={(e) => {
-                      e.target.style.background = "rgba(255, 255, 255, 0.04)";
-                      e.target.style.borderColor = "rgba(255, 255, 255, 0.1)";
-                    }}
-                  />
-                  <input
-                    type="password"
-                    placeholder="New password"
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    style={{
-                      width: "100%",
-                      padding: "11px 14px",
-                      marginBottom: 12,
-                      background: "rgba(255, 255, 255, 0.04)",
-                      border: "1px solid rgba(255, 255, 255, 0.1)",
-                      borderRadius: 12,
-                      color: "var(--fg, #dcdcdc)",
-                      fontSize: 15,
-                      outline: "none",
-                      transition: "all 0.2s ease",
-                      boxSizing: "border-box",
-                    }}
-                    onFocus={(e) => {
-                      e.target.style.background = "rgba(255, 255, 255, 0.08)";
-                      e.target.style.borderColor = "rgba(255, 255, 255, 0.2)";
-                    }}
-                    onBlur={(e) => {
-                      e.target.style.background = "rgba(255, 255, 255, 0.04)";
-                      e.target.style.borderColor = "rgba(255, 255, 255, 0.1)";
-                    }}
-                  />
-                  <Button
-                    onClick={handleUpdatePassword}
-                    style={{
-                      background: "rgba(100, 150, 255, 0.15)",
-                      border: "1px solid rgba(100, 150, 255, 0.3)",
-                      color: "#dcdcdc",
-                    }}
-                  >
-                    Update Password
-                  </Button>
+                <div className="account-form-section">
+                  <h3>Change Password</h3>
+                  <div className="account-form-group">
+                    <input
+                      type="password"
+                      placeholder="Current password"
+                      value={currentPassword}
+                      onChange={(e) => setCurrentPassword(e.target.value)}
+                    />
+                    <input
+                      type="password"
+                      placeholder="New password"
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                    />
+                    <Button
+                      onClick={handleUpdatePassword}
+                      style={{
+                        background: "rgba(100, 150, 255, 0.15)",
+                        border: "1px solid rgba(100, 150, 255, 0.3)",
+                        color: "#dcdcdc",
+                      }}
+                    >
+                      Update Password
+                    </Button>
+                  </div>
                 </div>
 
-                <div
-                  style={{
-                    marginBottom: 0,
-                    borderTop: "1px solid rgba(255, 255, 255, 0.08)",
-                    paddingTop: 20,
-                  }}
-                >
-                  <h3
-                    style={{
-                      marginBottom: 8,
-                      color: "#ffb3b3",
-                      fontSize: 16,
-                      fontWeight: 600,
-                    }}
-                  >
-                    Delete Account
-                  </h3>
-                  <p
-                    style={{
-                      marginBottom: 12,
-                      fontSize: 13,
-                      color: "var(--muted, #9a9a9a)",
-                      lineHeight: 1.4,
-                    }}
-                  >
+                <div className="account-danger-section">
+                  <h3>Delete Account</h3>
+                  <p>
                     This will permanently delete your account and all your
-                    notes.
+                    notes. This action cannot be undone.
                   </p>
-                  <input
-                    type="password"
-                    placeholder="Enter password to confirm"
-                    value={deletePassword}
-                    onChange={(e) => setDeletePassword(e.target.value)}
-                    style={{
-                      width: "100%",
-                      padding: "11px 14px",
-                      marginBottom: 12,
-                      background: "rgba(255, 255, 255, 0.04)",
-                      border: "1px solid rgba(255, 255, 255, 0.1)",
-                      borderRadius: 12,
-                      color: "var(--fg, #dcdcdc)",
-                      fontSize: 15,
-                      outline: "none",
-                      transition: "all 0.2s ease",
-                      boxSizing: "border-box",
-                    }}
-                    onFocus={(e) => {
-                      e.target.style.background = "rgba(255, 255, 255, 0.08)";
-                      e.target.style.borderColor = "rgba(255, 255, 255, 0.2)";
-                    }}
-                    onBlur={(e) => {
-                      e.target.style.background = "rgba(255, 255, 255, 0.04)";
-                      e.target.style.borderColor = "rgba(255, 255, 255, 0.1)";
-                    }}
-                  />
-                  <Button
-                    onClick={handleDeleteAccount}
-                    style={{
-                      background: "rgba(255, 107, 107, 0.15)",
-                      color: "#ffb3b3",
-                      border: "1px solid rgba(255, 107, 107, 0.3)",
-                    }}
-                  >
-                    Delete Account
-                  </Button>
+                  <div className="account-form-group">
+                    <input
+                      type="password"
+                      placeholder="Enter password to confirm deletion"
+                      value={deletePassword}
+                      onChange={(e) => setDeletePassword(e.target.value)}
+                    />
+                    <Button
+                      onClick={handleDeleteAccount}
+                      style={{
+                        background: "rgba(255, 107, 107, 0.15)",
+                        color: "#ffb3b3",
+                        border: "1px solid rgba(255, 107, 107, 0.3)",
+                      }}
+                    >
+                      Delete Account
+                    </Button>
+                  </div>
                 </div>
               </div>
             </div>

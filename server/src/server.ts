@@ -14,6 +14,16 @@ if (!uri) {
   throw new Error("MONGODB_URI is not defined in environment variables");
 }
 
+// Storage limits 
+const LIMITS = {
+  MAX_NOTES_PER_USER: 500,
+  MAX_TASKS_PER_USER: 1000,
+  MAX_NOTE_CONTENT_SIZE: 102400, // 100KB in bytes
+  MAX_TASK_TEXT_SIZE: 5120, // 5KB in bytes
+  MAX_NOTE_TITLE_SIZE: 500, // 500 bytes
+  MAX_TASK_TEXT_SIZE_CHARS: 2000, // 2000 characters for task text
+};
+
 // Middleware
 app.use(cors());
 app.use(express.json());
@@ -101,6 +111,38 @@ app.post("/notes", async (req, res) => {
   try {
     const { title, content, font, fontSize, theme, userId, isPinned } =
       req.body;
+
+    // Validate userId is provided for limit checking
+    if (!userId) {
+      return res
+        .status(400)
+        .json({ error: "userId is required to create a note" });
+    }
+
+    // Check content size limits
+    const titleSize = Buffer.byteLength(title || "", "utf8");
+    const contentSize = Buffer.byteLength(content || "", "utf8");
+
+    if (titleSize > LIMITS.MAX_NOTE_TITLE_SIZE) {
+      return res.status(413).json({
+        error: `Title exceeds size limit (max ${LIMITS.MAX_NOTE_TITLE_SIZE} bytes)`,
+      });
+    }
+
+    if (contentSize > LIMITS.MAX_NOTE_CONTENT_SIZE) {
+      return res.status(413).json({
+        error: `Note content exceeds size limit (max ${LIMITS.MAX_NOTE_CONTENT_SIZE} bytes)`,
+      });
+    }
+
+    // Check user's note count
+    const userNoteCount = await notesCollection.countDocuments({ userId });
+    if (userNoteCount >= LIMITS.MAX_NOTES_PER_USER) {
+      return res.status(429).json({
+        error: `Note limit reached. Maximum ${LIMITS.MAX_NOTES_PER_USER} notes per user.`,
+      });
+    }
+
     const now = Date.now();
     const newNote = {
       title: title || "",
@@ -131,8 +173,27 @@ app.put("/notes/:id", async (req, res) => {
       lastModified: Date.now(),
     };
 
-    if (title !== undefined) updateFields.title = title;
-    if (content !== undefined) updateFields.content = content;
+    // Validate content size if being updated
+    if (content !== undefined) {
+      const contentSize = Buffer.byteLength(content, "utf8");
+      if (contentSize > LIMITS.MAX_NOTE_CONTENT_SIZE) {
+        return res.status(413).json({
+          error: `Note content exceeds size limit (max ${LIMITS.MAX_NOTE_CONTENT_SIZE} bytes)`,
+        });
+      }
+      updateFields.content = content;
+    }
+
+    if (title !== undefined) {
+      const titleSize = Buffer.byteLength(title, "utf8");
+      if (titleSize > LIMITS.MAX_NOTE_TITLE_SIZE) {
+        return res.status(413).json({
+          error: `Title exceeds size limit (max ${LIMITS.MAX_NOTE_TITLE_SIZE} bytes)`,
+        });
+      }
+      updateFields.title = title;
+    }
+
     if (font !== undefined) updateFields.font = font;
     if (fontSize !== undefined) updateFields.fontSize = fontSize;
     if (theme !== undefined) updateFields.theme = theme;
@@ -209,6 +270,51 @@ app.get("/tasks/:id", async (req, res) => {
 app.post("/tasks", async (req, res) => {
   try {
     const { text, completed, userId } = req.body;
+
+    // Validate userId is provided for limit checking
+    if (!userId) {
+      return res
+        .status(400)
+        .json({ error: "userId is required to create a task" });
+    }
+
+    // Check text size limits
+    const textSize = Buffer.byteLength(text || "", "utf8");
+    const textLength = (text || "").length;
+
+    if (textLength > LIMITS.MAX_TASK_TEXT_SIZE_CHARS) {
+      return res.status(413).json({
+        error: `Task text exceeds size limit (max ${LIMITS.MAX_TASK_TEXT_SIZE_CHARS} characters)`,
+      });
+    }
+
+    if (textSize > LIMITS.MAX_TASK_TEXT_SIZE) {
+      return res.status(413).json({
+        error: `Task text exceeds size limit (max ${LIMITS.MAX_TASK_TEXT_SIZE} bytes)`,
+      });
+    }
+
+    // Check user's task count
+    const userTaskCount = await tasksCollection.countDocuments({ userId });
+    if (userTaskCount >= LIMITS.MAX_TASKS_PER_USER) {
+      // Auto-delete oldest completed tasks to make room
+      const oldestCompleted = await tasksCollection
+        .find({ userId, completed: true })
+        .sort({ completedAt: 1 })
+        .limit(Math.ceil(LIMITS.MAX_TASKS_PER_USER * 0.1)) // Delete 10% of limit
+        .toArray();
+
+      if (oldestCompleted.length > 0) {
+        const idsToDelete = oldestCompleted.map((t: any) => t._id);
+        await tasksCollection.deleteMany({ _id: { $in: idsToDelete } });
+      } else {
+        // If there are no completed tasks to delete, reject
+        return res.status(429).json({
+          error: `Task limit reached. Maximum ${LIMITS.MAX_TASKS_PER_USER} tasks per user. Please delete some completed tasks.`,
+        });
+      }
+    }
+
     const now = Date.now();
     const newTask = {
       text: text || "",
@@ -232,7 +338,27 @@ app.put("/tasks/:id", async (req, res) => {
   try {
     const { text, completed } = req.body;
     const updateData: any = {};
-    if (typeof text !== "undefined") updateData.text = text;
+
+    // Validate text size if being updated
+    if (typeof text !== "undefined") {
+      const textLength = text.length;
+      const textSize = Buffer.byteLength(text, "utf8");
+
+      if (textLength > LIMITS.MAX_TASK_TEXT_SIZE_CHARS) {
+        return res.status(413).json({
+          error: `Task text exceeds size limit (max ${LIMITS.MAX_TASK_TEXT_SIZE_CHARS} characters)`,
+        });
+      }
+
+      if (textSize > LIMITS.MAX_TASK_TEXT_SIZE) {
+        return res.status(413).json({
+          error: `Task text exceeds size limit (max ${LIMITS.MAX_TASK_TEXT_SIZE} bytes)`,
+        });
+      }
+
+      updateData.text = text;
+    }
+
     if (typeof completed !== "undefined") {
       updateData.completed = completed;
       updateData.completedAt = completed ? Date.now() : null;
@@ -505,8 +631,69 @@ app.delete("/auth/user/:userId", async (req, res) => {
   }
 });
 
-// Get user settings (themes, fonts, weather)
-app.get("/auth/user/:userId/settings", async (req, res) => {
+// Get user storage usage
+app.get("/auth/user/:userId/usage", async (req, res) => {
+  try {
+    const userId = req.params.userId;
+
+    const noteCount = await notesCollection.countDocuments({ userId });
+    const taskCount = await tasksCollection.countDocuments({ userId });
+
+    // Calculate total storage by summing note and task sizes
+    const notes = await notesCollection
+      .find({ userId })
+      .project({ title: 1, content: 1 })
+      .toArray();
+    const tasks = await tasksCollection
+      .find({ userId })
+      .project({ text: 1 })
+      .toArray();
+
+    let notesStorage = 0;
+    notes.forEach((note: any) => {
+      notesStorage += Buffer.byteLength(note.title || "", "utf8");
+      notesStorage += Buffer.byteLength(note.content || "", "utf8");
+    });
+
+    let tasksStorage = 0;
+    tasks.forEach((task: any) => {
+      tasksStorage += Buffer.byteLength(task.text || "", "utf8");
+    });
+
+    res.json({
+      notes: {
+        count: noteCount,
+        limit: LIMITS.MAX_NOTES_PER_USER,
+        storage: notesStorage,
+        storageLimit: LIMITS.MAX_NOTES_PER_USER * LIMITS.MAX_NOTE_CONTENT_SIZE,
+      },
+      tasks: {
+        count: taskCount,
+        limit: LIMITS.MAX_TASKS_PER_USER,
+        storage: tasksStorage,
+        storageLimit: LIMITS.MAX_TASKS_PER_USER * LIMITS.MAX_TASK_TEXT_SIZE,
+      },
+    });
+  } catch (error) {
+    res.status(500).json({ error: "Failed to fetch usage" });
+  }
+});
+
+// Get server storage limits
+app.get("/server/limits", async (req, res) => {
+  res.json({
+    notes: {
+      maxPerUser: LIMITS.MAX_NOTES_PER_USER,
+      maxContentSize: LIMITS.MAX_NOTE_CONTENT_SIZE,
+      maxTitleSize: LIMITS.MAX_NOTE_TITLE_SIZE,
+    },
+    tasks: {
+      maxPerUser: LIMITS.MAX_TASKS_PER_USER,
+      maxTextSize: LIMITS.MAX_TASK_TEXT_SIZE,
+      maxTextSizeChars: LIMITS.MAX_TASK_TEXT_SIZE_CHARS,
+    },
+  });
+});
   try {
     const user = await userInfoCollection.findOne({
       _id: new ObjectId(req.params.userId),
