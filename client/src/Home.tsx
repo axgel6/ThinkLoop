@@ -211,7 +211,7 @@ export default function Home({
             style={{ cursor: "pointer" }}
           >
             <div className="pomodoro-session">
-              {isWorkSession ? "Work Session" : "Break Time"}
+              {isWorkSession ? "Lock In Session" : "Break Time"}
             </div>
             <div className="pomodoro-time">{formatTime(pomodoroTime)}</div>
           </div>
