@@ -341,6 +341,8 @@ const Settings = ({ onOpenLoginModal, currentUser, onLogout }) => {
 
           <div className="settings-section">
             <h2>User Account</h2>
+            <p>Note: Server may need a moment to wake up on first use</p>
+
             {currentUser ? (
               <>
                 <p style={{ marginBottom: 12, color: "var(--muted, #9a9a9a)" }}>
