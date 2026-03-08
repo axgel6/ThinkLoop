@@ -17,6 +17,7 @@
   -webkit-backdrop-filter: blur(6px) saturate(150%);
   backdrop-filter: blur(6px) saturate(150%);
   text-align: center;
+  animation: widgetFadeIn 0.25s cubic-bezier(0.4, 1.6, 0.6, 1) both;
 }
 
 .home-info h2 {
@@ -67,6 +68,7 @@
   background: var(--panel-bg, rgba(25, 25, 25, 0.4));
   -webkit-backdrop-filter: blur(6px) saturate(150%);
   backdrop-filter: blur(6px) saturate(150%);
+  animation: widgetFadeIn 0.25s cubic-bezier(0.4, 1.6, 0.6, 1) 0.05s both;
 }
 
 .home-pinned h2 {
@@ -102,7 +104,6 @@
 .home-pinned-card:hover {
   background: rgba(255, 255, 255, 0.1);
   border-color: rgba(255, 255, 255, 0.14);
-  transform: translateY(-2px);
 }
 
 .home-pinned-title {
@@ -287,6 +288,23 @@
   background: var(--panel-bg, rgba(25, 25, 25, 0.4));
   -webkit-backdrop-filter: blur(6px) saturate(150%);
   backdrop-filter: blur(6px) saturate(150%);
+  animation: widgetFadeIn 0.25s cubic-bezier(0.4, 1.6, 0.6, 1) 0.1s both;
+}
+.pomodoro-modal-popup,
+.today-modal-popup {
+  text-align: left !important;
+  align-items: flex-start !important;
+}
+
+@keyframes widgetFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }
 
 .home-pomodoro h2 {

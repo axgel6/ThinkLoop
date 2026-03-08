@@ -75,14 +75,13 @@ export const NOTE_THEME_OPTIONS = [
 // CSS custom properties for each theme (used for per-note theming)
 export const THEME_VARS = {
   default: {
-    "--bg": "#000000",
-    "--fg": "#ffffff",
-    "--muted": "#999999",
-    "--panel-bg": "rgba(30, 30, 30, 0.6)",
-    "--panel-border": "rgba(100, 150, 255, 0.2)",
-    "--panel-bg-solid": "rgba(20, 20, 30, 0.8)",
-    "--glass-bg":
-      "linear-gradient(135deg, rgba(0, 0, 20, 0.4), rgba(100, 150, 255, 0.08))",
+    "--bg": "#0f1115",
+    "--fg": "#e6e6e6",
+    "--muted": "#8a93a3",
+    "--panel-bg": "rgba(22, 26, 33, 0.6)",
+    "--panel-border": "#2a2f3a",
+    "--panel-bg-solid": "#161a21",
+    "--glass-bg": "linear-gradient(135deg, #161a21, #0f1115)",
   },
   dark: {
     "--bg": "#000000",

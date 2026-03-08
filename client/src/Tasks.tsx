@@ -1,6 +1,6 @@
 import React from "react";
 import Button from "./Button";
-import "./Checklist.css";
+import "./Tasks.css";
 
 type Item = {
   id: string;

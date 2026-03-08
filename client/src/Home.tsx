@@ -4,6 +4,7 @@ import "./Home.css";
 
 const API_URL = process.env.REACT_APP_API_URL || "http://localhost:3000";
 
+// --- Types ---
 interface HomeProps {
   weatherCity?: string;
   currentUser?: { id?: string | number } | null;
@@ -22,6 +23,71 @@ interface HomeProps {
   handlePomodoroSkip?: () => void;
 }
 
+interface Note {
+  id: string;
+  title?: string;
+  content?: string;
+  lastModified?: number;
+  isPinned?: boolean;
+}
+
+// --- Reusable Icons ---
+const PauseIcon = () => (
+  <svg
+    width="32"
+    height="32"
+    viewBox="0 0 32 32"
+    fill="currentColor"
+    style={{ display: "block", margin: "0 auto" }}
+  >
+    <rect x="9" y="8" width="4" height="16" rx="2" />
+    <rect x="19" y="8" width="4" height="16" rx="2" />
+  </svg>
+);
+
+const PlayIcon = () => (
+  <svg
+    width="32"
+    height="32"
+    viewBox="0 0 32 32"
+    fill="currentColor"
+    style={{ display: "block", margin: "0 auto" }}
+  >
+    <path d="M9 9C9 7.8 10.3 7.2 11.3 7.8L23.3 14.8C24.2 15.4 24.2 16.6 23.3 17.2L11.3 24.2C10.3 24.8 9 24.2 9 23Z" />
+  </svg>
+);
+
+const SkipIcon = () => (
+  <svg
+    width="32"
+    height="32"
+    viewBox="0 0 32 32"
+    fill="currentColor"
+    style={{ display: "block", margin: "0 auto" }}
+  >
+    <path d="M8 9C8 7.8 9.3 7.2 10.3 7.8L18.3 14.8C19.2 15.4 19.2 16.6 18.3 17.2L10.3 24.2C9.3 24.8 8 24.2 8 23Z" />
+    <rect x="21" y="8" width="3" height="16" rx="1.5" />
+  </svg>
+);
+
+const ResetIcon = () => (
+  <svg
+    width="32"
+    height="32"
+    viewBox="0 0 32 32"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    style={{ display: "block", margin: "0 auto" }}
+  >
+    <path d="M 21.65 10.35 A 8 8 0 1 1 16 8" />
+    <path d="M 12.5 4.5 L 16 8 L 12.5 11.5" />
+  </svg>
+);
+
+// --- Main Component ---
 export default function Home({
   weatherCity,
   currentUser,
@@ -39,41 +105,22 @@ export default function Home({
   handlePomodoroReset = () => {},
   handlePomodoroSkip = () => {},
 }: HomeProps) {
-  const [currentTime, setCurrentTime] = useState<string>("");
-  const [currentTimeWithSeconds, setCurrentTimeWithSeconds] =
-    useState<string>("");
-  const [pinnedNotes, setPinnedNotes] = useState<
-    Array<{
-      id: string;
-      title?: string;
-      content?: string;
-      lastModified?: number;
-    }>
-  >([]);
-  const [expandedNote, setExpandedNote] = useState<{
-    id: string;
-    title?: string;
-    content?: string;
-    lastModified?: number;
-  } | null>(null);
+  // State
+  const [now, setNow] = useState<Date>(new Date());
+  const [pinnedNotes, setPinnedNotes] = useState<Note[]>([]);
+  const [expandedNote, setExpandedNote] = useState<Note | null>(null);
   const [expandedToday, setExpandedToday] = useState<boolean>(false);
 
-  const getCurrentTime = () => {
-    const options: Intl.DateTimeFormatOptions = {
-      hour: "2-digit",
-      minute: "2-digit",
-    };
-    return new Date().toLocaleTimeString(undefined, options);
-  };
-
-  const getCurrentTimeWithSeconds = () => {
-    const options: Intl.DateTimeFormatOptions = {
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit",
-    };
-    return new Date().toLocaleTimeString(undefined, options);
-  };
+  // Derived Time & Date values
+  const currentTime = now.toLocaleTimeString(undefined, {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+  const currentTimeWithSeconds = now.toLocaleTimeString(undefined, {
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  });
 
   const getOrdinalSuffix = (day: number) => {
     const remainder = day % 100;
@@ -91,14 +138,26 @@ export default function Home({
   };
 
   const getCurrentDateLabel = () => {
-    const now = new Date();
     const weekday = now.toLocaleDateString(undefined, { weekday: "long" });
     const month = now.toLocaleDateString(undefined, { month: "long" });
     const day = now.getDate();
     return `${weekday} ${month} ${day}${getOrdinalSuffix(day)}`;
   };
 
-  const currentDateLabel = getCurrentDateLabel();
+  // Utilities
+  const stripHtml = (value: string) =>
+    value
+      .replace(/<[^>]+>/g, "")
+      .replace(/\s+/g, " ")
+      .trim();
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60)
+      .toString()
+      .padStart(2, "0");
+    const secs = (seconds % 60).toString().padStart(2, "0");
+    return `${mins}:${secs}`;
+  };
 
   const getPinnedNotes = useCallback(async () => {
     if (!currentUser?.id) return [];
@@ -106,41 +165,17 @@ export default function Home({
       const response = await fetch(`${API_URL}/notes?userId=${currentUser.id}`);
       if (!response.ok) throw new Error("Failed to fetch notes");
 
-      const serverNotes = await response.json();
-      return (serverNotes.filter((note: any) => note.isPinned) || []) as Array<{
-        id: string;
-        title?: string;
-        content?: string;
-        lastModified?: number;
-      }>;
+      const serverNotes: Note[] = await response.json();
+      return serverNotes.filter((note) => note.isPinned) || [];
     } catch (e) {
       console.error("Failed to fetch pinned notes:", e);
       return [];
     }
   }, [currentUser]);
 
-  const stripHtml = (value: string) =>
-    value
-      .replace(/<[^>]+>/g, "")
-      .replace(/\s+/g, " ")
-      .trim();
-
-  // Format seconds to MM:SS
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
-  };
-
+  // Effects
   useEffect(() => {
-    setCurrentTime(getCurrentTime());
-    setCurrentTimeWithSeconds(getCurrentTimeWithSeconds());
-
-    const intervalId = setInterval(() => {
-      setCurrentTime(getCurrentTime());
-      setCurrentTimeWithSeconds(getCurrentTimeWithSeconds());
-    }, 1000);
-
+    const intervalId = setInterval(() => setNow(new Date()), 1000);
     return () => clearInterval(intervalId);
   }, []);
 
@@ -154,18 +189,18 @@ export default function Home({
 
     loadPinned();
     const intervalId = setInterval(loadPinned, 15000);
+    window.addEventListener("storage", loadPinned);
 
-    const handleStorage = () => loadPinned();
-    window.addEventListener("storage", handleStorage);
     return () => {
       isActive = false;
       clearInterval(intervalId);
-      window.removeEventListener("storage", handleStorage);
+      window.removeEventListener("storage", loadPinned);
     };
   }, [getPinnedNotes]);
 
   return (
     <div id="home-content">
+      {/* --- Today Widget --- */}
       <div
         className="home-info"
         onClick={() => setExpandedToday(true)}
@@ -174,9 +209,10 @@ export default function Home({
         <h2>Today</h2>
         <div className="home-info-time">{currentTime}</div>
         <Weather city={weatherCity} />
-        <div className="home-info-date">{currentDateLabel}</div>
+        <div className="home-info-date">{getCurrentDateLabel()}</div>
       </div>
 
+      {/* --- Pinned Notes Widget --- */}
       <div className="home-pinned">
         <h2>Pinned Notes</h2>
         {pinnedNotes.length === 0 ? (
@@ -202,6 +238,7 @@ export default function Home({
         )}
       </div>
 
+      {/* --- Mini Pomodoro Widget --- */}
       <div className="home-pomodoro">
         <h2>Pomodoro Timer</h2>
         <div className="pomodoro-widget">
@@ -219,28 +256,32 @@ export default function Home({
             <button
               className="pomodoro-btn"
               onClick={handlePomodoroToggle}
-              title={isRunning ? "Pause" : "Start"}
+              title={isRunning ? "Pause timer" : "Start timer"}
+              aria-label={isRunning ? "Pause" : "Start"}
             >
-              {isRunning ? "⏸" : "▶"}
+              {isRunning ? <PauseIcon /> : <PlayIcon />}
             </button>
             <button
               className="pomodoro-btn"
               onClick={handlePomodoroSkip}
               title="Skip to next session"
+              aria-label="Skip"
             >
-              ⏭
+              <SkipIcon />
             </button>
             <button
               className="pomodoro-btn"
               onClick={handlePomodoroReset}
               title="Reset timer"
+              aria-label="Reset"
             >
-              ↻
+              <ResetIcon />
             </button>
           </div>
         </div>
       </div>
 
+      {/* --- Expanded Note Modal --- */}
       {expandedNote && (
         <div
           className="note-modal-overlay"
@@ -276,6 +317,7 @@ export default function Home({
         </div>
       )}
 
+      {/* --- Full Screen Pomodoro Modal --- */}
       {fullScreenPomodoro && (
         <div
           className="note-modal-overlay"
@@ -313,22 +355,57 @@ export default function Home({
                 className="pomodoro-modal-btn"
                 onClick={handlePomodoroToggle}
                 title={isRunning ? "Pause" : "Start"}
+                aria-label={isRunning ? "Pause" : "Start"}
               >
-                {isRunning ? "⏸ Pause" : "▶ Start"}
+                <span
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 8,
+                  }}
+                >
+                  {isRunning ? (
+                    <>
+                      <PauseIcon /> Pause
+                    </>
+                  ) : (
+                    <>
+                      <PlayIcon /> Start
+                    </>
+                  )}
+                </span>
               </button>
               <button
                 className="pomodoro-modal-btn"
                 onClick={handlePomodoroSkip}
                 title="Skip to next session"
+                aria-label="Skip"
               >
-                ⏭ Skip
+                <span
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 8,
+                  }}
+                >
+                  <SkipIcon /> Skip
+                </span>
               </button>
               <button
                 className="pomodoro-modal-btn"
                 onClick={handlePomodoroReset}
                 title="Reset timer"
+                aria-label="Reset"
               >
-                ↻ Reset
+                <span
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 8,
+                  }}
+                >
+                  <ResetIcon /> Reset
+                </span>
               </button>
             </div>
 
@@ -348,9 +425,8 @@ export default function Home({
                         Math.min(60, parseInt(e.target.value) || 1),
                       );
                       setWorkDuration(val);
-                      if (isWorkSession && !isRunning) {
+                      if (isWorkSession && !isRunning)
                         setPomodoroTime(val * 60);
-                      }
                     }}
                   />
                 </label>
@@ -369,9 +445,8 @@ export default function Home({
                         Math.min(30, parseInt(e.target.value) || 1),
                       );
                       setBreakDuration(val);
-                      if (!isWorkSession && !isRunning) {
+                      if (!isWorkSession && !isRunning)
                         setPomodoroTime(val * 60);
-                      }
                     }}
                   />
                 </label>
@@ -381,6 +456,7 @@ export default function Home({
         </div>
       )}
 
+      {/* --- Expanded Today Modal --- */}
       {expandedToday && (
         <div
           className="note-modal-overlay"
@@ -404,7 +480,7 @@ export default function Home({
 
             <div className="today-modal-content">
               <div className="today-modal-time">{currentTimeWithSeconds}</div>
-              <div className="today-modal-date">{currentDateLabel}</div>
+              <div className="today-modal-date">{getCurrentDateLabel()}</div>
               <div className="today-modal-weather">
                 <Weather city={weatherCity} />
               </div>

@@ -708,28 +708,17 @@ pre {
 }
 
 .theme-default {
-  --bg: #000000;
-  --fg: #ffffff;
-  --muted: #999999;
-  --panel-bg: rgba(30, 30, 30, 0.6);
-  --panel-border: rgba(100, 150, 255, 0.2);
-  --panel-bg-solid: rgba(20, 20, 30, 0.8);
+  --bg: #0f1115;
+  --fg: #e6e6e6;
+  --muted: #8a93a3;
+  --panel-bg: rgba(22, 26, 33, 0.7);
+  --panel-border: #2a2f3a;
+  --panel-bg-solid: #161a21;
   --glass-bg: linear-gradient(
     135deg,
-    rgba(0, 0, 20, 0.4),
-    rgba(31, 0, 186, 0.08)
+    rgba(15, 17, 21, 0.8),
+    rgba(43, 124, 255, 0.05)
   );
-}
-
-.theme-default body {
-  background:
-    radial-gradient(
-      ellipse at bottom,
-      rgba(38, 0, 255, 0.2) 0%,
-      transparent 70%
-    ),
-    #000000;
-  background-attachment: fixed;
 }
 
 .theme-dark {
