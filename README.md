@@ -1,6 +1,6 @@
 # ThinkLoop
 
-A modern, full-stack note-taking and productivity app with Pomodoro timer, checklist, OCR, and more.
+A modern, full-stack productivity dashboard app with notes, Pomodoro timer, checklist, OCR, and more.
 
 ## Project Structure
 
