@@ -21,6 +21,7 @@ export const COLOR_OPTIONS = [
   { id: "fifteen", label: "Snow Leopard" },
   { id: "sixteen", label: "eXPerience" },
   { id: "seventeen", label: "Bright Red" },
+  { id: "eighteen", label: "Gruvbox (ModelLoop Default)" },
 ];
 
 // Mapping of color option IDs to CSS theme classes
@@ -44,6 +45,7 @@ export const THEME_CLASS_MAP = {
   fifteen: "theme-snowleopard",
   sixteen: "theme-windowsxp",
   seventeen: "theme-brightred",
+  eighteen: "theme-gruvbox",
 };
 
 // All theme classes (auto-generated from THEME_CLASS_MAP)
@@ -70,6 +72,7 @@ export const NOTE_THEME_OPTIONS = [
   { id: "snowleopard", label: "Snow Leopard" },
   { id: "windowsxp", label: "eXPerience" },
   { id: "brightred", label: "Bright Red" },
+  { id: "gruvbox", label: "Gruvbox (ModelLoop Default)" },
 ];
 
 // CSS custom properties for each theme (used for per-note theming)
@@ -264,6 +267,16 @@ export const THEME_VARS = {
     "--panel-bg-solid": "#A52A2A",
     "--glass-bg":
       "linear-gradient(135deg, rgba(220, 80, 80, 0.3), rgba(139, 26, 26, 0.5))",
+  },
+  gruvbox: {
+    "--bg": "#282828",
+    "--fg": "#ebdbb2",
+    "--muted": "#928374",
+    "--panel-bg": "rgba(60, 56, 54, 0.7)",
+    "--panel-border": "rgba(168, 153, 132, 0.3)",
+    "--panel-bg-solid": "#3c3836",
+    "--glass-bg":
+      "linear-gradient(135deg, rgba(40, 40, 40, 0.85), rgba(250, 189, 47, 0.04))",
   },
 };
 

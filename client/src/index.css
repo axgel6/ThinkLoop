@@ -985,6 +985,70 @@ pre {
   );
 }
 
+.theme-gruvbox {
+  --bg: #282828;
+  --fg: #ebdbb2;
+  --muted: #928374;
+  --panel-bg: rgba(60, 56, 54, 0.7);
+  --panel-border: rgba(168, 153, 132, 0.3);
+  --panel-bg-solid: #3c3836;
+  --glass-bg: linear-gradient(
+    135deg,
+    rgba(40, 40, 40, 0.85),
+    rgba(250, 189, 47, 0.04)
+  );
+}
+
+.theme-gruvbox .btn,
+.theme-gruvbox .toolbar button,
+.theme-gruvbox .login-submit-btn,
+.theme-gruvbox .settings-toggles button,
+.theme-gruvbox .toolbar-actions .undo-btn,
+.theme-gruvbox .toolbar-actions .redo-btn,
+.theme-gruvbox .toolbar-actions .done-btn {
+  background: #fabd2f;
+  color: #282828;
+  border: none;
+  border-radius: 25px;
+  backdrop-filter: none;
+  box-shadow: none;
+}
+
+.theme-gruvbox .btn svg line,
+.theme-gruvbox .btn svg polyline,
+.theme-gruvbox .btn svg path,
+.theme-gruvbox .btn svg circle,
+.theme-gruvbox .btn svg rect,
+.theme-gruvbox .btn svg polygon {
+  stroke: #282828;
+}
+
+.theme-gruvbox .btn:hover,
+.theme-gruvbox .toolbar button:hover,
+.theme-gruvbox .login-submit-btn:hover,
+.theme-gruvbox .settings-toggles button:hover,
+.theme-gruvbox .toolbar-actions .undo-btn:hover,
+.theme-gruvbox .toolbar-actions .redo-btn:hover,
+.theme-gruvbox .toolbar-actions .done-btn:hover {
+  background: #d3869b;
+  color: #282828;
+  border-color: transparent;
+}
+
+.theme-gruvbox .custom-select-button {
+  background: #fabd2f;
+  color: #282828;
+  border: none;
+  border-radius: 25px;
+  backdrop-filter: none;
+}
+
+.theme-gruvbox .custom-select-button:hover {
+  background: #d3869b;
+  color: #282828;
+  transform: none;
+}
+
 .theme-light {
   --bg: #ffffff;
   --fg: #1a1a1a;

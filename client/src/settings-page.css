@@ -1,3 +1,11 @@
+/* ModelLoop link styling */
+.modelLoop-link {
+  color: #fabd2f;
+  transition: color 0.2s;
+}
+.modelLoop-link:hover {
+  color: #d3869b;
+}
 .settings-toggles {
   border: 1px solid var(--panel-border, rgba(255, 255, 255, 0.08));
   border-radius: 20px;

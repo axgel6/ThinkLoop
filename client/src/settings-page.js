@@ -773,6 +773,17 @@ const Settings = ({ onOpenLoginModal, currentUser, onLogout }) => {
             <Button onClick={() => window.open("https://aynjel.com")}>
               Created by Angel Gutierrez
             </Button>
+            <h4>
+              Try{" "}
+              <a
+                href="https://modelloop-frontend.onrender.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="modelLoop-link"
+              >
+                ModelLoop
+              </a>
+            </h4>
           </div>
         </div>
       </div>
