@@ -79,7 +79,7 @@ export const NOTE_THEME_OPTIONS = [
 export const THEME_VARS = {
   default: {
     "--bg": "#0a0e14",
-    "--fg": "#b3b1ad",
+    "--fg": "#e6e4de",
     "--muted": "#3d4663",
     "--panel-bg": "rgba(13, 16, 23, 0.82)",
     "--panel-border": "#151a24",

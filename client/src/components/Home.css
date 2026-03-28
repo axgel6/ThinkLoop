@@ -94,16 +94,16 @@
 .home-pinned-card {
   border-radius: 14px;
   padding: 12px 12px 10px;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--panel-bg-solid);
+  border: 1px solid var(--panel-border);
   color: var(--fg, #dcdcdc);
   cursor: pointer;
   transition: background 0.15s ease, border-color 0.15s ease;
 }
 
 .home-pinned-card:hover {
-  background: rgba(255, 255, 255, 0.1);
-  border-color: rgba(255, 255, 255, 0.14);
+  background: var(--panel-bg);
+  border-color: var(--panel-border);
 }
 
 .home-pinned-title {
