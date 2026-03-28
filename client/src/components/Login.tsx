@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import "./Login.css";
 
 interface LoginModalProps {
@@ -14,25 +14,26 @@ export default function LoginModal({
   onClose,
   onLogin,
 }: LoginModalProps) {
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [name, setName] = useState("");
   const [isRegister, setIsRegister] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const formRef = useRef<HTMLFormElement>(null);
 
   if (!isOpen) return null;
 
   const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (e.target === e.currentTarget) {
-      onClose();
-    }
+    if (e.target === e.currentTarget) onClose();
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError("");
     setLoading(true);
+
+    const data = new FormData(e.currentTarget);
+    const username = data.get("username") as string;
+    const password = data.get("password") as string;
+    const name = data.get("name") as string;
 
     try {
       const endpoint = isRegister ? "/auth/register" : "/auth/login";
@@ -44,16 +45,14 @@ export default function LoginModal({
         ),
       });
 
-      const data = await response.json();
+      const json = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || "Authentication failed");
+        throw new Error(json.error || "Authentication failed");
       }
 
-      onLogin({ id: data.id, username: data.username, name: data.name });
-      setUsername("");
-      setPassword("");
-      setName("");
+      onLogin({ id: json.id, username: json.username, name: json.name });
+      formRef.current?.reset();
     } catch (err: any) {
       setError(err.message || "An error occurred");
     } finally {
@@ -74,16 +73,15 @@ export default function LoginModal({
             : "Welcome back to ThinkLoop"}
         </p>
         {error && <div className="error-message">{error}</div>}
-        <form onSubmit={handleSubmit} className="login-form">
+        <form ref={formRef} onSubmit={handleSubmit} className="login-form">
           {isRegister && (
             <div className="form-group">
               <label htmlFor="name">Full Name</label>
               <input
                 id="name"
+                name="name"
                 type="text"
                 placeholder="Enter your full name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
                 required
               />
             </div>
@@ -92,10 +90,9 @@ export default function LoginModal({
             <label htmlFor="username">Username</label>
             <input
               id="username"
+              name="username"
               type="text"
               placeholder="Enter your username"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
               required
             />
           </div>
@@ -103,10 +100,9 @@ export default function LoginModal({
             <label htmlFor="password">Password</label>
             <input
               id="password"
+              name="password"
               type="password"
               placeholder="Enter your password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
               required
             />
           </div>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Navbar from "./components/Navbar";
 import Tasks from "./components/Tasks";
 import NotesHandler from "./components/NotesHandler";
@@ -11,12 +11,18 @@ import Home from "./components/Home";
 
 const API_URL = process.env.REACT_APP_API_URL || "http://localhost:3000";
 
+const TITLES = {
+  home: "Home",
+  notes: "Notes",
+  tasks: "Tasks",
+  settings: "Settings",
+};
+
 function App() {
-  // Initialize activeTab from localStorage or default to "home"
   const [activeTab, setActiveTab] = useState(() => {
     try {
       return localStorage.getItem("activeTab") || "home";
-    } catch (e) {
+    } catch {
       return "home";
     }
   });
@@ -26,7 +32,7 @@ function App() {
     try {
       const stored = localStorage.getItem("currentUser");
       return stored ? JSON.parse(stored) : null;
-    } catch (e) {
+    } catch {
       return null;
     }
   });
@@ -34,7 +40,7 @@ function App() {
   const [weatherCity, setWeatherCity] = useState(() => {
     try {
       return localStorage.getItem("settings:weatherCity") || "Atlanta";
-    } catch (e) {
+    } catch {
       return "Atlanta";
     }
   });
@@ -46,17 +52,16 @@ function App() {
   const [fullScreenPomodoro, setFullScreenPomodoro] = useState(false);
   const [workDuration, setWorkDuration] = useState(25);
   const [breakDuration, setBreakDuration] = useState(5);
-
-  const titles = {
-    home: "Home",
-    notes: "Notes",
-    tasks: "Tasks",
-    settings: "Settings",
-  };
+  const isWorkSessionRef = useRef(isWorkSession);
+  const workDurationRef = useRef(workDuration);
+  const breakDurationRef = useRef(breakDuration);
+  isWorkSessionRef.current = isWorkSession;
+  workDurationRef.current = workDuration;
+  breakDurationRef.current = breakDuration;
 
   const user = currentUser ? currentUser.name || currentUser.username : "Guest";
 
-  // Save current user to localStorage when it changes
+  // Sync currentUser to localStorage
   useEffect(() => {
     try {
       if (currentUser) {
@@ -64,7 +69,7 @@ function App() {
       } else {
         localStorage.removeItem("currentUser");
       }
-    } catch (e) {
+    } catch {
       // ignore
     }
   }, [currentUser]);
@@ -76,9 +81,6 @@ function App() {
 
   const handleLogout = () => {
     setCurrentUser(null);
-    localStorage.removeItem("currentUser");
-
-    // Reset to default theme and apply immediately
     localStorage.setItem("settings:selected", "zero");
     localStorage.setItem("settings:font", "zero");
     localStorage.setItem("settings:weatherCity", "Atlanta");
@@ -91,34 +93,35 @@ function App() {
   useEffect(() => {
     try {
       localStorage.setItem("activeTab", activeTab);
-    } catch (e) {
+    } catch {
       // ignore
     }
   }, [activeTab]);
 
-  // Check backend connectivity (Render free tier sleeps)
+  // Check backend connectivity (Render free tier sleeps).
+  // Run once: use a ref so the interval doesn't restart on every state change.
   useEffect(() => {
+    const connectedRef = { current: false };
+
     const checkConnection = async () => {
       try {
         const res = await fetch(`${API_URL}/health`, { method: "GET" });
-        if (res.ok) {
-          setIsConnected(true);
-        } else {
-          setIsConnected(false);
-        }
+        connectedRef.current = res.ok;
+        setIsConnected(res.ok);
       } catch {
+        connectedRef.current = false;
         setIsConnected(false);
       }
     };
 
     checkConnection();
     const interval = setInterval(async () => {
-      if (isConnected !== true) await checkConnection();
+      if (!connectedRef.current) await checkConnection();
       else clearInterval(interval);
     }, 3000);
 
     return () => clearInterval(interval);
-  }, [isConnected]);
+  }, []);
 
   // Initialize theme and font on app startup
   useEffect(() => {
@@ -128,34 +131,30 @@ function App() {
     applyFont(savedFont);
   }, []);
 
-  // Pomodoro timer effect
+  // Pomodoro timer — only restarts when isRunning changes, not every tick
   useEffect(() => {
-    let intervalId;
+    if (!isRunning) return;
 
-    if (isRunning && pomodoroTime > 0) {
-      intervalId = setInterval(() => {
-        setPomodoroTime((prev) => {
-          if (prev <= 1) {
-            setIsRunning(false);
-            if (isWorkSession) {
-              setIsWorkSession(false);
-              return breakDuration * 60;
-            } else {
-              setIsWorkSession(true);
-              return workDuration * 60;
-            }
+    const intervalId = setInterval(() => {
+      setPomodoroTime((prev) => {
+        if (prev <= 1) {
+          setIsRunning(false);
+          if (isWorkSessionRef.current) {
+            setIsWorkSession(false);
+            return breakDurationRef.current * 60;
+          } else {
+            setIsWorkSession(true);
+            return workDurationRef.current * 60;
           }
-          return prev - 1;
-        });
-      }, 1000);
-    }
+        }
+        return prev - 1;
+      });
+    }, 1000);
 
     return () => clearInterval(intervalId);
-  }, [isRunning, pomodoroTime, isWorkSession, workDuration, breakDuration]);
+  }, [isRunning]);
 
-  const handlePomodoroToggle = () => {
-    setIsRunning(!isRunning);
-  };
+  const handlePomodoroToggle = () => setIsRunning((r) => !r);
 
   const handlePomodoroReset = () => {
     setIsRunning(false);
@@ -174,7 +173,7 @@ function App() {
     }
   };
 
-  // Fetch settings from server when user is logged in (on mount and periodically)
+  // Fetch settings from server when user is logged in
   useEffect(() => {
     const fetchSettingsFromServer = async () => {
       if (!currentUser) return;
@@ -189,7 +188,6 @@ function App() {
           const newFont = settings.fontTheme || "zero";
           const newCity = settings.weatherCity || "Atlanta";
 
-          // Update localStorage and apply if changed
           const currentTheme = localStorage.getItem("settings:selected");
           const currentFont = localStorage.getItem("settings:font");
           const currentCity = localStorage.getItem("settings:weatherCity");
@@ -213,12 +211,8 @@ function App() {
       }
     };
 
-    // Fetch immediately on mount
     fetchSettingsFromServer();
-
-    // Poll every 5 seconds for updates from other devices
     const interval = setInterval(fetchSettingsFromServer, 5000);
-
     return () => clearInterval(interval);
   }, [currentUser]);
 
@@ -234,8 +228,18 @@ function App() {
       }
     };
 
+    // Same-tab updates from settings dispatch this custom event
+    const handleCityChanged = () => {
+      const city = localStorage.getItem("settings:weatherCity") || "Atlanta";
+      setWeatherCity(city);
+    };
+
     window.addEventListener("storage", handleStorageChange);
-    return () => window.removeEventListener("storage", handleStorageChange);
+    window.addEventListener("weatherCityChanged", handleCityChanged);
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+      window.removeEventListener("weatherCityChanged", handleCityChanged);
+    };
   }, []);
 
   return (
@@ -247,7 +251,7 @@ function App() {
       )}
       <div id="top-bar">
         <h1 id="title" style={{ fontWeight: "bold" }}>
-          {"ThinkLoop/" + titles[activeTab]}
+          {"ThinkLoop/" + TITLES[activeTab]}
         </h1>
         <h1
           id="user"
@@ -283,6 +287,7 @@ function App() {
           onOpenLoginModal={() => setIsLoginModalOpen(true)}
           currentUser={currentUser}
           onLogout={handleLogout}
+          onUpdateUser={setCurrentUser}
         />
       )}
       {!["home", "notes", "tasks", "settings"].includes(activeTab) && (

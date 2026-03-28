@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import Dropdown from "./Dropdown";
 import Button from "./Button";
+import AccountModal from "./AccountModal";
 import "./settings-page.css";
 import { FONT_OPTIONS, FONT_MAP, applyFont } from "../utils/fonts";
 import { COLOR_OPTIONS, applyTheme } from "../utils/themes";
@@ -30,7 +31,7 @@ const CITY_OPTIONS = [
   { id: "Toronto", label: "Toronto" },
 ];
 
-const Settings = ({ onOpenLoginModal, currentUser, onLogout }) => {
+const Settings = ({ onOpenLoginModal, currentUser, onLogout, onUpdateUser }) => {
   // Safely stringify JSON for export: escape characters/sequences that can
   // cause issues if the JSON is later embedded in HTML or a <script> tag.
   // This prevents JSON injection by neutralizing </script>, U+2028/U+2029,
@@ -38,7 +39,7 @@ const Settings = ({ onOpenLoginModal, currentUser, onLogout }) => {
   const safeJSONStringify = (obj) =>
     JSON.stringify(
       obj,
-      (k, v) => {
+      (_k, v) => {
         if (typeof v === "string") {
           return v
             .replace(/\u2028/g, "\\u2028")
@@ -66,16 +67,15 @@ const Settings = ({ onOpenLoginModal, currentUser, onLogout }) => {
     }
   });
 
-  const [weatherCity, setWeatherCity] = React.useState("Atlanta");
+  const [weatherCity, setWeatherCity] = React.useState(() => {
+    try {
+      return localStorage.getItem("settings:weatherCity") || "Atlanta";
+    } catch {
+      return "Atlanta";
+    }
+  });
 
   const [showAccountModal, setShowAccountModal] = useState(false);
-  const [newName, setNewName] = useState("");
-  const [newUsername, setNewUsername] = useState("");
-  const [currentPassword, setCurrentPassword] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [deletePassword, setDeletePassword] = useState("");
-  const [accountError, setAccountError] = useState("");
-  const [accountSuccess, setAccountSuccess] = useState("");
   const [isLoadingSettings, setIsLoadingSettings] = useState(false);
 
   // Load theme settings from server when user logs in
@@ -171,132 +171,6 @@ const Settings = ({ onOpenLoginModal, currentUser, onLogout }) => {
     }
   }, [weatherCity, currentUser, isLoadingSettings]);
 
-  const handleUpdateName = async () => {
-    if (!currentUser || !newName) return;
-    setAccountError("");
-    setAccountSuccess("");
-
-    try {
-      const response = await fetch(
-        `${API_URL}/auth/user/${currentUser.id}/name`,
-        {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ newName }),
-        },
-      );
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "Failed to update name");
-      }
-
-      setAccountSuccess("Name updated successfully!");
-      setNewName("");
-      // Update local user data
-      const updatedUser = { ...currentUser, name: data.name };
-      localStorage.setItem("currentUser", JSON.stringify(updatedUser));
-      window.location.reload(); // Reload to update UI
-    } catch (err) {
-      setAccountError(err.message);
-    }
-  };
-
-  const handleUpdateUsername = async () => {
-    if (!currentUser || !newUsername) return;
-    setAccountError("");
-    setAccountSuccess("");
-
-    try {
-      const response = await fetch(
-        `${API_URL}/auth/user/${currentUser.id}/username`,
-        {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ newUsername }),
-        },
-      );
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "Failed to update username");
-      }
-
-      setAccountSuccess("Username updated successfully!");
-      setNewUsername("");
-      // Update local user data
-      const updatedUser = { ...currentUser, username: data.username };
-      localStorage.setItem("currentUser", JSON.stringify(updatedUser));
-      window.location.reload(); // Reload to update UI
-    } catch (err) {
-      setAccountError(err.message);
-    }
-  };
-
-  const handleUpdatePassword = async () => {
-    if (!currentUser || !currentPassword || !newPassword) return;
-    setAccountError("");
-    setAccountSuccess("");
-
-    try {
-      const response = await fetch(
-        `${API_URL}/auth/user/${currentUser.id}/password`,
-        {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ currentPassword, newPassword }),
-        },
-      );
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "Failed to update password");
-      }
-
-      setAccountSuccess("Password updated successfully!");
-      setCurrentPassword("");
-      setNewPassword("");
-    } catch (err) {
-      setAccountError(err.message);
-    }
-  };
-
-  const handleDeleteAccount = async () => {
-    if (!currentUser || !deletePassword) return;
-    if (
-      !window.confirm(
-        "Are you sure you want to delete your account? This cannot be undone.",
-      )
-    ) {
-      return;
-    }
-
-    setAccountError("");
-    setAccountSuccess("");
-
-    try {
-      const response = await fetch(`${API_URL}/auth/user/${currentUser.id}`, {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ password: deletePassword }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "Failed to delete account");
-      }
-
-      alert("Account deleted successfully");
-      onLogout();
-      setShowAccountModal(false);
-    } catch (err) {
-      setAccountError(err.message);
-    }
-  };
 
   return (
     console.warn(
@@ -367,291 +241,12 @@ const Settings = ({ onOpenLoginModal, currentUser, onLogout }) => {
           </div>
 
           {showAccountModal && currentUser && (
-            <div
-              className="modal-backdrop"
-              onClick={() => setShowAccountModal(false)}
-            >
-              <div
-                className="modal-content"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <button
-                  className="modal-close"
-                  onClick={() => setShowAccountModal(false)}
-                  aria-label="Close"
-                >
-                  ✕
-                </button>
-                <h1>Manage Account</h1>
-
-                {accountError && (
-                  <div className="error-message">{accountError}</div>
-                )}
-                {accountSuccess && (
-                  <div
-                    style={{
-                      background: "rgba(81, 207, 102, 0.1)",
-                      border: "1px solid rgba(81, 207, 102, 0.25)",
-                      color: "#51cf66",
-                      padding: "12px 14px",
-                      borderRadius: "10px",
-                      marginBottom: "16px",
-                      fontSize: "13px",
-                      textAlign: "center",
-                    }}
-                  >
-                    {accountSuccess}
-                  </div>
-                )}
-
-                <div style={{ marginBottom: 20 }}>
-                  <label
-                    style={{
-                      display: "block",
-                      marginBottom: 8,
-                      color: "var(--fg, #dcdcdc)",
-                      fontSize: 13,
-                      fontWeight: 600,
-                    }}
-                  >
-                    Change Name
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="New name"
-                    value={newName}
-                    onChange={(e) => setNewName(e.target.value)}
-                    style={{
-                      width: "100%",
-                      padding: "11px 14px",
-                      marginBottom: 12,
-                      background: "rgba(255, 255, 255, 0.04)",
-                      border: "1px solid rgba(255, 255, 255, 0.1)",
-                      borderRadius: 12,
-                      color: "var(--fg, #dcdcdc)",
-                      fontSize: 15,
-                      outline: "none",
-                      transition: "all 0.2s ease",
-                      boxSizing: "border-box",
-                    }}
-                    onFocus={(e) => {
-                      e.target.style.background = "rgba(255, 255, 255, 0.08)";
-                      e.target.style.borderColor = "rgba(255, 255, 255, 0.2)";
-                    }}
-                    onBlur={(e) => {
-                      e.target.style.background = "rgba(255, 255, 255, 0.04)";
-                      e.target.style.borderColor = "rgba(255, 255, 255, 0.1)";
-                    }}
-                  />
-                  <Button
-                    onClick={handleUpdateName}
-                    style={{
-                      background: "rgba(100, 150, 255, 0.15)",
-                      border: "1px solid rgba(100, 150, 255, 0.3)",
-                      color: "#dcdcdc",
-                    }}
-                  >
-                    Update Name
-                  </Button>
-                </div>
-
-                <div style={{ marginBottom: 20 }}>
-                  <label
-                    style={{
-                      display: "block",
-                      marginBottom: 8,
-                      color: "var(--fg, #dcdcdc)",
-                      fontSize: 13,
-                      fontWeight: 600,
-                    }}
-                  >
-                    Change Username
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="New username"
-                    value={newUsername}
-                    onChange={(e) => setNewUsername(e.target.value)}
-                    style={{
-                      width: "100%",
-                      padding: "11px 14px",
-                      marginBottom: 12,
-                      background: "rgba(255, 255, 255, 0.04)",
-                      border: "1px solid rgba(255, 255, 255, 0.1)",
-                      borderRadius: 12,
-                      color: "var(--fg, #dcdcdc)",
-                      fontSize: 15,
-                      outline: "none",
-                      transition: "all 0.2s ease",
-                      boxSizing: "border-box",
-                    }}
-                    onFocus={(e) => {
-                      e.target.style.background = "rgba(255, 255, 255, 0.08)";
-                      e.target.style.borderColor = "rgba(255, 255, 255, 0.2)";
-                    }}
-                    onBlur={(e) => {
-                      e.target.style.background = "rgba(255, 255, 255, 0.04)";
-                      e.target.style.borderColor = "rgba(255, 255, 255, 0.1)";
-                    }}
-                  />
-                  <Button
-                    onClick={handleUpdateUsername}
-                    style={{
-                      background: "rgba(100, 150, 255, 0.15)",
-                      border: "1px solid rgba(100, 150, 255, 0.3)",
-                      color: "#dcdcdc",
-                    }}
-                  >
-                    Update Username
-                  </Button>
-                </div>
-
-                <div style={{ marginBottom: 20 }}>
-                  <label
-                    style={{
-                      display: "block",
-                      marginBottom: 8,
-                      color: "var(--fg, #dcdcdc)",
-                      fontSize: 13,
-                      fontWeight: 600,
-                    }}
-                  >
-                    Change Password
-                  </label>
-                  <input
-                    type="password"
-                    placeholder="Current password"
-                    value={currentPassword}
-                    onChange={(e) => setCurrentPassword(e.target.value)}
-                    style={{
-                      width: "100%",
-                      padding: "11px 14px",
-                      marginBottom: 10,
-                      background: "rgba(255, 255, 255, 0.04)",
-                      border: "1px solid rgba(255, 255, 255, 0.1)",
-                      borderRadius: 12,
-                      color: "var(--fg, #dcdcdc)",
-                      fontSize: 15,
-                      outline: "none",
-                      transition: "all 0.2s ease",
-                      boxSizing: "border-box",
-                    }}
-                    onFocus={(e) => {
-                      e.target.style.background = "rgba(255, 255, 255, 0.08)";
-                      e.target.style.borderColor = "rgba(255, 255, 255, 0.2)";
-                    }}
-                    onBlur={(e) => {
-                      e.target.style.background = "rgba(255, 255, 255, 0.04)";
-                      e.target.style.borderColor = "rgba(255, 255, 255, 0.1)";
-                    }}
-                  />
-                  <input
-                    type="password"
-                    placeholder="New password"
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    style={{
-                      width: "100%",
-                      padding: "11px 14px",
-                      marginBottom: 12,
-                      background: "rgba(255, 255, 255, 0.04)",
-                      border: "1px solid rgba(255, 255, 255, 0.1)",
-                      borderRadius: 12,
-                      color: "var(--fg, #dcdcdc)",
-                      fontSize: 15,
-                      outline: "none",
-                      transition: "all 0.2s ease",
-                      boxSizing: "border-box",
-                    }}
-                    onFocus={(e) => {
-                      e.target.style.background = "rgba(255, 255, 255, 0.08)";
-                      e.target.style.borderColor = "rgba(255, 255, 255, 0.2)";
-                    }}
-                    onBlur={(e) => {
-                      e.target.style.background = "rgba(255, 255, 255, 0.04)";
-                      e.target.style.borderColor = "rgba(255, 255, 255, 0.1)";
-                    }}
-                  />
-                  <Button
-                    onClick={handleUpdatePassword}
-                    style={{
-                      background: "rgba(100, 150, 255, 0.15)",
-                      border: "1px solid rgba(100, 150, 255, 0.3)",
-                      color: "#dcdcdc",
-                    }}
-                  >
-                    Update Password
-                  </Button>
-                </div>
-
-                <div
-                  style={{
-                    marginBottom: 0,
-                    borderTop: "1px solid rgba(255, 255, 255, 0.08)",
-                    paddingTop: 20,
-                  }}
-                >
-                  <h3
-                    style={{
-                      marginBottom: 8,
-                      color: "#ffb3b3",
-                      fontSize: 16,
-                      fontWeight: 600,
-                    }}
-                  >
-                    Delete Account
-                  </h3>
-                  <p
-                    style={{
-                      marginBottom: 12,
-                      fontSize: 13,
-                      color: "var(--muted, #9a9a9a)",
-                      lineHeight: 1.4,
-                    }}
-                  >
-                    This will permanently delete your account and all your
-                    notes.
-                  </p>
-                  <input
-                    type="password"
-                    placeholder="Enter password to confirm"
-                    value={deletePassword}
-                    onChange={(e) => setDeletePassword(e.target.value)}
-                    style={{
-                      width: "100%",
-                      padding: "11px 14px",
-                      marginBottom: 12,
-                      background: "rgba(255, 255, 255, 0.04)",
-                      border: "1px solid rgba(255, 255, 255, 0.1)",
-                      borderRadius: 12,
-                      color: "var(--fg, #dcdcdc)",
-                      fontSize: 15,
-                      outline: "none",
-                      transition: "all 0.2s ease",
-                      boxSizing: "border-box",
-                    }}
-                    onFocus={(e) => {
-                      e.target.style.background = "rgba(255, 255, 255, 0.08)";
-                      e.target.style.borderColor = "rgba(255, 255, 255, 0.2)";
-                    }}
-                    onBlur={(e) => {
-                      e.target.style.background = "rgba(255, 255, 255, 0.04)";
-                      e.target.style.borderColor = "rgba(255, 255, 255, 0.1)";
-                    }}
-                  />
-                  <Button
-                    onClick={handleDeleteAccount}
-                    style={{
-                      background: "rgba(255, 107, 107, 0.15)",
-                      color: "#ffb3b3",
-                      border: "1px solid rgba(255, 107, 107, 0.3)",
-                    }}
-                  >
-                    Delete Account
-                  </Button>
-                </div>
-              </div>
-            </div>
+            <AccountModal
+              currentUser={currentUser}
+              onClose={() => setShowAccountModal(false)}
+              onUpdateUser={onUpdateUser}
+              onLogout={onLogout}
+            />
           )}
 
           <hr className="settings-divider" />
