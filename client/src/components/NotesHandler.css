@@ -47,7 +47,9 @@
   color: var(--fg, #ffffff);
   outline: none;
   font-size: 13px;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
 }
 
 .notes-search::placeholder {
@@ -162,7 +164,9 @@
   border-radius: 10px;
   cursor: pointer;
   font-size: 12px;
-  transition: background 0.15s ease, color 0.15s ease;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease;
 }
 
 .remove-btn:hover {
@@ -179,7 +183,10 @@
   color: var(--muted, #999);
   font-size: 12px;
   cursor: pointer;
-  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease,
+    border-color 0.15s ease;
 }
 
 .pin-btn:hover {
