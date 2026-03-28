@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from "react";
-import Navbar from "./Navbar";
-import Tasks from "./Tasks";
-import NotesHandler from "./NotesHandler";
-import Settings from "./settings-page";
-import NotFound from "./NotFound";
-import LoginModal from "./Login";
-import { applyTheme } from "./themes";
-import { applyFont } from "./fonts";
-import Home from "./Home";
+import Navbar from "./components/Navbar";
+import Tasks from "./components/Tasks";
+import NotesHandler from "./components/NotesHandler";
+import Settings from "./components/settings-page";
+import NotFound from "./components/NotFound";
+import LoginModal from "./components/Login";
+import { applyTheme } from "./utils/themes";
+import { applyFont } from "./utils/fonts";
+import Home from "./components/Home";
 
 const API_URL = process.env.REACT_APP_API_URL || "http://localhost:3000";
 

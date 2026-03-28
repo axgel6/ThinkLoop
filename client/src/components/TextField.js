@@ -2,8 +2,8 @@ import React, { useState, useRef, useEffect } from "react";
 import "./TextField.css";
 import Button from "./Button";
 import Dropdown from "./Dropdown";
-import { FONT_MAP, FONT_OPTIONS } from "./fonts";
-import { NOTE_THEME_OPTIONS, THEME_VARS } from "./themes";
+import { FONT_MAP, FONT_OPTIONS } from "../utils/fonts";
+import { NOTE_THEME_OPTIONS, THEME_VARS } from "../utils/themes";
 
 const FONT_SIZE_OPTIONS = [
   { id: 14, label: "14px" },

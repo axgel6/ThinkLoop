@@ -2,8 +2,8 @@ import React, { useState } from "react";
 import Dropdown from "./Dropdown";
 import Button from "./Button";
 import "./settings-page.css";
-import { FONT_OPTIONS, FONT_MAP, applyFont } from "./fonts";
-import { COLOR_OPTIONS, applyTheme } from "./themes";
+import { FONT_OPTIONS, FONT_MAP, applyFont } from "../utils/fonts";
+import { COLOR_OPTIONS, applyTheme } from "../utils/themes";
 
 const API_URL = process.env.REACT_APP_API_URL || "http://localhost:3000";
 
