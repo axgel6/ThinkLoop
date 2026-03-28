@@ -720,16 +720,16 @@ pre {
 }
 
 .theme-default {
-  --bg: #0f1115;
-  --fg: #e6e6e6;
-  --muted: #8a93a3;
-  --panel-bg: rgba(22, 26, 33, 0.7);
-  --panel-border: #2a2f3a;
-  --panel-bg-solid: #161a21;
+  --bg: #0a0e14;
+  --fg: #b3b1ad;
+  --muted: #3d4663;
+  --panel-bg: rgba(13, 16, 23, 0.82);
+  --panel-border: #151a24;
+  --panel-bg-solid: #0d1017;
   --glass-bg: linear-gradient(
     135deg,
-    rgba(15, 17, 21, 0.8),
-    rgba(43, 124, 255, 0.05)
+    rgba(10, 14, 20, 0.88),
+    rgba(57, 186, 230, 0.05)
   );
 }
 

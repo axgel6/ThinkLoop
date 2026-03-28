@@ -246,7 +246,9 @@ function App() {
         </div>
       )}
       <div id="top-bar">
-        <h1 id="title">{"ThinkLoop / " + titles[activeTab]}</h1>
+        <h1 id="title" style={{ fontWeight: "bold" }}>
+          {"ThinkLoop/" + titles[activeTab]}
+        </h1>
         <h1
           id="user"
           onClick={() => !currentUser && setIsLoginModalOpen(true)}

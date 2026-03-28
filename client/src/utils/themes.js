@@ -2,7 +2,7 @@
 
 // Color theme options for settings
 export const COLOR_OPTIONS = [
-  { id: "zero", label: "Default" },
+  { id: "zero", label: "Default (Ayu)" },
   { id: "one", label: "Dark" },
   { id: "light", label: "Light" },
   { id: "two", label: "Blue" },
@@ -78,13 +78,13 @@ export const NOTE_THEME_OPTIONS = [
 // CSS custom properties for each theme (used for per-note theming)
 export const THEME_VARS = {
   default: {
-    "--bg": "#0f1115",
-    "--fg": "#e6e6e6",
-    "--muted": "#8a93a3",
-    "--panel-bg": "rgba(22, 26, 33, 0.6)",
-    "--panel-border": "#2a2f3a",
-    "--panel-bg-solid": "#161a21",
-    "--glass-bg": "linear-gradient(135deg, #161a21, #0f1115)",
+    "--bg": "#0a0e14",
+    "--fg": "#b3b1ad",
+    "--muted": "#3d4663",
+    "--panel-bg": "rgba(13, 16, 23, 0.82)",
+    "--panel-border": "#151a24",
+    "--panel-bg-solid": "#0d1017",
+    "--glass-bg": "linear-gradient(135deg, #0d1017, rgba(57, 186, 230, 0.05))",
   },
   dark: {
     "--bg": "#000000",
