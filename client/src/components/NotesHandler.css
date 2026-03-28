@@ -1,186 +1,147 @@
-/* Apply bottom padding to the TextField component wrapper */
+/* Note item wrapper */
 .text-field {
-  margin-bottom: 32px;
+  margin-bottom: 16px;
 }
 
 .note-item {
   position: relative;
-  margin-bottom: 20px;
-  overflow: visible; /* allow dropdowns opened inside notes to be visible */
+  margin-bottom: 12px;
+  overflow: visible;
 }
 
+/* Top toolbar (search + actions) */
 .notes-toolbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  padding: 12px 14px;
-  margin-bottom: 16px;
-  border-radius: 30px;
-  border: 1px solid var(--panel-border, rgba(255, 255, 255, 0.08));
-  background: var(--panel-bg, rgba(25, 25, 25, 0.5));
-  -webkit-backdrop-filter: blur(6px) saturate(150%);
-  backdrop-filter: blur(6px) saturate(150%);
+  gap: 10px;
+  padding: 8px 12px;
+  margin-bottom: 14px;
+  border-radius: 16px;
+  border: 1px solid var(--panel-border, rgba(255, 255, 255, 0.07));
+  background: var(--panel-bg, rgba(20, 20, 20, 0.5));
+  backdrop-filter: blur(10px) saturate(140%);
+  -webkit-backdrop-filter: blur(10px) saturate(140%);
 }
 
 .notes-toolbar-left {
   flex: 1;
-  min-width: 180px;
+  min-width: 160px;
 }
 
 .notes-toolbar-right {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 6px;
   flex-wrap: wrap;
 }
 
+/* Search input */
 .notes-search {
   width: 100%;
-  max-width: 420px;
-  padding: 10px 12px;
-  border-radius: 30px;
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  background: rgba(255, 255, 255, 0.06);
+  max-width: 380px;
+  padding: 7px 14px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  background: rgba(255, 255, 255, 0.05);
   color: var(--fg, #ffffff);
   outline: none;
-  font-size: 14px;
-  transition:
-    border 0.12s ease,
-    box-shadow 0.12s ease;
+  font-size: 13px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
 .notes-search::placeholder {
-  color: var(--muted, rgba(220, 220, 220, 0.6));
+  color: var(--muted, rgba(200, 200, 200, 0.4));
 }
 
 .notes-search:focus {
-  border-color: rgba(255, 255, 255, 0.28);
-  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.2);
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.05);
 }
 
+/* Icon buttons in toolbar */
 .icon-button {
-  padding: 10px 12px;
-  min-width: 40px;
-  min-height: 40px;
+  padding: 7px 10px;
+  min-width: 34px;
+  min-height: 34px;
 }
 
 .icon-button svg {
   display: block;
 }
 
+/* Note footer (edit mode) */
 .note-footer {
-  /* Use grid so center label can stay centered while side items truncate */
   display: grid;
   grid-template-columns: 1fr auto auto;
   align-items: center;
-  gap: 12px;
-  padding: 8px 12px;
-  border-top: 1px solid var(--panel-border, rgba(255, 255, 255, 0.04));
-  background: var(--panel-bg, rgba(30, 30, 30, 0.6));
-  border-radius: 0 0 25px 25px;
-  margin-top: 8px;
-  position: relative;
+  gap: 8px;
+  padding: 7px 12px;
+  border-top: 1px solid var(--panel-border, rgba(255, 255, 255, 0.05));
+  background: rgba(255, 255, 255, 0.012);
+  border-radius: 0 0 20px 20px;
 }
 
+/* Title display (view mode) */
 .note-title {
   color: var(--fg, #dcdcdc);
-  font-size: 13px;
+  font-size: 12px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   max-width: 100%;
 }
 
+/* Title input (edit mode) */
 .note-title-input {
   background: transparent;
   border: none;
   color: var(--fg, #dcdcdc);
-  font-size: 16px;
+  font-size: 13px;
+  font-weight: 600;
   max-width: 100%;
   outline: none;
-  font-weight: bold;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-}
-
-.note-title-input::placeholder {
-  color: var(--muted, #9a9a9a);
-}
-
-.remove-btn {
-  background: rgba(119, 0, 0, 0.473);
-  color: #ffb3b3;
-  border: 1px solid rgba(255, 138, 138, 0.12);
-  padding: 6px 10px;
-  border-radius: 25px;
-  cursor: pointer;
-  transition:
-    transform 0.12s ease,
-    background 0.12s ease;
-}
-
-.remove-btn:hover {
-  background: rgba(223, 0, 0, 0.473);
-  transform: scale(1.12);
-  color: blanchedalmond;
-}
-
-.remove-btn:active {
-  transform: scale(0.96);
-}
-
-/* Centered last-modified label in the footer */
-.note-last-modified {
-  /* center column in grid; keep centered without overlapping side content */
-  grid-column: 2 / 3;
-  justify-self: center;
-  color: var(--muted, #9a9a9a);
-  font-size: 12px;
-  text-align: center;
-  pointer-events: none; /* let clicks pass through to title/controls */
-  padding: 0 8px;
-  max-width: 100%;
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
-
-/* Ensure the title input and remove button have space so the centered label doesn't overlap their content visually */
-.note-title-input {
   padding-right: 8px;
-  padding-left: 0px;
-}
-
-/* Place title on the left column and remove button on the right column */
-.note-footer > .note-title-input {
+  padding-left: 0;
   grid-column: 1 / 2;
 }
 
+.note-title-input::placeholder {
+  color: var(--muted, #555);
+  font-weight: 400;
+}
+
+/* Last-modified label */
+.note-last-modified {
+  grid-column: 2 / 3;
+  justify-self: center;
+  color: var(--muted, #585858);
+  font-size: 11px;
+  text-align: center;
+  pointer-events: none;
+  padding: 0 6px;
+  max-width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* Footer action buttons */
 .note-footer-actions {
   grid-column: 3 / 4;
   justify-self: end;
   display: flex;
   align-items: center;
-  gap: 8px;
-}
-
-.pin-btn {
-  padding: 6px 10px;
-  border-radius: 20px;
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  background: rgba(255, 255, 255, 0.06);
-  color: var(--fg, #ffffff);
-  transition:
-    transform 0.12s ease,
-    background 0.12s ease;
+  gap: 5px;
 }
 
 .pin-btn,
 .note-footer-actions .remove-btn {
-  min-width: 38px;
-  min-height: 32px;
+  min-width: 30px;
+  min-height: 28px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -188,51 +149,76 @@
 
 .note-footer-actions .remove-btn svg,
 .pin-btn svg {
-  width: 20px;
-  height: 20px;
+  width: 15px;
+  height: 15px;
+}
+
+/* Remove button */
+.remove-btn {
+  background: rgba(160, 30, 30, 0.2);
+  color: rgba(255, 150, 150, 0.8);
+  border: 1px solid rgba(255, 100, 100, 0.1);
+  padding: 5px 9px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.remove-btn:hover {
+  background: rgba(190, 30, 30, 0.35);
+  color: #ffbbbb;
+}
+
+/* Pin button */
+.pin-btn {
+  padding: 5px 9px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--muted, #999);
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
 }
 
 .pin-btn:hover {
-  background: rgba(255, 255, 255, 0.12);
-  transform: scale(1.05);
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--fg, #ddd);
 }
 
 .pin-btn.active {
-  background: rgba(255, 214, 102, 0.18);
-  border-color: rgba(255, 214, 102, 0.4);
+  background: rgba(255, 210, 80, 0.12);
+  border-color: rgba(255, 210, 80, 0.3);
   color: #ffd666;
 }
 
+/* Empty state */
 .empty-state {
   text-align: center;
-  padding: 60px 20px;
-  color: var(--muted, #9a9a9a);
-  border: 1px solid var(--panel-border, rgba(255, 255, 255, 0.08));
-  border-radius: 20px;
-  background: #00000000;
-  -webkit-backdrop-filter: blur(4px);
+  border: 1px solid var(--panel-border, rgba(255, 255, 255, 0.07));
+  border-radius: 18px;
+  background: transparent;
   backdrop-filter: blur(4px);
-  padding: 24px;
-  margin-bottom: 16px;
-  transition: all 0.1s ease;
-  overflow: visible;
-  position: relative;
-  z-index: 1;
+  -webkit-backdrop-filter: blur(4px);
+  padding: 52px 24px;
+  margin-bottom: 14px;
+  color: var(--muted, #777);
 }
 
 .empty-state p {
-  font-size: 1.5em;
-  margin: 8px 0;
+  font-size: 1.15em;
+  margin: 6px 0;
   color: var(--fg, #dcdcdc);
-  opacity: 0.7;
+  opacity: 0.55;
 }
 
 .empty-state-subtitle {
-  font-size: 1em !important;
-  color: var(--muted, #9a9a9a) !important;
-  opacity: 0.6 !important;
+  font-size: 0.88em !important;
+  color: var(--muted, #888) !important;
+  opacity: 0.45 !important;
 }
 
 .primary {
-  animation: fadeInUp 0.1s ease-out 0.1s backwards;
+  animation: fadeInUp 0.2s cubic-bezier(0.4, 0, 0.2, 1) 0.05s backwards;
 }

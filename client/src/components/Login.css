@@ -13,7 +13,7 @@
   padding: 20px;
   -webkit-backdrop-filter: blur(2px);
   backdrop-filter: blur(2px);
-  animation: fadeIn 0.3s ease;
+  animation: fadeIn 0.2s ease;
 }
 
 @keyframes fadeIn {
@@ -28,7 +28,7 @@
 @keyframes slideUp {
   from {
     opacity: 0;
-    transform: translateY(30px);
+    transform: translateY(12px);
   }
   to {
     opacity: 1;
@@ -48,7 +48,7 @@
   -webkit-backdrop-filter: blur(10px) saturate(150%);
   backdrop-filter: blur(10px) saturate(150%);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-  animation: slideUp 0.3s ease;
+  animation: slideUp 0.22s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* Close Button */
@@ -67,14 +67,13 @@
   justify-content: center;
   cursor: pointer;
   font-size: 20px;
-  transition: all 0.2s ease;
+  transition: background 0.15s ease, border-color 0.15s ease;
   padding: 0;
 }
 
 .modal-close:hover {
   background: rgba(255, 255, 255, 0.12);
   border-color: rgba(255, 255, 255, 0.2);
-  transform: scale(1.1);
 }
 
 .modal-close:active {
@@ -125,7 +124,7 @@
   color: var(--fg, #dcdcdc);
   font-size: 15px;
   outline: none;
-  transition: all 0.2s ease;
+  transition: border-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
 }
 
 .form-group input::placeholder {
@@ -148,14 +147,13 @@
   font-size: 15px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: background 0.15s ease, border-color 0.15s ease;
   margin-top: 8px;
 }
 
 .login-submit-btn:hover:not(:disabled) {
   background: rgba(100, 150, 255, 0.25);
   border-color: rgba(100, 150, 255, 0.5);
-  transform: translateY(-2px);
 }
 
 .login-submit-btn:active:not(:disabled) {
@@ -269,7 +267,7 @@
   color: var(--fg, #dcdcdc);
   font-size: 14px;
   outline: none;
-  transition: all 0.2s ease;
+  transition: border-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
 }
 
 .account-form-group input::placeholder {

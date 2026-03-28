@@ -4,6 +4,7 @@ import "./Tasks.css";
 
 type Item = {
   id: string;
+  _clientId?: string;
   text: string;
   completed: boolean;
   createdAt: number;
@@ -141,6 +142,7 @@ const Tasks: React.FC<TasksProps> = ({ currentUser }) => {
     const id = `${now}-${Math.random().toString(36).slice(2)}`;
     const newItem = {
       id,
+      _clientId: id,
       text: t,
       completed: false,
       createdAt: now,
@@ -284,7 +286,7 @@ const Tasks: React.FC<TasksProps> = ({ currentUser }) => {
           {sortedItems.length === 0 && <li className="empty">No tasks yet</li>}
           {sortedItems.map((item) => (
             <li
-              key={item.id}
+              key={item._clientId ?? item.id}
               className={`checklist-item ${item.completed ? "completed" : ""}`}
             >
               <label className="checklist-label">

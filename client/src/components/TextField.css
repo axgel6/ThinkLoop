@@ -1,30 +1,39 @@
+/* TextField card */
 .text-field {
-  border: 3px solid var(--panel-border, rgba(255, 255, 255, 0.08));
-  border-radius: 25px;
-  background: var(--panel-bg-solid, rgba(20, 20, 20, 0.9));
-  -webkit-backdrop-filter: blur(4px);
-  backdrop-filter: blur(4px);
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.188);
+  border: 1px solid var(--panel-border, rgba(255, 255, 255, 0.07));
+  border-radius: 20px;
+  background: var(--panel-bg-solid, rgba(18, 18, 18, 0.92));
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  box-shadow:
+    0 2px 12px rgba(0, 0, 0, 0.25),
+    0 0 0 0.5px rgba(255, 255, 255, 0.03) inset;
   display: flex;
   flex-direction: column;
   max-height: 600px;
   width: 100%;
   color: var(--fg, #e0e0e0);
-  transition: all 0.1s ease;
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
   position: relative;
-  z-index: auto; /* allow child dropdown to escape stacking constraints */
-  animation: slideIn 0.1s ease-out backwards;
+  z-index: auto;
 }
 
-/* Note header - always visible */
+.text-field:hover {
+  border-color: rgba(255, 255, 255, 0.11);
+  box-shadow:
+    0 4px 20px rgba(0, 0, 0, 0.3),
+    0 0 0 0.5px rgba(255, 255, 255, 0.04) inset;
+}
+
+/* View-mode header */
 .note-header {
-  padding: 16px 20px;
-  border-bottom: 1px solid var(--panel-border, rgba(255, 255, 255, 0.08));
+  padding: 12px 18px;
+  border-bottom: 1px solid var(--panel-border, rgba(255, 255, 255, 0.06));
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 12px;
-  border-radius: 25px 25px 0 0;
+  gap: 10px;
+  border-radius: 20px 20px 0 0;
 }
 
 .view-mode .note-header {
@@ -33,8 +42,8 @@
 }
 
 .view-mode .note-header:hover {
-  background: var(--panel-bg, rgba(30, 30, 30, 0.4));
-  border-radius: 25px 25px 0 0;
+  background: rgba(255, 255, 255, 0.025);
+  border-radius: 20px 20px 0 0;
 }
 
 .note-header-content {
@@ -43,279 +52,219 @@
 }
 
 .note-title-display {
-  font-size: 18px;
+  font-size: 14px;
   font-weight: 600;
+  letter-spacing: 0.01em;
   color: var(--fg, #e0e0e0);
-  margin-bottom: 4px;
+  margin-bottom: 2px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .note-last-modified-header {
-  font-size: 12px;
-  color: var(--muted, #909090);
+  font-size: 11px;
+  color: var(--muted, #606060);
+  letter-spacing: 0.02em;
 }
 
-/* Remove the standalone done-btn styles since it's now in toolbar-actions */
-
-/* Hide header in edit mode since we have the toolbar */
+/* Hide header in edit mode */
 .edit-mode .note-header {
   display: none;
 }
 
 /* Toolbar */
 .toolbar {
-  border-bottom: 1px solid var(--panel-border, rgba(255, 255, 255, 0.08));
-  background: var(--panel-bg, rgba(30, 30, 30, 0.6));
-  padding: 8px 10px;
+  border-bottom: 1px solid var(--panel-border, rgba(255, 255, 255, 0.06));
+  background: rgba(255, 255, 255, 0.015);
+  padding: 6px 10px;
   display: flex;
-  gap: 8px;
+  gap: 4px;
+  align-items: center;
   justify-content: start;
-  border-radius: 25px 25px 0 0;
-  position: relative; /* contain absolute pinned actions */
-  /* modest right padding so the scrollable area can scroll under the pinned actions */
-  padding-right: 8px; /* room for pinned actions */
+  border-radius: 20px 20px 0 0;
+  position: relative;
+  padding-right: 10px;
 }
 
 .toolbar-scroll {
   display: flex;
-  gap: 10px;
-  /* allow horizontal scrolling with no wrapping */
+  gap: 4px;
   flex-wrap: nowrap;
   overflow-x: auto;
   overflow-y: hidden;
   white-space: nowrap;
-  -webkit-overflow-scrolling: touch; /* momentum scrolling on iOS */
-  touch-action: pan-x; /* prefer horizontal pan gestures */
-  overscroll-behavior-x: contain; /* prevent scroll chaining to the page */
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-x;
+  overscroll-behavior-x: contain;
   width: 100%;
-  /* Right padding must accommodate the pinned Done/Undo/Redo buttons */
-  padding-right: 220px;
+  padding-right: 200px;
+  align-items: center;
 }
 
-/* Add an invisible spacer at the end of the scroll area so users can scroll
-   far enough to reveal items hidden beneath the pinned actions. This ensures
-   touch scrolling can reveal the full width of toolbar content. */
 .toolbar-scroll::after {
   content: "";
   display: inline-block;
-  width: 220px;
+  width: 200px;
   height: 1px;
 }
 
-/* Right-side pinned actions container (keeps buttons same size; glyphs scaled)
-   This container stays visible while the rest of the toolbar can scroll. */
+/* Pinned toolbar actions */
 .toolbar-actions {
   display: inline-flex;
-  gap: 10px;
+  gap: 4px;
   align-items: center;
   position: absolute;
-  right: 20px;
+  right: 10px;
   top: 50%;
   transform: translateY(-50%);
-  z-index: 40; /* allow dropdowns (z-index 10050) to appear above actions */
-  /* Increase right padding to accommodate Done button */
-  padding-right: 0;
-}
-
-/* Let clicks pass through the actions container except the actual buttons.
-   This prevents the container from blocking dropdowns under it (theme picker). */
-.toolbar-actions {
+  z-index: 40;
   pointer-events: none;
 }
+
 .toolbar-actions > * {
-  pointer-events: auto; /* enable interaction for direct children (buttons) */
+  pointer-events: auto;
 }
 
-/* Make only the ASCII glyph larger so buttons maintain original dimensions */
-/* glyph class removed; buttons will show text labels now */
-
-/* Blurred frosted background behind the undo/redo buttons */
 .toolbar-actions .undo-btn,
 .toolbar-actions .redo-btn,
 .toolbar-actions .done-btn {
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
-  background: rgba(255, 255, 255, 0.02);
-  border-radius: 12px;
-  padding: 6px 8px; /* keep overall button size similar to others */
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  color: var(--muted, #999);
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border: var(--panel-border) 1px solid;
-  color: var(--muted, #bdbdbd);
-}
-
-.toolbar-actions .done-btn {
-  gap: 5px;
+  gap: 4px;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  transition: background 0.15s ease, color 0.15s ease;
 }
 
 .toolbar-actions .undo-btn:hover,
-.toolbar-actions .redo-btn:hover,
-.toolbar-actions .done-btn:hover {
-  background: rgba(255, 255, 255, 0.04);
-  color: var(--fg, #e0e0e0);
+.toolbar-actions .redo-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--fg, #ddd);
   box-shadow: none;
 }
 
-.toolbar-actions .done-btn:hover svg {
-  stroke: var(--fg, #e0e0e0);
+.toolbar-actions .done-btn {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.12);
+  color: var(--fg, #ccc);
 }
 
+.toolbar-actions .done-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--fg, #e8e8e8);
+  box-shadow: none;
+}
+
+.toolbar-actions .done-btn svg {
+  stroke: currentColor;
+  fill: none;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+/* Toolbar buttons */
 .toolbar button {
-  border: 1px solid var(--panel-border, rgba(255, 255, 255, 0.08));
-  background: var(--panel-bg, rgba(30, 30, 30, 0.6));
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  background: transparent;
   cursor: pointer;
-  padding: 6px 10px;
-  border-radius: 20px;
-  font-size: 14px;
-  color: var(--muted, #909090);
-  font-weight: 00;
-  transition: all 0.12s ease;
-  /* Prevent buttons from growing and force a single-line label with ellipsis
-     so long option text doesn't push the toolbar out of its bounds. */
+  padding: 4px 10px;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--muted, #888);
+  letter-spacing: 0.02em;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
   flex: 0 0 auto;
-  max-width: 160px;
+  max-width: 120px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .toolbar button:hover {
-  background: rgba(255, 255, 255, 0.04);
-  border-color: var(--panel-border, rgba(255, 255, 255, 0.12));
-  color: var(--fg, #e0e0e0);
-  transform: scale(1.01);
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.13);
+  color: var(--fg, #ddd);
 }
 
 .toolbar-actions svg {
-  stroke: var(--muted, #e0e0e0);
+  stroke: currentColor;
   fill: none;
   stroke-linejoin: round;
   stroke-linecap: round;
 }
 
-/* Font picker (checklist) */
-.font-picker {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-left: 0; /* keep the picker inline with the other buttons */
-  padding-left: 6px;
-  padding-right: 6px;
-  z-index: 2; /* toolbar-level element */
-  position: relative;
-}
-
-/* Make the Dropdown look like other toolbar buttons when used inside the toolbar */
-.font-picker .custom-select-button,
-.theme-picker .custom-select-button {
-  /* Make toolbar dropdown buttons look like other toolbar buttons and
-     ensure their outline (border) uses the note/site theme color so it's visible */
-  background: var(--panel-bg, rgba(30, 30, 30, 0.6));
-  border: 1px solid var(--panel-border, rgba(255, 255, 255, 0.08));
-  padding: 6px 10px;
-  border-radius: 20px;
-  font-size: 14px;
-  color: var(--muted, #909090);
-  font-weight: 500;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-}
-
-/* Font size picker styling to match toolbar buttons */
+/* Font / theme / size pickers */
+.font-picker,
+.theme-picker,
 .font-size-picker {
   display: inline-flex;
   align-items: center;
-  margin-left: 6px;
+  position: relative;
 }
 
+.font-picker .custom-select-button,
+.theme-picker .custom-select-button,
 .font-size-picker .custom-select-button {
-  background: var(--panel-bg, rgba(30, 30, 30, 0.6));
-  border: 1px solid var(--panel-border, rgba(255, 255, 255, 0.08));
-  padding: 6px 10px;
-  border-radius: 20px;
-  font-size: 14px;
-  color: var(--muted, #909090);
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  padding: 4px 10px;
+  border-radius: 10px;
+  font-size: 12px;
   font-weight: 500;
+  letter-spacing: 0.02em;
+  color: var(--muted, #888);
   cursor: pointer;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-}
-
-.font-size-picker .custom-select-button:hover {
-  background: rgba(255, 255, 255, 0.06);
-  color: var(--fg, #e0e0e0);
-  transform: scale(1.01);
-  box-shadow: none;
+  gap: 5px;
+  transition: background 0.15s ease, color 0.15s ease;
 }
 
 .font-picker .custom-select-button:hover,
-.theme-picker .custom-select-button:hover {
+.theme-picker .custom-select-button:hover,
+.font-size-picker .custom-select-button:hover {
   background: rgba(255, 255, 255, 0.06);
-  color: var(--fg, #e0e0e0);
-  transform: scale(1.01);
+  color: var(--fg, #ddd);
   box-shadow: none;
 }
 
-/* On small screens leave even more right padding so the toolbar can scroll further
-   and dropdowns under the pinned actions stay reachable */
-@media (max-width: 640px) {
-  .toolbar {
-    padding-right: 170px;
-  }
-  .toolbar-scroll {
-    padding-right: 70px;
-  }
-  .toolbar-scroll::after {
-    width: 70px;
-  }
-}
-
 .font-picker .custom-select-button .chev {
-  opacity: 0.7;
-  margin-left: 6px;
+  opacity: 0.5;
+  margin-left: 4px;
 }
 
-/* Theme picker next to font picker in the toolbar */
-.theme-picker {
-  display: inline-flex;
-  align-items: center;
-  margin-left: 6px;
+/* Dropdown z-index override */
+.text-field .custom-select-list {
+  z-index: 10050;
+  border: 1px solid var(--panel-border, rgba(255, 255, 255, 0.08));
 }
 
+/* Font preview samples */
 .font-picker-title {
-  font-size: 12px;
-  color: var(--muted, #9a9a9a);
+  font-size: 11px;
+  color: var(--muted, #777);
   font-weight: 600;
   margin-right: 4px;
 }
 
-.font-options {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-}
-
+.font-options { display: flex; gap: 8px; align-items: center; }
 .font-option {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  cursor: pointer;
-  user-select: none;
-  color: var(--muted, #bdbdbd);
-  font-size: 13px;
+  display: flex; align-items: center; gap: 6px;
+  cursor: pointer; user-select: none;
+  color: var(--muted, #bdbdbd); font-size: 12px;
 }
-
-.font-option input[type="radio"] {
-  width: 14px;
-  height: 14px;
-}
-
+.font-option input[type="radio"] { width: 13px; height: 13px; }
 .font-label {
   display: inline-block;
   padding: 2px 8px;
@@ -323,163 +272,59 @@
   background: rgba(255, 255, 255, 0.02);
 }
 
-/* Samples using the same font stacks as index.css so users can preview */
-.sample-mono {
-  font-family:
-    "JetBrains Mono", Menlo, Monaco, Consolas, "Courier New", monospace;
-}
-.sample-inter {
-  font-family:
-    "Inter",
-    -apple-system,
-    BlinkMacSystemFont,
-    "Segoe UI",
-    Roboto,
-    "Helvetica Neue",
-    Arial,
-    sans-serif;
-}
-.sample-paper {
-  font-family: "Merriweather", Georgia, "Times New Roman", serif;
-}
-.sample-handwritten {
-  font-family:
-    "Patrick Hand",
-    -apple-system,
-    BlinkMacSystemFont,
-    "Segoe UI",
-    Roboto,
-    "Helvetica Neue",
-    Arial,
-    sans-serif;
-}
-
-.sample-slab {
-  font-family: "Roboto Slab", Georgia, "Times New Roman", serif;
-}
-
-.sample-rounded {
-  font-family:
-    "Rubik",
-    -apple-system,
-    BlinkMacSystemFont,
-    "Segoe UI",
-    Roboto,
-    Arial,
-    sans-serif;
-}
-
-.sample-display {
-  font-family: "Playfair Display", Georgia, "Times New Roman", serif;
-}
-
-.sample-space {
-  font-family:
-    "Space Grotesk",
-    -apple-system,
-    BlinkMacSystemFont,
-    "Segoe UI",
-    Roboto,
-    Arial,
-    sans-serif;
-}
-
-.sample-orbitron {
-  font-family:
-    "Orbitron",
-    -apple-system,
-    BlinkMacSystemFont,
-    "Segoe UI",
-    Roboto,
-    Arial,
-    sans-serif;
-}
-
-.sample-amatic {
-  font-family: "Amatic SC", cursive;
-}
-
-.sample-greatvibes {
-  font-family: "Great Vibes", cursive;
-}
-
-/* Ensure dropdown list renders above card/container overlays when opened */
-.text-field .custom-select-list {
-  z-index: 10050; /* much higher than common UI elements */
-  /* use the note's outline color for dropdown border when inside a note */
-  border: 1px solid var(--panel-border, rgba(255, 255, 255, 0.08));
-}
+.sample-mono        { font-family: "JetBrains Mono", Menlo, Monaco, Consolas, "Courier New", monospace; }
+.sample-inter       { font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
+.sample-paper       { font-family: "Merriweather", Georgia, "Times New Roman", serif; }
+.sample-handwritten { font-family: "Patrick Hand", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
+.sample-slab        { font-family: "Roboto Slab", Georgia, "Times New Roman", serif; }
+.sample-rounded     { font-family: "Rubik", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; }
+.sample-display     { font-family: "Playfair Display", Georgia, "Times New Roman", serif; }
+.sample-space       { font-family: "Space Grotesk", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; }
+.sample-orbitron    { font-family: "Orbitron", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; }
+.sample-amatic      { font-family: "Amatic SC", cursive; }
+.sample-greatvibes  { font-family: "Great Vibes", cursive; }
 
 /* Editor area */
 .editor {
-  padding: 16px 20px;
-  padding-left: 40px; /* Extra left padding to show list numbers at large font sizes */
-  min-height: 140px;
+  padding: 14px 18px;
+  padding-left: 32px;
+  min-height: 120px;
   overflow-y: auto;
   outline: none;
   font-family: system-ui, sans-serif;
-  font-size: 16px;
-  line-height: 1.6;
-  border-radius: 0 0 25px 25px;
+  font-size: 15px;
+  line-height: 1.65;
+  border-radius: 0 0 20px 20px;
   color: var(--fg, #f0f0f0);
   max-inline-size: 100%;
 }
 
-/* In view mode, editor takes up full space without footer */
-.view-mode .editor {
-  border-radius: 0 0 25px 25px;
-}
+.view-mode .editor  { border-radius: 0 0 20px 20px; }
+.edit-mode  .editor { border-radius: 0; }
+.editor { transition: border-radius 0.15s ease; }
 
-/* In edit mode, keep footer rounded corners */
-.edit-mode .editor {
-  border-radius: 0;
-}
-
-/* Ensure ordered and unordered lists have proper spacing for markers */
 .editor ol,
-.editor ul {
-  padding-left: 1.5em; /* Use em units so it scales with font size */
-  margin: 0.5em 0;
-}
-
-.editor li {
-  margin: 0.3em 0;
-}
-
-/* Make list markers (numbers/bullets) inherit the font size */
+.editor ul { padding-left: 1.5em; margin: 0.4em 0; }
+.editor li { margin: 0.25em 0; }
 .editor ol li::marker,
-.editor ul li::marker {
-  font-size: inherit;
-}
-
-/* Mobile-friendly adjustments */
-@media (max-width: 640px) {
-  .editor {
-    padding: 12px 16px;
-    padding-left: 32px;
-  }
-
-  .editor ol,
-  .editor ul {
-    padding-left: 1.2em;
-  }
-}
+.editor ul li::marker { font-size: inherit; }
 
 .editor:empty:before {
   content: attr(placeholder);
-  color: var(--muted, #777);
+  color: var(--muted, #555);
+  font-style: italic;
 }
 
-/* Scrollbar styling */
-.editor::-webkit-scrollbar {
-  width: 8px;
-}
+/* Scrollbar */
+.editor::-webkit-scrollbar       { width: 5px; }
+.editor::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.08); border-radius: 6px; }
+.editor::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.15); }
 
-.editor::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 10px;
-}
-
-.editor::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.2);
+/* Mobile */
+@media (max-width: 640px) {
+  .editor { padding: 10px 14px; padding-left: 24px; }
+  .editor ol, .editor ul { padding-left: 1.2em; }
+  .toolbar { padding-right: 8px; }
+  .toolbar-scroll { padding-right: 160px; }
+  .toolbar-scroll::after { width: 160px; }
 }

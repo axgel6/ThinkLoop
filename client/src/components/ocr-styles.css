@@ -39,14 +39,14 @@
   -webkit-backdrop-filter: blur(10px) saturate(150%);
   backdrop-filter: blur(10px) saturate(150%);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-  animation: slideUp 0.3s ease;
+  animation: slideUp 0.22s cubic-bezier(0.4, 0, 0.2, 1);
   color: var(--fg, #dcdcdc);
 }
 
 @keyframes slideUp {
   from {
     opacity: 0;
-    transform: translateY(30px);
+    transform: translateY(12px);
   }
   to {
     opacity: 1;
@@ -83,14 +83,13 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s ease;
+  transition: background 0.15s ease, border-color 0.15s ease;
   flex-shrink: 0;
 }
 
 .ocr-modal-close:hover {
   background: rgba(255, 255, 255, 0.12);
   border-color: rgba(255, 255, 255, 0.2);
-  transform: scale(1.1);
 }
 
 .ocr-modal-close:active {
@@ -136,7 +135,7 @@
   border-radius: 20px;
   padding: 48px 24px;
   text-align: center;
-  transition: all 0.2s ease;
+  transition: border-color 0.15s ease, background 0.15s ease;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -284,7 +283,7 @@
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: background 0.15s ease, border-color 0.15s ease;
   outline: none;
 }
 

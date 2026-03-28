@@ -26,12 +26,24 @@ body {
   --side-padding: 14px;
   padding-left: var(--side-padding);
   padding-right: var(--side-padding);
-  padding-top: 32px;
   /* Ensure content can be scrolled above the fixed bottom navbar */
   padding-bottom: 100px;
   color: #e0e0e0;
   /* Force scrollbar to always be visible to prevent layout shift */
   overflow-y: scroll;
+}
+
+.connection-banner {
+  background: #fe8019;
+  color: #282828;
+  padding: 10px 20px;
+  border-radius: 25px;
+  font-size: 14px;
+  font-weight: 500;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 1300px;
+  margin-bottom: 16px;
 }
 
 /* Font theme utility classes

@@ -15,14 +15,14 @@
   box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.24);
   padding: 32px;
   margin-bottom: 20px;
-  transition: all 0.3s ease;
+  transition: box-shadow 0.2s ease;
   overflow: visible;
   position: relative;
   z-index: 1;
   width: 100%;
   max-width: 100%;
   box-sizing: border-box;
-  animation: fadeInUp 0.1s ease-out backwards;
+  animation: fadeInUp 0.2s cubic-bezier(0.4, 0, 0.2, 1) backwards;
 }
 
 .settings-section {

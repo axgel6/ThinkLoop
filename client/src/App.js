@@ -30,6 +30,7 @@ function App() {
       return null;
     }
   });
+  const [isConnected, setIsConnected] = useState(null);
   const [weatherCity, setWeatherCity] = useState(() => {
     try {
       return localStorage.getItem("settings:weatherCity") || "Atlanta";
@@ -94,6 +95,30 @@ function App() {
       // ignore
     }
   }, [activeTab]);
+
+  // Check backend connectivity (Render free tier sleeps)
+  useEffect(() => {
+    const checkConnection = async () => {
+      try {
+        const res = await fetch(`${API_URL}/health`, { method: "GET" });
+        if (res.ok) {
+          setIsConnected(true);
+        } else {
+          setIsConnected(false);
+        }
+      } catch {
+        setIsConnected(false);
+      }
+    };
+
+    checkConnection();
+    const interval = setInterval(async () => {
+      if (isConnected !== true) await checkConnection();
+      else clearInterval(interval);
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, [isConnected]);
 
   // Initialize theme and font on app startup
   useEffect(() => {
@@ -215,6 +240,11 @@ function App() {
 
   return (
     <div className="App">
+      {isConnected === false && (
+        <div className="connection-banner">
+          Waiting for backend to wake up... (This may take a moment)
+        </div>
+      )}
       <div id="top-bar">
         <h1 id="title">{"ThinkLoop / " + titles[activeTab]}</h1>
         <h1

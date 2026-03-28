@@ -58,6 +58,11 @@ async function connectDB() {
   }
 }
 
+// Health check
+app.get("/health", (_req, res) => {
+  res.sendStatus(200);
+});
+
 // Routes for notes
 
 // Get all notes (filtered by user if userId provided)
