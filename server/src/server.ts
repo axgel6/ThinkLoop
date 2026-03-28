@@ -84,6 +84,8 @@ app.get("/notes", async (req, res) => {
       font: note.font || "inter",
       fontSize: note.fontSize || 16,
       theme: note.theme || "default",
+      noteType: note.noteType || "text",
+      language: note.language || "python",
       createdAt: note.createdAt || Date.now(),
       lastModified: note.lastModified || note.createdAt || Date.now(),
       userId: note.userId || null,
@@ -114,8 +116,17 @@ app.get("/notes/:id", async (req, res) => {
 // Create note
 app.post("/notes", async (req, res) => {
   try {
-    const { title, content, font, fontSize, theme, userId, isPinned } =
-      req.body;
+    const {
+      title,
+      content,
+      font,
+      fontSize,
+      theme,
+      userId,
+      isPinned,
+      noteType,
+      language,
+    } = req.body;
 
     // Validate userId is provided for limit checking
     if (!userId) {
@@ -155,6 +166,8 @@ app.post("/notes", async (req, res) => {
       font: font || "inter",
       fontSize: fontSize || 16,
       theme: theme || "default",
+      noteType: noteType || "text",
+      language: language || "python",
       userId: userId || null,
       isPinned: isPinned || false,
       createdAt: now,
@@ -173,7 +186,8 @@ app.post("/notes", async (req, res) => {
 // Update note
 app.put("/notes/:id", async (req, res) => {
   try {
-    const { title, content, font, fontSize, theme, isPinned } = req.body;
+    const { title, content, font, fontSize, theme, isPinned, language } =
+      req.body;
     const updateFields: any = {
       lastModified: Date.now(),
     };
@@ -203,6 +217,7 @@ app.put("/notes/:id", async (req, res) => {
     if (fontSize !== undefined) updateFields.fontSize = fontSize;
     if (theme !== undefined) updateFields.theme = theme;
     if (isPinned !== undefined) updateFields.isPinned = isPinned;
+    if (language !== undefined) updateFields.language = language;
 
     const result = await notesCollection.updateOne(
       { _id: new ObjectId(req.params.id) },

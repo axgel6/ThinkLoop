@@ -4,6 +4,31 @@ import Button from "./Button";
 import Dropdown from "./Dropdown";
 import { FONT_MAP, FONT_OPTIONS } from "../utils/fonts";
 import { NOTE_THEME_OPTIONS, THEME_VARS } from "../utils/themes";
+import hljs from "highlight.js";
+import "highlight.js/styles/tokyo-night-dark.css";
+
+const LANGUAGE_OPTIONS = [
+  { id: "javascript", label: "JavaScript" },
+  { id: "typescript", label: "TypeScript" },
+  { id: "python", label: "Python" },
+  { id: "java", label: "Java" },
+  { id: "c", label: "C" },
+  { id: "cpp", label: "C++" },
+  { id: "csharp", label: "C#" },
+  { id: "go", label: "Go" },
+  { id: "rust", label: "Rust" },
+  { id: "html", label: "HTML" },
+  { id: "css", label: "CSS" },
+  { id: "sql", label: "SQL" },
+  { id: "bash", label: "Bash" },
+  { id: "json", label: "JSON" },
+  { id: "yaml", label: "YAML" },
+  { id: "markdown", label: "Markdown" },
+  { id: "php", label: "PHP" },
+  { id: "ruby", label: "Ruby" },
+  { id: "swift", label: "Swift" },
+  { id: "kotlin", label: "Kotlin" },
+];
 
 const FONT_SIZE_OPTIONS = [
   { id: 14, label: "14px" },
@@ -40,6 +65,9 @@ const TextField = ({
   isFullScreen = false,
   onFullScreenChange,
   noteId,
+  noteType = "text",
+  language: languageProp = "javascript",
+  onLanguageChange,
 }) => {
   // keep a ticking clock to refresh relative-time labels every minute
   const [now, setNow] = useState(Date.now());
@@ -82,6 +110,8 @@ const TextField = ({
   );
   // Default per-note theme is 'default' which uses global variables
   const [noteTheme, setNoteTheme] = useState(themeProp ?? "default");
+  // Code note language
+  const [noteLanguage, setNoteLanguage] = useState(languageProp ?? "javascript");
   // Track edit mode state
   const [isEditMode, setIsEditMode] = useState(false);
   const editorRef = useRef(null);
@@ -411,6 +441,147 @@ const TextField = ({
     window.addEventListener("keydown", handleEscape);
     return () => window.removeEventListener("keydown", handleEscape);
   }, [isFullScreen, onFullScreenChange]);
+
+  // --- Code note rendering ---
+  if (noteType === "code") {
+    const highlighted = (() => {
+      try {
+        return hljs.highlight(value || "", { language: noteLanguage, ignoreIllegals: true }).value;
+      } catch {
+        return hljs.highlightAuto(value || "").value;
+      }
+    })();
+
+    return (
+      <div
+        className={`text-field code-note ${isEditMode ? "edit-mode" : "view-mode"}`}
+        style={themeVars}
+      >
+        {!isEditMode && (
+          <div className="note-header" onClick={() => setIsEditMode(true)}>
+            <div className="note-header-content">
+              <div className="note-title-display-row">
+                <div className="note-title-display">{noteTitle || "New code note"}</div>
+                <span className="code-note-lang-badge">{noteLanguage}</span>
+              </div>
+              {lastModified && (
+                <div className="note-last-modified-header">
+                  Last modified: {formatRelative(lastModified)}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {isEditMode && (
+          <div className="toolbar">
+            <div className="toolbar-scroll">
+              <div className="lang-picker">
+                <Dropdown
+                  options={LANGUAGE_OPTIONS}
+                  value={noteLanguage}
+                  onChange={(v) => {
+                    setNoteLanguage(v);
+                    if (onLanguageChange) onLanguageChange(v);
+                  }}
+                />
+              </div>
+              <div className="theme-picker">
+                <Dropdown
+                  options={NOTE_THEME_OPTIONS}
+                  value={noteTheme}
+                  onChange={(v) => {
+                    setNoteTheme(v);
+                    if (onThemeChange) onThemeChange(v);
+                  }}
+                />
+              </div>
+            </div>
+            <div className="toolbar-actions">
+              <Button
+                className="done-btn"
+                onClick={() => setIsEditMode(false)}
+                aria-label="Done editing"
+              >
+                <svg width="15" height="15" viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg">
+                  <line x1="10" y1="25" x2="25" y2="40" strokeWidth="5" strokeLinecap="round" />
+                  <line x1="25" y1="40" x2="40" y2="10" strokeWidth="5" strokeLinecap="round" />
+                </svg>{" "}
+                Done
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {isEditMode ? (
+          <textarea
+            className="code-editor"
+            value={value}
+            onChange={(e) => {
+              setValue(e.target.value);
+              if (onChange) onChange(e.target.value);
+            }}
+            spellCheck={false}
+            autoComplete="off"
+            autoCorrect="off"
+            autoCapitalize="off"
+            placeholder="Write your code here..."
+          />
+        ) : (
+          <pre className="code-view">
+            <code dangerouslySetInnerHTML={{ __html: highlighted }} />
+          </pre>
+        )}
+
+        {isEditMode && (
+          <div className="note-footer">
+            <input
+              className="note-title-input"
+              value={noteTitle}
+              onChange={handleTitleChange}
+              placeholder="Type here to rename note"
+              aria-label="Note title"
+            />
+            <div className="note-last-modified" role="status" aria-live="polite" aria-atomic="true">
+              {lastModified ? <span>Last modified: {formatRelative(lastModified)}</span> : null}
+            </div>
+            <div className="note-footer-actions">
+              {onTogglePin && (
+                <Button
+                  className={`pin-btn${isPinned ? " active" : ""}`}
+                  onClick={onTogglePin}
+                  aria-label={isPinned ? "Unpin note" : "Pin note"}
+                  title={isPinned ? "Unpin note" : "Pin note"}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <path d="M12 17v5" />
+                    <path d="M9 7V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v3" />
+                    <path d="M5 9h14" />
+                    <path d="M7 9l-2 7h14l-2-7" />
+                  </svg>
+                </Button>
+              )}
+              {onRemove && (
+                <Button
+                  className="remove-btn"
+                  onClick={onRemove}
+                  aria-label="Remove note"
+                  title="Remove note"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <path d="M3 6h18" />
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                    <line x1="10" y1="11" x2="10" y2="17" />
+                    <line x1="14" y1="11" x2="14" y2="17" />
+                  </svg>
+                </Button>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div

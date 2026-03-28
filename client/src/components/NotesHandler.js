@@ -15,6 +15,7 @@ const NoteItem = React.memo(function NoteItem({
   updateNoteFont,
   updateNoteTheme,
   updateNoteFontSize,
+  updateNoteLanguage,
   handleRemove,
   isPinned,
   onTogglePin,
@@ -39,6 +40,10 @@ const NoteItem = React.memo(function NoteItem({
     (th) => updateNoteTheme(note.id, th),
     [note.id, updateNoteTheme],
   );
+  const onLanguageChange = useCallback(
+    (lang) => updateNoteLanguage(note.id, lang),
+    [note.id, updateNoteLanguage],
+  );
   const onRemove = useCallback(
     () => handleRemove(note.id),
     [note.id, handleRemove],
@@ -52,6 +57,8 @@ const NoteItem = React.memo(function NoteItem({
         font={note.font}
         fontSize={note.fontSize}
         theme={note.theme}
+        noteType={note.noteType || "text"}
+        language={note.language || "javascript"}
         createdAt={note.createdAt}
         lastModified={note.lastModified}
         onChange={onChange}
@@ -59,6 +66,7 @@ const NoteItem = React.memo(function NoteItem({
         onFontChange={onFontChange}
         onFontSizeChange={onFontSizeChange}
         onThemeChange={onThemeChange}
+        onLanguageChange={onLanguageChange}
         onRemove={onRemove}
         isPinned={isPinned}
         onTogglePin={() => onTogglePin(note.id)}
@@ -198,43 +206,48 @@ const NotesHandler = ({ currentUser }) => {
     }
   }, [notes, currentUser, loading]);
 
-  const handleNewNote = useCallback(async () => {
-    const newNote = {
-      content: "",
-      title: "",
-      font: "inter",
-      fontSize: 16,
-      theme: "default",
-      userId: currentUser ? currentUser.id : null,
-    };
-
-    // If logged out, only create locally
-    if (!currentUser) {
-      const localNote = {
-        ...newNote,
-        id: Date.now().toString(),
-        createdAt: Date.now(),
-        lastModified: Date.now(),
+  const handleNewNote = useCallback(
+    async (noteType = "text") => {
+      const newNote = {
+        content: "",
+        title: "",
+        font: noteType === "code" ? "mono" : "inter",
+        fontSize: 16,
+        theme: "default",
+        noteType,
+        language: "python",
+        userId: currentUser ? currentUser.id : null,
       };
-      setNotes((prev) => [localNote, ...prev]);
-      return;
-    }
 
-    // If logged in, create on server
-    try {
-      const response = await fetch(`${API_URL}/notes`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(newNote),
-      });
+      // If logged out, only create locally
+      if (!currentUser) {
+        const localNote = {
+          ...newNote,
+          id: Date.now().toString(),
+          createdAt: Date.now(),
+          lastModified: Date.now(),
+        };
+        setNotes((prev) => [localNote, ...prev]);
+        return;
+      }
 
-      if (!response.ok) throw new Error("Failed to create note");
-      const createdNote = await response.json();
-      setNotes((prev) => [createdNote, ...prev]);
-    } catch (error) {
-      console.error("Failed to create note:", error);
-    }
-  }, [currentUser]);
+      // If logged in, create on server
+      try {
+        const response = await fetch(`${API_URL}/notes`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(newNote),
+        });
+
+        if (!response.ok) throw new Error("Failed to create note");
+        const createdNote = await response.json();
+        setNotes((prev) => [createdNote, ...prev]);
+      } catch (error) {
+        console.error("Failed to create note:", error);
+      }
+    },
+    [currentUser],
+  );
 
   const workerRef = useRef(null);
 
@@ -536,6 +549,29 @@ const NotesHandler = ({ currentUser }) => {
     [currentUser],
   );
 
+  const updateNoteLanguage = useCallback(
+    async (id, language) => {
+      setNotes((prev) =>
+        prev.map((n) =>
+          n.id === id ? { ...n, language, lastModified: Date.now() } : n,
+        ),
+      );
+
+      if (!currentUser) return;
+
+      try {
+        await fetch(`${API_URL}/notes/${id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ language }),
+        });
+      } catch (error) {
+        console.error("Failed to update note language:", error);
+      }
+    },
+    [currentUser],
+  );
+
   // Persist to localStorage as backup
   useEffect(() => {
     if (!loading) {
@@ -604,7 +640,29 @@ const NotesHandler = ({ currentUser }) => {
             </svg>
           </Button>
           <Button
-            onClick={handleNewNote}
+            onClick={() => handleNewNote("code")}
+            className="icon-button"
+            aria-label="New code note"
+            title="New code note"
+          >
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <polyline points="16 18 22 12 16 6" />
+              <polyline points="8 6 2 12 8 18" />
+            </svg>
+          </Button>
+          <Button
+            onClick={() => handleNewNote("text")}
             className="icon-button"
             aria-label="New note"
             title="New note"
@@ -676,6 +734,7 @@ const NotesHandler = ({ currentUser }) => {
             updateNoteFont={updateNoteFont}
             updateNoteTheme={updateNoteTheme}
             updateNoteFontSize={updateNoteFontSize}
+            updateNoteLanguage={updateNoteLanguage}
             handleRemove={handleRemove}
             isPinned={pinnedIds.includes(String(n.id))}
             onTogglePin={handleTogglePin}
