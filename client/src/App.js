@@ -154,6 +154,19 @@ function App() {
     return () => clearInterval(intervalId);
   }, [isRunning]);
 
+  // Update browser tab title when pomodoro is running
+  useEffect(() => {
+    if (!isRunning) {
+      document.title = "ThinkLoop";
+      return;
+    }
+    const mins = Math.floor(pomodoroTime / 60)
+      .toString()
+      .padStart(2, "0");
+    const secs = (pomodoroTime % 60).toString().padStart(2, "0");
+    document.title = `${mins}:${secs} - ${isWorkSession ? "Focus" : "Break"}`;
+  }, [pomodoroTime, isRunning, isWorkSession]);
+
   const handlePomodoroToggle = () => setIsRunning((r) => !r);
 
   const handlePomodoroReset = () => {
