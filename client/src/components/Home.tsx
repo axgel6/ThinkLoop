@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, ReactElement } from "react";
+import confetti from "canvas-confetti";
 import Weather from "./Weather";
 import "./Home.css";
 
@@ -31,7 +32,157 @@ interface Note {
   isPinned?: boolean;
 }
 
-// --- Reusable Icons ---
+interface Task {
+  id: string;
+  _clientId?: string;
+  text: string;
+  completed: boolean;
+  createdAt: number;
+  completedAt?: number;
+}
+
+interface Countdown {
+  id: string;
+  label: string;
+  targetDate: string;
+}
+
+interface SessionRecord {
+  startedAt: number;
+  duration: number;
+  type: "work" | "break";
+}
+
+interface FocusStats {
+  todaySessions: number;
+  todayMinutes: number;
+  weekSessions: number;
+  weekMinutes: number;
+}
+
+type WidgetId =
+  | "today"
+  | "pinned"
+  | "tasks"
+  | "quick-note"
+  | "focus-stats"
+  | "countdowns"
+  | "pomodoro";
+
+interface WidgetConfig {
+  id: WidgetId;
+  label: string;
+  visible: boolean;
+  size: "full" | "half";
+}
+
+const DEFAULT_WIDGET_CONFIG: WidgetConfig[] = [
+  { id: "today",       label: "Today",          visible: true, size: "full" },
+  { id: "pinned",      label: "Pinned Notes",   visible: true, size: "full" },
+  { id: "tasks",       label: "Tasks",          visible: true, size: "full" },
+  { id: "quick-note",  label: "Quick Note",     visible: true, size: "full" },
+  { id: "focus-stats", label: "Focus Stats",    visible: true, size: "full" },
+  { id: "countdowns",  label: "Countdowns",     visible: true, size: "full" },
+  { id: "pomodoro",    label: "Pomodoro Timer", visible: true, size: "full" },
+];
+
+// --- Date helpers ---
+const MONTHS = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
+];
+const getDaysInMonth = (month: number, year: number) =>
+  new Date(year, month, 0).getDate();
+const buildDateStr = (year: number, month: number, day: number) =>
+  `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+const parseDateStr = (s: string) => {
+  const [y, m, d] = s.split("-").map(Number);
+  return { year: y ?? new Date().getFullYear(), month: m ?? 1, day: d ?? 1 };
+};
+const todayParts = () => {
+  const d = new Date();
+  return { year: d.getFullYear(), month: d.getMonth() + 1, day: d.getDate() };
+};
+const YEAR_RANGE = Array.from(
+  { length: 16 },
+  (_, i) => new Date().getFullYear() + i,
+);
+
+// --- DatePickerSelects ---
+function DatePickerSelects({
+  month,
+  day,
+  year,
+  onMonth,
+  onDay,
+  onYear,
+}: {
+  month: number;
+  day: number;
+  year: number;
+  onMonth: (v: number) => void;
+  onDay: (v: number) => void;
+  onYear: (v: number) => void;
+}) {
+  const maxDay = getDaysInMonth(month, year);
+  return (
+    <div className="date-picker-selects">
+      <select
+        className="date-select"
+        value={month}
+        onChange={(e) => {
+          const v = Number(e.target.value);
+          onMonth(v);
+          if (day > getDaysInMonth(v, year)) onDay(getDaysInMonth(v, year));
+        }}
+      >
+        {MONTHS.map((m, i) => (
+          <option key={i} value={i + 1}>
+            {m}
+          </option>
+        ))}
+      </select>
+      <select
+        className="date-select date-select-day"
+        value={day}
+        onChange={(e) => onDay(Number(e.target.value))}
+      >
+        {Array.from({ length: maxDay }, (_, i) => i + 1).map((d) => (
+          <option key={d} value={d}>
+            {d}
+          </option>
+        ))}
+      </select>
+      <select
+        className="date-select date-select-year"
+        value={year}
+        onChange={(e) => {
+          const v = Number(e.target.value);
+          onYear(v);
+          if (day > getDaysInMonth(month, v)) onDay(getDaysInMonth(month, v));
+        }}
+      >
+        {YEAR_RANGE.map((y) => (
+          <option key={y} value={y}>
+            {y}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+}
+
+// --- Icons ---
 const PauseIcon = () => (
   <svg
     width="32"
@@ -44,7 +195,6 @@ const PauseIcon = () => (
     <rect x="19" y="8" width="4" height="16" rx="2" />
   </svg>
 );
-
 const PlayIcon = () => (
   <svg
     width="32"
@@ -56,7 +206,6 @@ const PlayIcon = () => (
     <path d="M9 9C9 7.8 10.3 7.2 11.3 7.8L23.3 14.8C24.2 15.4 24.2 16.6 23.3 17.2L11.3 24.2C10.3 24.8 9 24.2 9 23Z" />
   </svg>
 );
-
 const SkipIcon = () => (
   <svg
     width="32"
@@ -69,7 +218,6 @@ const SkipIcon = () => (
     <rect x="21" y="8" width="3" height="16" rx="1.5" />
   </svg>
 );
-
 const ResetIcon = () => (
   <svg
     width="32"
@@ -84,6 +232,21 @@ const ResetIcon = () => (
   >
     <path d="M 21.65 10.35 A 8 8 0 1 1 16 8" />
     <path d="M 12.5 4.5 L 16 8 L 12.5 11.5" />
+  </svg>
+);
+const PencilIcon = () => (
+  <svg
+    width="15"
+    height="15"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
   </svg>
 );
 
@@ -105,13 +268,63 @@ export default function Home({
   handlePomodoroReset = () => {},
   handlePomodoroSkip = () => {},
 }: HomeProps) {
-  // State
   const [now, setNow] = useState<Date>(new Date());
   const [pinnedNotes, setPinnedNotes] = useState<Note[]>([]);
   const [expandedNote, setExpandedNote] = useState<Note | null>(null);
-  const [expandedToday, setExpandedToday] = useState<boolean>(false);
+  const [expandedToday, setExpandedToday] = useState(false);
 
-  // Derived Time & Date values
+  const [homeTasks, setHomeTasks] = useState<Task[]>([]);
+
+  const [quickNoteText, setQuickNoteText] = useState("");
+  const [quickNoteSaving, setQuickNoteSaving] = useState(false);
+  const [quickNoteSuccess, setQuickNoteSuccess] = useState(false);
+
+  const [focusStats, setFocusStats] = useState<FocusStats>({
+    todaySessions: 0,
+    todayMinutes: 0,
+    weekSessions: 0,
+    weekMinutes: 0,
+  });
+
+  const [countdowns, setCountdowns] = useState<Countdown[]>(() => {
+    try {
+      return JSON.parse(localStorage.getItem("countdowns:items") || "[]");
+    } catch {
+      return [];
+    }
+  });
+  const [showAddCountdown, setShowAddCountdown] = useState(false);
+  const [newCountdownLabel, setNewCountdownLabel] = useState("");
+  const [newMonth, setNewMonth] = useState(() => todayParts().month);
+  const [newDay, setNewDay] = useState(() => todayParts().day);
+  const [newYear, setNewYear] = useState(() => todayParts().year);
+  const [editingCountdownId, setEditingCountdownId] = useState<string | null>(
+    null,
+  );
+  const [editLabel, setEditLabel] = useState("");
+  const [editMonth, setEditMonth] = useState(1);
+  const [editDay, setEditDay] = useState(1);
+  const [editYear, setEditYear] = useState(() => todayParts().year);
+
+  const [widgetConfig, setWidgetConfig] = useState<WidgetConfig[]>(() => {
+    try {
+      const saved: WidgetConfig[] | null = JSON.parse(
+        localStorage.getItem("home:widget-config") || "null",
+      );
+      if (!Array.isArray(saved)) return DEFAULT_WIDGET_CONFIG;
+      const savedIds = new Set(saved.map((w) => w.id));
+      const merged = [...saved];
+      for (const def of DEFAULT_WIDGET_CONFIG) {
+        if (!savedIds.has(def.id)) merged.push(def);
+      }
+      return merged;
+    } catch {
+      return DEFAULT_WIDGET_CONFIG;
+    }
+  });
+  const [isEditingWidgets, setIsEditingWidgets] = useState(false);
+
+  // --- Time ---
   const currentTime = now.toLocaleTimeString(undefined, {
     hour: "2-digit",
     minute: "2-digit",
@@ -123,8 +336,8 @@ export default function Home({
   });
 
   const getOrdinalSuffix = (day: number) => {
-    const remainder = day % 100;
-    if (remainder >= 11 && remainder <= 13) return "th";
+    const r = day % 100;
+    if (r >= 11 && r <= 13) return "th";
     switch (day % 10) {
       case 1:
         return "st";
@@ -136,7 +349,6 @@ export default function Home({
         return "th";
     }
   };
-
   const getCurrentDateLabel = () => {
     const weekday = now.toLocaleDateString(undefined, { weekday: "long" });
     const month = now.toLocaleDateString(undefined, { month: "long" });
@@ -144,64 +356,293 @@ export default function Home({
     return `${weekday} ${month} ${day}${getOrdinalSuffix(day)}`;
   };
 
-  // Utilities
-  const stripHtml = (value: string) =>
-    value
+  const stripHtml = (v: string) =>
+    v
       .replace(/<[^>]+>/g, "")
       .replace(/\s+/g, " ")
       .trim();
-
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60)
+  const formatTime = (s: number) =>
+    `${Math.floor(s / 60)
       .toString()
-      .padStart(2, "0");
-    const secs = (seconds % 60).toString().padStart(2, "0");
-    return `${mins}:${secs}`;
-  };
+      .padStart(2, "0")}:${(s % 60).toString().padStart(2, "0")}`;
 
+  // --- Pinned notes ---
   const getPinnedNotes = useCallback(async () => {
     if (!currentUser?.id) return [];
     try {
-      const response = await fetch(`${API_URL}/notes?userId=${currentUser.id}`);
-      if (!response.ok) throw new Error("Failed to fetch notes");
-
-      const serverNotes: Note[] = await response.json();
-      return serverNotes.filter((note) => note.isPinned) || [];
-    } catch (e) {
-      console.error("Failed to fetch pinned notes:", e);
+      const res = await fetch(`${API_URL}/notes?userId=${currentUser.id}`);
+      if (!res.ok) return [];
+      const notes: Note[] = await res.json();
+      return notes.filter((n) => n.isPinned) || [];
+    } catch {
       return [];
     }
   }, [currentUser]);
 
-  // Effects
+  // --- Tasks ---
+  const getTasks = useCallback(async () => {
+    if (currentUser?.id) {
+      try {
+        const res = await fetch(`${API_URL}/tasks?userId=${currentUser.id}`);
+        if (res.ok) {
+          const all: Task[] = await res.json();
+          return all.filter((t) => !t.completed);
+        }
+      } catch {}
+      return [];
+    }
+    try {
+      const raw = localStorage.getItem("checklist:items");
+      if (!raw) return [];
+      return (JSON.parse(raw) as Task[]).filter((t) => !t.completed);
+    } catch {
+      return [];
+    }
+  }, [currentUser]);
+
+  const toggleHomeTask = async (id: string) => {
+    setHomeTasks((prev) => prev.filter((t) => t.id !== id));
+    confetti({ particleCount: 80, spread: 60, origin: { y: 0.7 } });
+    if (currentUser?.id) {
+      try {
+        await fetch(`${API_URL}/tasks/${id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ completed: true }),
+        });
+      } catch {}
+    } else {
+      try {
+        const raw = localStorage.getItem("checklist:items");
+        if (raw) {
+          const updated = (JSON.parse(raw) as Task[]).map((t) =>
+            t.id === id
+              ? { ...t, completed: true, completedAt: Date.now() }
+              : t,
+          );
+          localStorage.setItem("checklist:items", JSON.stringify(updated));
+        }
+      } catch {}
+    }
+  };
+
+  // --- Focus stats ---
+  const loadFocusStats = useCallback(() => {
+    try {
+      const sessions: SessionRecord[] = JSON.parse(
+        localStorage.getItem("focusStats:sessions") || "[]",
+      );
+      const d = new Date();
+      const todayStart = new Date(
+        d.getFullYear(),
+        d.getMonth(),
+        d.getDate(),
+      ).getTime();
+      const weekStart = (() => {
+        const w = new Date(d);
+        w.setDate(w.getDate() - ((w.getDay() + 6) % 7));
+        w.setHours(0, 0, 0, 0);
+        return w.getTime();
+      })();
+      const work = sessions.filter((s) => s.type === "work");
+      const today = work.filter((s) => s.startedAt >= todayStart);
+      const week = work.filter((s) => s.startedAt >= weekStart);
+      setFocusStats({
+        todaySessions: today.length,
+        todayMinutes: Math.round(
+          today.reduce((s, r) => s + r.duration, 0) / 60,
+        ),
+        weekSessions: week.length,
+        weekMinutes: Math.round(week.reduce((s, r) => s + r.duration, 0) / 60),
+      });
+    } catch {}
+  }, []);
+
+  // --- Countdowns ---
+  const resetNewDate = () => {
+    const t = todayParts();
+    setNewMonth(t.month);
+    setNewDay(t.day);
+    setNewYear(t.year);
+  };
+
+  const addCountdown = () => {
+    if (!newCountdownLabel.trim()) return;
+    setCountdowns((prev) => [
+      ...prev,
+      {
+        id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+        label: newCountdownLabel.trim(),
+        targetDate: buildDateStr(newYear, newMonth, newDay),
+      },
+    ]);
+    setNewCountdownLabel("");
+    resetNewDate();
+    setShowAddCountdown(false);
+  };
+
+  const startEditCountdown = (cd: Countdown) => {
+    const p = parseDateStr(cd.targetDate);
+    setEditingCountdownId(cd.id);
+    setEditLabel(cd.label);
+    setEditMonth(p.month);
+    setEditDay(p.day);
+    setEditYear(p.year);
+  };
+
+  const saveEditCountdown = () => {
+    if (!editLabel.trim() || !editingCountdownId) return;
+    setCountdowns((prev) =>
+      prev.map((c) =>
+        c.id === editingCountdownId
+          ? {
+              ...c,
+              label: editLabel.trim(),
+              targetDate: buildDateStr(editYear, editMonth, editDay),
+            }
+          : c,
+      ),
+    );
+    setEditingCountdownId(null);
+  };
+
+  const removeCountdown = (id: string) => {
+    if (editingCountdownId === id) setEditingCountdownId(null);
+    setCountdowns((prev) => prev.filter((c) => c.id !== id));
+  };
+  const getDaysUntil = (targetDate: string) =>
+    Math.ceil(
+      (new Date(targetDate + "T00:00:00").getTime() - Date.now()) / 86400000,
+    );
+
+  // --- Quick note ---
+  const createQuickNote = async () => {
+    const text = quickNoteText.trim();
+    if (!text) return;
+    setQuickNoteSaving(true);
+    const ts = Date.now();
+    const payload = {
+      title: "",
+      content: `<p>${text}</p>`,
+      font: "inter",
+      fontSize: 16,
+      theme: "default",
+      noteType: "text",
+      language: "python",
+      userId: currentUser?.id ?? null,
+    };
+    try {
+      if (currentUser?.id) {
+        await fetch(`${API_URL}/notes`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+      } else {
+        const local = {
+          ...payload,
+          id: `${ts}-${Math.random().toString(36).slice(2)}`,
+          createdAt: ts,
+          lastModified: ts,
+        };
+        const existing = JSON.parse(localStorage.getItem("localNotes") || "[]");
+        localStorage.setItem(
+          "localNotes",
+          JSON.stringify([local, ...existing]),
+        );
+      }
+    } catch {}
+    setQuickNoteText("");
+    setQuickNoteSaving(false);
+    setQuickNoteSuccess(true);
+    setTimeout(() => setQuickNoteSuccess(false), 2000);
+  };
+
+  // --- Widget config helpers ---
+  const moveWidget = (index: number, dir: -1 | 1) => {
+    const next = [...widgetConfig];
+    const target = index + dir;
+    if (target < 0 || target >= next.length) return;
+    const tmp = next[index]!;
+    next[index] = next[target]!;
+    next[target] = tmp;
+    setWidgetConfig(next);
+  };
+  const toggleWidgetVisible = (id: WidgetId) => {
+    setWidgetConfig((prev) =>
+      prev.map((w) => (w.id === id ? { ...w, visible: !w.visible } : w)),
+    );
+  };
+
+  const toggleWidgetSize = (id: WidgetId) => {
+    setWidgetConfig((prev) =>
+      prev.map((w) =>
+        w.id === id ? { ...w, size: w.size === "full" ? "half" : "full" } : w,
+      ),
+    );
+  };
+
+  // --- Effects ---
   useEffect(() => {
-    const intervalId = setInterval(() => setNow(new Date()), 1000);
-    return () => clearInterval(intervalId);
+    const id = setInterval(() => setNow(new Date()), 1000);
+    return () => clearInterval(id);
   }, []);
 
   useEffect(() => {
-    let isActive = true;
-
-    const loadPinned = async () => {
-      const next = await getPinnedNotes();
-      if (isActive) setPinnedNotes(next);
+    let active = true;
+    const load = async () => {
+      const n = await getPinnedNotes();
+      if (active) setPinnedNotes(n);
     };
-
-    loadPinned();
-    const intervalId = setInterval(loadPinned, 15000);
-    window.addEventListener("storage", loadPinned);
-
+    load();
+    const id = setInterval(load, 15000);
+    window.addEventListener("storage", load);
     return () => {
-      isActive = false;
-      clearInterval(intervalId);
-      window.removeEventListener("storage", loadPinned);
+      active = false;
+      clearInterval(id);
+      window.removeEventListener("storage", load);
     };
   }, [getPinnedNotes]);
 
-  return (
-    <div id="home-content">
-      {/* --- Today Widget --- */}
+  useEffect(() => {
+    let active = true;
+    const load = async () => {
+      const t = await getTasks();
+      if (active) setHomeTasks(t);
+    };
+    load();
+    const id = setInterval(load, 15000);
+    window.addEventListener("storage", load);
+    return () => {
+      active = false;
+      clearInterval(id);
+      window.removeEventListener("storage", load);
+    };
+  }, [getTasks]);
+
+  useEffect(() => {
+    loadFocusStats();
+    const h = () => loadFocusStats();
+    window.addEventListener("focusSessionComplete", h);
+    return () => window.removeEventListener("focusSessionComplete", h);
+  }, [loadFocusStats]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem("countdowns:items", JSON.stringify(countdowns));
+    } catch {}
+  }, [countdowns]);
+  useEffect(() => {
+    try {
+      localStorage.setItem("home:widget-config", JSON.stringify(widgetConfig));
+    } catch {}
+  }, [widgetConfig]);
+
+  // --- Widget JSX map ---
+  const widgetMap: Record<WidgetId, ReactElement> = {
+    today: (
       <div
+        key="today"
         className="home-info"
         onClick={() => setExpandedToday(true)}
         style={{ cursor: "pointer" }}
@@ -211,9 +652,10 @@ export default function Home({
         <Weather city={weatherCity} />
         <div className="home-info-date">{getCurrentDateLabel()}</div>
       </div>
+    ),
 
-      {/* --- Pinned Notes Widget --- */}
-      <div className="home-pinned">
+    pinned: (
+      <div key="pinned" className="home-pinned">
         <h2>Pinned Notes</h2>
         {pinnedNotes.length === 0 ? (
           <p className="home-pinned-empty">No pinned notes yet</p>
@@ -237,9 +679,225 @@ export default function Home({
           </div>
         )}
       </div>
+    ),
 
-      {/* --- Mini Pomodoro Widget --- */}
-      <div className="home-pomodoro">
+    tasks: (
+      <div key="tasks" className="home-tasks">
+        <h2>Tasks</h2>
+        {homeTasks.length === 0 ? (
+          <p className="home-tasks-empty">All caught up!</p>
+        ) : (
+          <ul className="home-tasks-list">
+            {homeTasks.slice(0, 5).map((task) => (
+              <li key={task._clientId ?? task.id} className="home-tasks-item">
+                <label className="home-tasks-label">
+                  <input
+                    type="checkbox"
+                    checked={false}
+                    onChange={() => toggleHomeTask(task.id)}
+                  />
+                  <span className="home-tasks-checkbox"></span>
+                  <span className="home-tasks-text">{task.text}</span>
+                </label>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    ),
+
+    "quick-note": (
+      <div key="quick-note" className="home-quick-note">
+        <h2>Quick Note</h2>
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            createQuickNote();
+          }}
+        >
+          <textarea
+            className="quick-note-input"
+            placeholder="Write something down..."
+            value={quickNoteText}
+            onChange={(e) => setQuickNoteText(e.target.value)}
+            rows={3}
+          />
+          <button
+            type="submit"
+            className={`quick-note-btn${quickNoteSuccess ? " success" : ""}`}
+            disabled={quickNoteSaving || !quickNoteText.trim()}
+          >
+            {quickNoteSaving
+              ? "Saving..."
+              : quickNoteSuccess
+                ? "Saved!"
+                : "Save Note"}
+          </button>
+        </form>
+      </div>
+    ),
+
+    "focus-stats": (
+      <div key="focus-stats" className="home-focus-stats">
+        <h2>Focus Stats</h2>
+        <div className="focus-stats-grid">
+          <div className="focus-stat-item">
+            <div className="focus-stat-value">{focusStats.todaySessions}</div>
+            <div className="focus-stat-label">Sessions Today</div>
+          </div>
+          <div className="focus-stat-item">
+            <div className="focus-stat-value">{focusStats.todayMinutes}m</div>
+            <div className="focus-stat-label">Focus Time Today</div>
+          </div>
+          <div className="focus-stat-item">
+            <div className="focus-stat-value">{focusStats.weekSessions}</div>
+            <div className="focus-stat-label">Sessions This Week</div>
+          </div>
+          <div className="focus-stat-item">
+            <div className="focus-stat-value">{focusStats.weekMinutes}m</div>
+            <div className="focus-stat-label">Focus Time (Week)</div>
+          </div>
+        </div>
+      </div>
+    ),
+
+    countdowns: (
+      <div key="countdowns" className="home-countdowns">
+        <h2>Countdowns</h2>
+        {countdowns.length > 0 && (
+          <div className="countdown-list">
+            {countdowns.map((cd) => {
+              const days = getDaysUntil(cd.targetDate);
+              if (editingCountdownId === cd.id) {
+                return (
+                  <div key={cd.id} className="countdown-edit-row">
+                    <input
+                      className="countdown-input"
+                      value={editLabel}
+                      onChange={(e) => setEditLabel(e.target.value)}
+                      placeholder="Label"
+                      autoFocus
+                    />
+                    <DatePickerSelects
+                      month={editMonth}
+                      day={editDay}
+                      year={editYear}
+                      onMonth={setEditMonth}
+                      onDay={setEditDay}
+                      onYear={setEditYear}
+                    />
+                    <div className="countdown-form-actions">
+                      <button
+                        className="countdown-add-submit"
+                        onClick={saveEditCountdown}
+                      >
+                        Save
+                      </button>
+                      <button
+                        className="countdown-cancel"
+                        onClick={() => setEditingCountdownId(null)}
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                );
+              }
+              return (
+                <div
+                  key={cd.id}
+                  className={`countdown-row${days <= 0 ? " ended" : days <= 3 ? " urgent" : ""}`}
+                >
+                  <div className="countdown-num-block">
+                    <span className="countdown-days">
+                      {days > 0 ? days : 0}
+                    </span>
+                    <span className="countdown-unit">days</span>
+                  </div>
+                  <div className="countdown-info">
+                    <div className="countdown-label">{cd.label}</div>
+                    <div className="countdown-date">
+                      {new Date(cd.targetDate + "T00:00:00").toLocaleDateString(
+                        undefined,
+                        { month: "short", day: "numeric", year: "numeric" },
+                      )}
+                    </div>
+                  </div>
+                  <button
+                    className="countdown-edit-btn"
+                    onClick={() => startEditCountdown(cd)}
+                    aria-label="Edit countdown"
+                  >
+                    ✎
+                  </button>
+                  <button
+                    className="countdown-remove"
+                    onClick={() => removeCountdown(cd.id)}
+                    aria-label="Remove countdown"
+                  >
+                    ✕
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        )}
+        {countdowns.length === 0 && !showAddCountdown && (
+          <p className="home-countdowns-empty">No countdowns yet</p>
+        )}
+        {showAddCountdown ? (
+          <form
+            className="countdown-add-form"
+            onSubmit={(e) => {
+              e.preventDefault();
+              addCountdown();
+            }}
+          >
+            <input
+              className="countdown-input"
+              placeholder="Label (e.g. Birthday)"
+              value={newCountdownLabel}
+              onChange={(e) => setNewCountdownLabel(e.target.value)}
+              required
+            />
+            <DatePickerSelects
+              month={newMonth}
+              day={newDay}
+              year={newYear}
+              onMonth={setNewMonth}
+              onDay={setNewDay}
+              onYear={setNewYear}
+            />
+            <div className="countdown-form-actions">
+              <button type="submit" className="countdown-add-submit">
+                Add
+              </button>
+              <button
+                type="button"
+                className="countdown-cancel"
+                onClick={() => {
+                  setShowAddCountdown(false);
+                  setNewCountdownLabel("");
+                  resetNewDate();
+                }}
+              >
+                Cancel
+              </button>
+            </div>
+          </form>
+        ) : (
+          <button
+            className="countdown-add-btn"
+            onClick={() => setShowAddCountdown(true)}
+          >
+            + Add Countdown
+          </button>
+        )}
+      </div>
+    ),
+
+    pomodoro: (
+      <div key="pomodoro" className="home-pomodoro">
         <h2>Pomodoro Timer</h2>
         <div className="pomodoro-widget">
           <div
@@ -280,6 +938,109 @@ export default function Home({
           </div>
         </div>
       </div>
+    ),
+  };
+
+  return (
+    <div id="home-content">
+      {/* Render widgets in configured order */}
+      {widgetConfig.filter((w) => w.visible).map((w) => (
+        <div
+          key={w.id}
+          className={`widget-cell${w.size === "full" ? " widget-cell-full" : ""}`}
+        >
+          {widgetMap[w.id]}
+        </div>
+      ))}
+
+      {/* Edit widgets button */}
+      <div className="widget-cell widget-cell-full">
+        <button
+          className="home-edit-btn"
+          onClick={() => setIsEditingWidgets(true)}
+          aria-label="Customize widgets"
+          title="Customize widgets"
+        >
+          <PencilIcon />
+          <span>Edit Widgets</span>
+        </button>
+      </div>
+
+      {/* --- Widget Edit Modal --- */}
+      {isEditingWidgets && (
+        <div
+          className="note-modal-overlay"
+          onClick={() => setIsEditingWidgets(false)}
+        >
+          <div
+            className="widget-edit-popup"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              className="modal-close-btn"
+              onClick={() => setIsEditingWidgets(false)}
+              aria-label="Close"
+            >
+              ✕
+            </button>
+            <div className="widget-edit-header">
+              <h2>Customize Widgets</h2>
+              <p>Toggle visibility and reorder</p>
+            </div>
+            <ul className="widget-edit-list">
+              {widgetConfig.map((w, i) => (
+                <li key={w.id} className="widget-edit-item">
+                  <button
+                    className={`widget-toggle${w.visible ? " on" : " off"}`}
+                    onClick={() => toggleWidgetVisible(w.id)}
+                    aria-label={w.visible ? "Hide" : "Show"}
+                  >
+                    <span className="widget-toggle-knob" />
+                  </button>
+                  <span
+                    className={`widget-edit-label${!w.visible ? " muted" : ""}`}
+                  >
+                    {w.label}
+                  </span>
+                  <button
+                    className={`widget-size-btn${w.size === "half" ? " is-half" : ""}`}
+                    onClick={() => toggleWidgetSize(w.id)}
+                    title={w.size === "half" ? "Half width" : "Full width"}
+                    aria-label="Toggle width"
+                  >
+                    <span className="size-icon-block" />
+                    <span className="size-icon-block" />
+                  </button>
+                  <div className="widget-edit-arrows">
+                    <button
+                      className="widget-arrow-btn"
+                      disabled={i === 0}
+                      onClick={() => moveWidget(i, -1)}
+                      aria-label="Move up"
+                    >
+                      ▲
+                    </button>
+                    <button
+                      className="widget-arrow-btn"
+                      disabled={i === widgetConfig.length - 1}
+                      onClick={() => moveWidget(i, 1)}
+                      aria-label="Move down"
+                    >
+                      ▼
+                    </button>
+                  </div>
+                </li>
+              ))}
+            </ul>
+            <button
+              className="widget-edit-done"
+              onClick={() => setIsEditingWidgets(false)}
+            >
+              Done
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* --- Expanded Note Modal --- */}
       {expandedNote && (
@@ -334,11 +1095,9 @@ export default function Home({
             >
               ✕
             </button>
-
             <div className="pomodoro-modal-header">
               <h1>Pomodoro Timer</h1>
             </div>
-
             <div
               className={`pomodoro-modal-display ${isWorkSession ? "work" : "break"}`}
             >
@@ -349,13 +1108,10 @@ export default function Home({
                 {formatTime(pomodoroTime)}
               </div>
             </div>
-
             <div className="pomodoro-modal-controls">
               <button
                 className="pomodoro-modal-btn"
                 onClick={handlePomodoroToggle}
-                title={isRunning ? "Pause" : "Start"}
-                aria-label={isRunning ? "Pause" : "Start"}
               >
                 <span
                   style={{
@@ -378,8 +1134,6 @@ export default function Home({
               <button
                 className="pomodoro-modal-btn"
                 onClick={handlePomodoroSkip}
-                title="Skip to next session"
-                aria-label="Skip"
               >
                 <span
                   style={{
@@ -394,8 +1148,6 @@ export default function Home({
               <button
                 className="pomodoro-modal-btn"
                 onClick={handlePomodoroReset}
-                title="Reset timer"
-                aria-label="Reset"
               >
                 <span
                   style={{
@@ -408,7 +1160,6 @@ export default function Home({
                 </span>
               </button>
             </div>
-
             <div className="pomodoro-settings">
               <h3>Customize Duration</h3>
               <div className="setting-group">
@@ -420,13 +1171,12 @@ export default function Home({
                     max="60"
                     value={workDuration}
                     onChange={(e) => {
-                      const val = Math.max(
+                      const v = Math.max(
                         1,
                         Math.min(60, parseInt(e.target.value) || 1),
                       );
-                      setWorkDuration(val);
-                      if (isWorkSession && !isRunning)
-                        setPomodoroTime(val * 60);
+                      setWorkDuration(v);
+                      if (isWorkSession && !isRunning) setPomodoroTime(v * 60);
                     }}
                   />
                 </label>
@@ -440,13 +1190,12 @@ export default function Home({
                     max="30"
                     value={breakDuration}
                     onChange={(e) => {
-                      const val = Math.max(
+                      const v = Math.max(
                         1,
                         Math.min(30, parseInt(e.target.value) || 1),
                       );
-                      setBreakDuration(val);
-                      if (!isWorkSession && !isRunning)
-                        setPomodoroTime(val * 60);
+                      setBreakDuration(v);
+                      if (!isWorkSession && !isRunning) setPomodoroTime(v * 60);
                     }}
                   />
                 </label>
@@ -473,11 +1222,9 @@ export default function Home({
             >
               ✕
             </button>
-
             <div className="today-modal-header">
               <h1>Today</h1>
             </div>
-
             <div className="today-modal-content">
               <div className="today-modal-time">{currentTimeWithSeconds}</div>
               <div className="today-modal-date">{getCurrentDateLabel()}</div>

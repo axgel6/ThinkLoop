@@ -1,4 +1,5 @@
 import React from "react";
+import confetti from "canvas-confetti";
 import Button from "./Button";
 import "./Tasks.css";
 
@@ -184,6 +185,9 @@ const Tasks: React.FC<TasksProps> = ({ currentUser }) => {
     if (!item) return;
 
     const newCompleted = !item.completed;
+    if (newCompleted) {
+      confetti({ particleCount: 100, spread: 2000, origin: { y: 0 } });
+    }
     setItems((prev) =>
       prev.map((i) => {
         if (i.id !== id) return i;

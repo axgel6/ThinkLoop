@@ -1000,7 +1000,7 @@ pre {
   --bg: #282828;
   --fg: #ebdbb2;
   --muted: #928374;
-  --panel-bg: rgba(60, 56, 54, 0.7);
+  --panel-bg: rgba(60, 56, 54, 0.268);
   --panel-border: rgba(168, 153, 132, 0.3);
   --panel-bg-solid: #3c3836;
   --glass-bg: linear-gradient(

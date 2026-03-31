@@ -1,3 +1,37 @@
+#home-content {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  max-width: 748px;
+  margin: 14px auto 0;
+  padding: 0 14px 100px;
+}
+
+.widget-cell {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.widget-cell-full {
+  grid-column: 1 / -1;
+}
+
+/* Make every widget fill its cell */
+.home-info,
+.home-pinned,
+.home-tasks,
+.home-quick-note,
+.home-focus-stats,
+.home-countdowns,
+.home-pomodoro {
+  margin: 0;
+  max-width: none;
+  width: 100%;
+  flex: 1;
+  box-sizing: border-box;
+}
+
 #home-content h1 {
   text-align: center;
   color: var(--fg, #dcdcdc);
@@ -7,9 +41,6 @@
 }
 
 .home-info {
-  margin: 18px auto 0;
-  max-width: 720px;
-  width: 100%;
   padding: 12px 14px 35px;
   border-radius: 18px;
   border: 1px solid var(--panel-border, rgba(255, 255, 255, 0.08));
@@ -59,9 +90,6 @@
 }
 
 .home-pinned {
-  margin: 18px auto 0;
-  max-width: 720px;
-  width: 100%;
   padding: 12px 14px 16px;
   border-radius: 18px;
   border: 1px solid var(--panel-border, rgba(255, 255, 255, 0.08));
@@ -278,9 +306,6 @@
 
 /* Pomodoro Timer Widget */
 .home-pomodoro {
-  margin: 24px auto 0;
-  max-width: 720px;
-  width: 100%;
   padding: 12px 14px 16px;
   border-radius: 18px;
   border: 1px solid var(--panel-border, rgba(255, 255, 255, 0.08));
@@ -595,14 +620,713 @@
   font-size: 16px;
 }
 
+/* Tasks Preview Widget */
+.home-tasks {
+  padding: 12px 14px 16px;
+  border-radius: 18px;
+  border: 1px solid var(--panel-border, rgba(255, 255, 255, 0.08));
+  background: var(--panel-bg, rgba(25, 25, 25, 0.4));
+  -webkit-backdrop-filter: blur(6px) saturate(150%);
+  backdrop-filter: blur(6px) saturate(150%);
+  animation: widgetFadeIn 0.25s cubic-bezier(0.4, 0, 0.2, 1) 0.11s both;
+}
+
+.home-tasks h2 {
+  margin: 4px 0 10px;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--fg, #dcdcdc);
+  text-align: left;
+}
+
+.home-tasks-empty {
+  color: var(--muted, #9a9a9a);
+  font-size: 14px;
+  margin: 6px 0 0;
+}
+
+.home-tasks-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.home-tasks-item {
+  display: flex;
+  align-items: center;
+}
+
+.home-tasks-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  width: 100%;
+  padding: 6px 8px;
+  border-radius: 10px;
+  transition: background 0.15s ease;
+}
+
+.home-tasks-label:hover {
+  background: var(--panel-bg, rgba(255, 255, 255, 0.04));
+}
+
+.home-tasks-label input[type="checkbox"] {
+  display: none;
+}
+
+.home-tasks-checkbox {
+  width: 18px;
+  height: 18px;
+  min-width: 18px;
+  border-radius: 5px;
+  border: 1.5px solid var(--panel-border, rgba(255, 255, 255, 0.2));
+  background: transparent;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.home-tasks-label:hover .home-tasks-checkbox {
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
+.home-tasks-text {
+  font-size: 14px;
+  color: var(--fg, #dcdcdc);
+  line-height: 1.4;
+}
+
+/* Quick Note Widget */
+.home-quick-note {
+  padding: 12px 14px 16px;
+  border-radius: 18px;
+  border: 1px solid var(--panel-border, rgba(255, 255, 255, 0.08));
+  background: var(--panel-bg, rgba(25, 25, 25, 0.4));
+  -webkit-backdrop-filter: blur(6px) saturate(150%);
+  backdrop-filter: blur(6px) saturate(150%);
+  animation: widgetFadeIn 0.25s cubic-bezier(0.4, 0, 0.2, 1) 0.14s both;
+}
+
+.home-quick-note h2 {
+  margin: 4px 0 10px;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--fg, #dcdcdc);
+  text-align: left;
+}
+
+.quick-note-input {
+  width: 100%;
+  box-sizing: border-box;
+  background: var(--input-bg, rgba(255, 255, 255, 0.04));
+  border: 1px solid var(--input-border, rgba(255, 255, 255, 0.1));
+  border-radius: 12px;
+  color: var(--fg, #dcdcdc);
+  font-size: 14px;
+  padding: 10px 12px;
+  resize: none;
+  outline: none;
+  font-family: inherit;
+  line-height: 1.5;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.quick-note-input::placeholder {
+  color: var(--muted, #9a9a9a);
+}
+
+.quick-note-input:focus {
+  border-color: var(--input-border-focus, rgba(255, 255, 255, 0.2));
+  background: var(--input-bg-focus, rgba(255, 255, 255, 0.07));
+}
+
+.quick-note-btn {
+  margin-top: 8px;
+  padding: 8px 18px;
+  border-radius: 10px;
+  background: var(--button-bg, rgba(255, 255, 255, 0.06));
+  border: 1px solid var(--button-border, rgba(255, 255, 255, 0.1));
+  color: var(--fg, #dcdcdc);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.quick-note-btn:hover:not(:disabled) {
+  background: var(--button-bg-hover, rgba(255, 255, 255, 0.1));
+  border-color: rgba(255, 255, 255, 0.18);
+}
+
+.quick-note-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.quick-note-btn.success {
+  background: rgba(72, 199, 142, 0.15);
+  border-color: rgba(72, 199, 142, 0.4);
+  color: #48c78e;
+}
+
+/* Focus Stats Widget */
+.home-focus-stats {
+  padding: 12px 14px 16px;
+  border-radius: 18px;
+  border: 1px solid var(--panel-border, rgba(255, 255, 255, 0.08));
+  background: var(--panel-bg, rgba(25, 25, 25, 0.4));
+  -webkit-backdrop-filter: blur(6px) saturate(150%);
+  backdrop-filter: blur(6px) saturate(150%);
+  animation: widgetFadeIn 0.25s cubic-bezier(0.4, 0, 0.2, 1) 0.17s both;
+}
+
+.home-focus-stats h2 {
+  margin: 4px 0 14px;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--fg, #dcdcdc);
+  text-align: left;
+}
+
+.focus-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+
+.focus-stat-item {
+  background: var(--panel-bg-solid, rgba(255, 255, 255, 0.04));
+  border: 1px solid var(--panel-border, rgba(255, 255, 255, 0.07));
+  border-radius: 12px;
+  padding: 12px 8px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.focus-stat-value {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--fg, #dcdcdc);
+  line-height: 1;
+}
+
+.focus-stat-label {
+  font-size: 11px;
+  color: var(--muted, #9a9a9a);
+  line-height: 1.3;
+  text-align: center;
+}
+
+/* Countdowns Widget */
+.home-countdowns {
+  padding: 12px 14px 16px;
+  border-radius: 18px;
+  border: 1px solid var(--panel-border, rgba(255, 255, 255, 0.08));
+  background: var(--panel-bg, rgba(25, 25, 25, 0.4));
+  -webkit-backdrop-filter: blur(6px) saturate(150%);
+  backdrop-filter: blur(6px) saturate(150%);
+  animation: widgetFadeIn 0.25s cubic-bezier(0.4, 0, 0.2, 1) 0.20s both;
+}
+
+.home-countdowns h2 {
+  margin: 4px 0 12px;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--fg, #dcdcdc);
+  text-align: left;
+}
+
+.home-countdowns-empty {
+  color: var(--muted, #9a9a9a);
+  font-size: 14px;
+  margin: 0 0 10px;
+}
+
+.countdown-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.countdown-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: var(--panel-bg-solid, rgba(255, 255, 255, 0.04));
+  border: 1px solid var(--panel-border, rgba(255, 255, 255, 0.08));
+  border-radius: 12px;
+  padding: 10px 12px;
+  transition: border-color 0.2s ease;
+}
+
+.countdown-row.urgent {
+  border-color: rgba(255, 180, 50, 0.35);
+}
+
+.countdown-row.ended {
+  border-color: rgba(255, 80, 80, 0.3);
+  opacity: 0.65;
+}
+
+.countdown-num-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 48px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.countdown-days {
+  font-size: 30px;
+  font-weight: 700;
+  color: var(--fg, #dcdcdc);
+  line-height: 1;
+}
+
+.countdown-row.urgent .countdown-days {
+  color: #f5a623;
+}
+
+.countdown-row.ended .countdown-days {
+  color: #e05555;
+}
+
+.countdown-unit {
+  font-size: 10px;
+  color: var(--muted, #9a9a9a);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-top: 2px;
+}
+
+.countdown-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.countdown-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--fg, #dcdcdc);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.countdown-date {
+  font-size: 12px;
+  color: var(--muted, #9a9a9a);
+  margin-top: 2px;
+}
+
+.countdown-remove {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: transparent;
+  border: none;
+  color: var(--muted, #9a9a9a);
+  font-size: 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  flex-shrink: 0;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.countdown-remove:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--fg, #dcdcdc);
+}
+
+.countdown-edit-btn {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: transparent;
+  border: none;
+  color: var(--muted, #9a9a9a);
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  flex-shrink: 0;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.countdown-edit-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--fg, #dcdcdc);
+}
+
+.countdown-edit-row {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: var(--panel-bg-solid, rgba(255, 255, 255, 0.04));
+  border: 1px solid var(--panel-border, rgba(255, 255, 255, 0.12));
+  border-radius: 12px;
+  padding: 12px;
+}
+
+.countdown-add-form,
+.countdown-edit-row {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.countdown-edit-row {
+  margin-top: 0;
+}
+
+/* Custom date picker */
+.date-picker-selects {
+  display: flex;
+  gap: 6px;
+}
+
+.date-select {
+  flex: 1;
+  background: var(--input-bg, rgba(255, 255, 255, 0.04));
+  border: 1px solid var(--input-border, rgba(255, 255, 255, 0.1));
+  border-radius: 10px;
+  color: var(--fg, #dcdcdc);
+  font-size: 13px;
+  padding: 7px 6px;
+  outline: none;
+  font-family: inherit;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  text-align: center;
+  transition: border-color 0.15s ease, background 0.15s ease;
+  color-scheme: dark;
+}
+
+.date-select:focus {
+  border-color: var(--input-border-focus, rgba(255, 255, 255, 0.22));
+  background: var(--input-bg-focus, rgba(255, 255, 255, 0.07));
+}
+
+.date-select option {
+  background: #2a2a2a;
+  color: var(--fg, #dcdcdc);
+}
+
+.date-select-day {
+  flex: 0 0 58px;
+}
+
+.date-select-year {
+  flex: 0 0 76px;
+}
+
+.countdown-input {
+  width: 100%;
+  box-sizing: border-box;
+  background: var(--input-bg, rgba(255, 255, 255, 0.04));
+  border: 1px solid var(--input-border, rgba(255, 255, 255, 0.1));
+  border-radius: 10px;
+  color: var(--fg, #dcdcdc);
+  font-size: 14px;
+  padding: 8px 12px;
+  outline: none;
+  font-family: inherit;
+  transition: border-color 0.15s ease;
+  color-scheme: dark;
+}
+
+.countdown-input::placeholder {
+  color: var(--muted, #9a9a9a);
+}
+
+.countdown-input:focus {
+  border-color: var(--input-border-focus, rgba(255, 255, 255, 0.2));
+}
+
+.countdown-form-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 2px;
+}
+
+.countdown-add-submit,
+.countdown-cancel {
+  padding: 7px 16px;
+  border-radius: 9px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.countdown-add-submit {
+  background: var(--button-bg, rgba(255, 255, 255, 0.08));
+  border: 1px solid var(--button-border, rgba(255, 255, 255, 0.12));
+  color: var(--fg, #dcdcdc);
+}
+
+.countdown-add-submit:hover {
+  background: rgba(255, 255, 255, 0.13);
+}
+
+.countdown-cancel {
+  background: transparent;
+  border: 1px solid var(--panel-border, rgba(255, 255, 255, 0.08));
+  color: var(--muted, #9a9a9a);
+}
+
+.countdown-cancel:hover {
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--fg, #dcdcdc);
+}
+
+.countdown-add-btn {
+  margin-top: 4px;
+  padding: 7px 14px;
+  border-radius: 10px;
+  background: transparent;
+  border: 1px dashed var(--panel-border, rgba(255, 255, 255, 0.15));
+  color: var(--muted, #9a9a9a);
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+/* Edit Widgets Button */
+.home-edit-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 auto 4px;
+  padding: 7px 16px;
+  border-radius: 20px;
+  background: transparent;
+  border: 1px solid var(--panel-border, rgba(255, 255, 255, 0.1));
+  color: var(--muted, #9a9a9a);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.home-edit-btn:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--fg, #dcdcdc);
+  border-color: rgba(255, 255, 255, 0.18);
+}
+
+/* Widget Edit Modal */
+.widget-edit-popup {
+  background: var(--panel-bg-solid, rgba(40, 40, 40, 0.97));
+  border: 1px solid var(--panel-border, rgba(255, 255, 255, 0.12));
+  border-radius: 24px;
+  padding: 32px;
+  max-width: 380px;
+  width: 90%;
+  position: relative;
+  z-index: 1000;
+  -webkit-backdrop-filter: blur(10px) saturate(150%);
+  backdrop-filter: blur(10px) saturate(150%);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+  animation: slideUp 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+  color: var(--fg, #dcdcdc);
+}
+
+.widget-edit-header {
+  margin-bottom: 20px;
+  padding-right: 36px;
+}
+
+.widget-edit-header h2 {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--fg, #dcdcdc);
+  margin: 0 0 4px;
+}
+
+.widget-edit-header p {
+  font-size: 13px;
+  color: var(--muted, #9a9a9a);
+  margin: 0;
+}
+
+.widget-edit-list {
+  list-style: none;
+  margin: 0 0 20px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.widget-edit-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* Toggle switch */
+.widget-toggle {
+  width: 36px;
+  height: 20px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  cursor: pointer;
+  padding: 0;
+  position: relative;
+  flex-shrink: 0;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.widget-toggle.on {
+  background: rgba(72, 199, 142, 0.3);
+  border-color: rgba(72, 199, 142, 0.5);
+}
+
+.widget-toggle-knob {
+  position: absolute;
+  top: 2px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.45);
+  transition: left 0.2s ease, background 0.2s ease;
+}
+
+.widget-toggle.off .widget-toggle-knob { left: 2px; }
+.widget-toggle.on .widget-toggle-knob  { left: 18px; background: #48c78e; }
+
+.widget-edit-label {
+  flex: 1;
+  font-size: 14px;
+  color: var(--fg, #dcdcdc);
+  font-weight: 500;
+}
+
+.widget-edit-label.muted {
+  color: var(--muted, #9a9a9a);
+}
+
+.widget-edit-arrows {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.widget-arrow-btn {
+  width: 22px;
+  height: 18px;
+  border-radius: 5px;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--muted, #9a9a9a);
+  font-size: 9px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+
+.widget-arrow-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--fg, #dcdcdc);
+}
+
+.widget-arrow-btn:disabled {
+  opacity: 0.25;
+  cursor: default;
+}
+
+.widget-edit-done {
+  width: 100%;
+  padding: 10px;
+  border-radius: 12px;
+  background: var(--button-bg, rgba(255, 255, 255, 0.08));
+  border: 1px solid var(--button-border, rgba(255, 255, 255, 0.12));
+  color: var(--fg, #dcdcdc);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.widget-edit-done:hover {
+  background: rgba(255, 255, 255, 0.13);
+}
+
+/* Widget size toggle */
+.widget-size-btn {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  padding: 4px 6px;
+  border-radius: 6px;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.widget-size-btn:hover {
+  background: rgba(255, 255, 255, 0.07);
+  border-color: rgba(255, 255, 255, 0.18);
+}
+
+.size-icon-block {
+  display: block;
+  width: 10px;
+  height: 12px;
+  border-radius: 2px;
+  background: var(--fg, #dcdcdc);
+  opacity: 0.85;
+  transition: opacity 0.15s ease;
+}
+
+/* Full width: both blocks bright */
+.widget-size-btn .size-icon-block { opacity: 0.85; }
+
+/* Half width: second block dimmed */
+.widget-size-btn.is-half .size-icon-block:last-child { opacity: 0.2; }
+
+.countdown-add-btn:hover {
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--fg, #dcdcdc);
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
 /* Mobile Optimization */
 @media (max-width: 768px) {
   #home-content {
-    padding: 0 12px;
+    gap: 10px;
+    padding: 0 10px 90px;
   }
 
   .home-info {
-    margin: 12px auto 0;
     padding: 10px 12px 20px;
     border-radius: 16px;
   }
@@ -628,7 +1352,6 @@
   }
 
   .home-pinned {
-    margin: 12px auto 0;
     padding: 10px 12px 12px;
     border-radius: 16px;
   }
@@ -658,10 +1381,29 @@
     font-size: 12px;
   }
 
-  .home-pomodoro {
-    margin: 12px auto 0;
+  .home-pomodoro,
+  .home-tasks,
+  .home-quick-note,
+  .home-focus-stats,
+  .home-countdowns {
     padding: 10px 12px 12px;
     border-radius: 16px;
+  }
+
+  .home-tasks h2,
+  .home-quick-note h2,
+  .home-focus-stats h2,
+  .home-countdowns h2 {
+    font-size: 14px;
+    margin: 2px 0 8px;
+  }
+
+  .focus-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .focus-stat-value {
+    font-size: 22px;
   }
 
   .pomodoro-widget {
@@ -804,11 +1546,17 @@
 
 @media (max-width: 480px) {
   #home-content {
-    padding: 0 8px;
+    grid-template-columns: 1fr;
+    gap: 8px;
+    padding: 0 8px 80px;
+  }
+
+  .widget-cell,
+  .widget-cell-full {
+    grid-column: 1 / -1;
   }
 
   .home-info {
-    margin: 10px auto 0;
     padding: 10px 10px 16px;
   }
 
@@ -831,9 +1579,20 @@
   }
 
   .home-pinned,
-  .home-pomodoro {
-    margin: 10px auto 0;
+  .home-pomodoro,
+  .home-tasks,
+  .home-quick-note,
+  .home-focus-stats,
+  .home-countdowns {
     padding: 10px;
+  }
+
+  .focus-stat-value {
+    font-size: 18px;
+  }
+
+  .countdown-days {
+    font-size: 28px;
   }
 
   .home-pinned h2,

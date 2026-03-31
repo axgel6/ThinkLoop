@@ -10,6 +10,7 @@
     "@testing-library/user-event": "^14.6.1",
     "@types/react": "^19.2.2",
     "@types/react-dom": "^19.2.2",
+    "canvas-confetti": "^1.9.4",
     "highlight.js": "^11.11.1",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
@@ -46,6 +47,7 @@
     ]
   },
   "devDependencies": {
+    "@types/canvas-confetti": "^1.9.0",
     "@types/node": "^25.0.10",
     "gh-pages": "^6.3.0",
     "ts-node": "^10.9.2",

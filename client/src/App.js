@@ -140,6 +140,13 @@ function App() {
         if (prev <= 1) {
           setIsRunning(false);
           if (isWorkSessionRef.current) {
+            try {
+              const record = { startedAt: Date.now(), duration: workDurationRef.current * 60, type: "work" };
+              const existing = JSON.parse(localStorage.getItem("focusStats:sessions") || "[]");
+              existing.push(record);
+              localStorage.setItem("focusStats:sessions", JSON.stringify(existing));
+              window.dispatchEvent(new Event("focusSessionComplete"));
+            } catch {}
             setIsWorkSession(false);
             return breakDurationRef.current * 60;
           } else {
