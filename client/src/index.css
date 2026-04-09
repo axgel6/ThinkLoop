@@ -46,9 +46,16 @@ body {
   font-size: 14px;
   font-weight: 500;
   box-sizing: border-box;
-  width: 100%;
-  max-width: 1300px;
-  margin-bottom: 16px;
+  width: fit-content;
+  max-width: calc(100% - 24px);
+  position: fixed;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 50;
+  margin: 0;
+  text-align: center;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
 }
 
 /* Font theme utility classes
@@ -1473,4 +1480,3 @@ body {
   color: var(--fg);
   background-repeat: no-repeat;
 }
-
