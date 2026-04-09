@@ -196,7 +196,6 @@ const TextField = ({
 
   const lastEditorRangeRef = useRef(null);
   const lastTitleSelRef = useRef({ start: null, end: null });
-  const prevEditModeRef = useRef(isEditMode);
 
   // Stable refs for keyboard handler
   const undoRef = useRef(null);
@@ -316,11 +315,10 @@ const TextField = ({
     }
   }, [value]);
 
-  // On entering edit mode, focus editor and place cursor at the end.
+  // When in edit mode, focus editor and place cursor at the end.
+  // This also covers newly-created notes that mount directly in edit mode.
   useEffect(() => {
-    const enteringEditMode = isEditMode && !prevEditModeRef.current;
-    prevEditModeRef.current = isEditMode;
-    if (!enteringEditMode || !editorRef.current) return;
+    if (!isEditMode || !editorRef.current) return;
 
     editorRef.current.focus();
     const sel = window.getSelection();

@@ -356,6 +356,7 @@ const NotesHandler = ({ currentUser }) => {
           lastModified: Date.now(),
         };
         setNotes((prev) => [localNote, ...prev]);
+        setEditingNoteId(localNote.id);
         return;
       }
 
@@ -370,6 +371,7 @@ const NotesHandler = ({ currentUser }) => {
         if (!response.ok) throw new Error("Failed to create note");
         const createdNote = await response.json();
         setNotes((prev) => [createdNote, ...prev]);
+        setEditingNoteId(createdNote.id);
       } catch (error) {
         console.error("Failed to create note:", error);
       }
