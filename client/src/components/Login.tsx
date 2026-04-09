@@ -64,7 +64,7 @@ export default function LoginModal({
     <div className="modal-backdrop" onClick={handleBackdropClick}>
       <div className="modal-content">
         <button className="modal-close" onClick={onClose} aria-label="Close">
-          ✕
+          ←
         </button>
         <h1>{isRegister ? "Sign Up" : "Sign In"}</h1>
         <p>

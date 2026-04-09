@@ -25,7 +25,7 @@ body {
   --side-padding: 20px;
   padding-left: var(--side-padding);
   padding-right: var(--side-padding);
-  padding-bottom: 120px;
+  padding-bottom: 20px;
   color: #e0e0e0;
   /* Force scrollbar to always be visible to prevent layout shift */
   overflow-y: scroll;
@@ -34,7 +34,7 @@ body {
 @media (max-width: 640px) {
   body {
     --side-padding: 12px;
-    padding-bottom: 80px;
+    padding-bottom: 20px;
   }
 }
 
@@ -970,8 +970,8 @@ pre {
 
 .theme-windowsxp {
   --bg: #3b6fb3;
-  --fg: #ffffff;
-  --muted: #d8e7ff;
+  --fg: #0b1f3a;
+  --muted: #365a8c;
   --panel-bg: rgba(47, 95, 165, 0.58);
   --panel-border: rgba(255, 255, 255, 0.62);
   --panel-bg-solid: #2d5a9f;
@@ -1474,7 +1474,3 @@ body {
   background-repeat: no-repeat;
 }
 
-.login-submit-btn {
-  border-radius: 50px !important;
-  max-width: fit-content;
-}

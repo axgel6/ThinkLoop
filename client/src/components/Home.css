@@ -35,7 +35,7 @@
   grid-auto-rows: minmax(200px, auto);
   gap: 18px;
   width: 100%;
-  padding: 16px 0 120px;
+  padding: 16px 0 0;
   align-items: stretch;
 }
 
@@ -95,8 +95,10 @@
 /* Every widget fills its cell height */
 .home-info,
 .home-pinned,
+.home-recent,
 .home-tasks,
 .home-quick-note,
+.home-quick-actions,
 .home-focus-stats,
 .home-countdowns,
 .home-pomodoro {
@@ -130,7 +132,7 @@
   --title-accent: var(--accent-today);
   padding: 22px 22px 24px;
   border-radius: 18px;
-  border: 1px solid color-mix(in srgb, var(--accent-today) 35%, transparent);
+  border: 1px solid var(--panel-border, rgba(255, 255, 255, 0.08));
   background: var(--panel-bg, rgba(25, 25, 25, 0.4));
   -webkit-backdrop-filter: blur(8px) saturate(160%);
   backdrop-filter: blur(8px) saturate(160%);
@@ -193,7 +195,7 @@
   --title-accent: var(--accent-pinned);
   padding: 12px 14px 16px;
   border-radius: 18px;
-  border: 1px solid color-mix(in srgb, var(--accent-pinned) 35%, transparent);
+  border: 1px solid var(--panel-border, rgba(255, 255, 255, 0.08));
   background: var(--panel-bg, rgba(25, 25, 25, 0.4));
   -webkit-backdrop-filter: blur(8px) saturate(160%);
   backdrop-filter: blur(8px) saturate(160%);
@@ -203,12 +205,6 @@
 
 .home-pinned h2 {
   margin: 4px 0 12px;
-}
-
-.home-pinned-empty {
-  color: var(--muted, #9a9a9a);
-  font-size: 14px;
-  margin: 6px 0 0;
 }
 
 .home-pinned-list {
@@ -246,6 +242,172 @@
   line-height: 1.4;
 }
 
+/* Empty State Styling */
+.home-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 16px;
+  text-align: center;
+  flex: 1;
+  min-height: 120px;
+}
+
+.home-empty-state-text {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--fg, #dcdcdc);
+  margin: 0 0 6px;
+}
+
+.home-empty-state-hint {
+  font-size: 12px;
+  color: var(--muted, #9a9a9a);
+  margin: 0;
+}
+
+/* Recent Notes Widget */
+.home-recent {
+  --title-accent: var(--accent-pinned);
+  padding: 12px 14px 16px;
+  border-radius: 18px;
+  border: 1px solid var(--panel-border, rgba(255, 255, 255, 0.08));
+  background: var(--panel-bg, rgba(25, 25, 25, 0.4));
+  -webkit-backdrop-filter: blur(8px) saturate(160%);
+  backdrop-filter: blur(8px) saturate(160%);
+  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.1);
+  animation: widgetFadeIn 0.25s cubic-bezier(0.4, 0, 0.2, 1) 0.06s both;
+}
+
+.home-recent h2 {
+  margin: 4px 0 12px;
+}
+
+.home-recent-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+}
+
+.home-recent-card {
+  border-radius: 14px;
+  padding: 10px 12px;
+  background: var(--panel-bg-solid);
+  border: 1px solid var(--panel-border);
+  color: var(--fg, #dcdcdc);
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.home-recent-card:hover {
+  background: var(--panel-bg);
+  border-color: var(--panel-border);
+}
+
+.home-recent-title {
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--fg, #dcdcdc);
+}
+
+.home-recent-content {
+  font-size: 12px;
+  color: var(--muted, #b5b5b5);
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.home-recent-time {
+  font-size: 11px;
+  color: var(--muted, #9a9a9a);
+  margin-top: 2px;
+}
+
+/* Quick Actions Widget */
+.home-quick-actions {
+  padding: 22px 22px 24px;
+  border-radius: 18px;
+  border: 1px solid var(--panel-border, rgba(255, 255, 255, 0.08));
+  background: var(--panel-bg, rgba(25, 25, 25, 0.4));
+  -webkit-backdrop-filter: blur(8px) saturate(160%);
+  backdrop-filter: blur(8px) saturate(160%);
+  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.1);
+  animation: widgetFadeIn 0.25s cubic-bezier(0.4, 0, 0.2, 1) 0.02s both;
+}
+
+.home-quick-actions h2 {
+  margin: 4px 0 14px;
+  --title-accent: var(--accent-focus);
+}
+
+.quick-actions-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+}
+
+.quick-action-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: var(--button-bg, rgba(255, 255, 255, 0.04));
+  border: 1px solid var(--button-border, rgba(255, 255, 255, 0.08));
+  color: var(--fg, #dcdcdc);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    transform 0.1s ease;
+  text-align: left;
+  width: 100%;
+}
+
+.quick-action-btn:hover {
+  background: var(--button-bg-hover, rgba(255, 255, 255, 0.08));
+  border-color: rgba(255, 255, 255, 0.14);
+  transform: translateX(2px);
+}
+
+.quick-action-btn:active {
+  transform: translateX(0);
+}
+
+.action-icon {
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  min-width: 24px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.06);
+  line-height: 1;
+}
+
+.action-icon.play {
+  font-size: 13px;
+}
+
+.action-icon.notes {
+  font-size: 14px;
+}
+
 /* Modal Overlay */
 .note-modal-overlay {
   position: fixed;
@@ -278,7 +440,7 @@
   background: var(--panel-bg-solid, rgba(55, 55, 55, 0.95));
   border: 1px solid var(--panel-border, rgba(255, 255, 255, 0.12));
   border-radius: 28px;
-  padding: 32px;
+  padding: 50px 24px 24px;
   max-width: 600px;
   width: 100%;
   max-height: 80vh;
@@ -306,7 +468,7 @@
 .modal-close-btn {
   position: absolute;
   top: 16px;
-  right: 16px;
+  left: 16px;
   background: rgba(255, 255, 255, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.1);
   color: var(--fg, #dcdcdc);
@@ -337,8 +499,8 @@
   font-size: 24px;
   font-weight: 700;
   color: var(--fg, #dcdcdc);
-  margin-bottom: 16px;
-  margin-top: 4px;
+  margin-bottom: 12px;
+  margin-top: 2px;
   word-wrap: break-word;
 }
 
@@ -347,7 +509,7 @@
   color: var(--fg, #dcdcdc);
   line-height: 1.6;
   word-wrap: break-word;
-  margin-bottom: 16px;
+  margin-bottom: 12px;
 }
 
 /* Style HTML content inside the modal */
@@ -401,7 +563,7 @@
 .modal-note-footer {
   font-size: 12px;
   color: var(--muted, #9a9a9a);
-  margin-top: 20px;
+  margin-top: 12px;
   padding-top: 12px;
   border-top: 1px solid rgba(255, 255, 255, 0.04);
 }
@@ -411,7 +573,7 @@
   --title-accent: var(--accent-pomodoro);
   padding: 12px 14px 16px;
   border-radius: 18px;
-  border: 1px solid color-mix(in srgb, var(--accent-pomodoro) 35%, transparent);
+  border: 1px solid var(--panel-border, rgba(255, 255, 255, 0.08));
   background: var(--panel-bg, rgba(25, 25, 25, 0.4));
   -webkit-backdrop-filter: blur(8px) saturate(160%);
   backdrop-filter: blur(8px) saturate(160%);
@@ -547,7 +709,7 @@
   background: var(--panel-bg-solid, rgba(55, 55, 55, 0.95));
   border: 1px solid var(--panel-border, rgba(255, 255, 255, 0.12));
   border-radius: 28px;
-  padding: 40px;
+  padding: 54px 28px 28px;
   max-width: 500px;
   width: 90%;
   max-height: 85vh;
@@ -563,7 +725,7 @@
 
 .pomodoro-modal-header {
   text-align: center;
-  margin-bottom: 32px;
+  margin-bottom: 20px;
 }
 
 .pomodoro-modal-header h1 {
@@ -580,8 +742,8 @@
     transparent
   );
   border-radius: 16px;
-  padding: 32px;
-  margin-bottom: 28px;
+  padding: 24px;
+  margin-bottom: 20px;
   text-align: center;
   border: 2px solid
     color-mix(
@@ -639,18 +801,18 @@
 .pomodoro-modal-controls {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  margin-bottom: 32px;
+  gap: 8px;
+  margin-bottom: 20px;
 }
 
 .pomodoro-modal-btn {
-  padding: 12px 24px;
-  border-radius: 12px;
-  background: var(--button-bg, rgba(255, 255, 255, 0.06));
-  border: 1px solid var(--button-border, rgba(255, 255, 255, 0.08));
+  padding: 7px 13px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--panel-border, rgba(255, 255, 255, 0.1));
   color: var(--fg, #dcdcdc);
-  font-size: 16px;
-  font-weight: 600;
+  font-size: 13px;
+  font-weight: 500;
   cursor: pointer;
   transition:
     background 0.15s ease,
@@ -658,8 +820,8 @@
 }
 
 .pomodoro-modal-btn:hover {
-  background: var(--button-bg-hover, rgba(255, 255, 255, 0.1));
-  border-color: var(--button-border-hover, rgba(255, 255, 255, 0.14));
+  background: rgba(255, 255, 255, 0.09);
+  border-color: rgba(255, 255, 255, 0.18);
 }
 
 .pomodoro-modal-btn:active {
@@ -668,7 +830,7 @@
 
 .pomodoro-settings {
   border-top: 1px solid var(--panel-border, rgba(255, 255, 255, 0.08));
-  padding-top: 24px;
+  padding-top: 16px;
 }
 
 .pomodoro-settings h3 {
@@ -727,14 +889,9 @@
 /* Today Modal */
 .today-modal-popup {
   background: var(--panel-bg-solid, rgba(55, 55, 55, 0.95));
-  border: 1px solid
-    color-mix(
-      in srgb,
-      var(--accent-today) 35%,
-      var(--panel-border, rgba(255, 255, 255, 0.12))
-    );
+  border: 1px solid var(--panel-border, rgba(255, 255, 255, 0.12));
   border-radius: 28px;
-  padding: 40px;
+  padding: 54px 28px 28px;
   max-width: 620px;
   width: 90%;
   max-height: 85vh;
@@ -750,7 +907,7 @@
 
 .today-modal-header {
   text-align: left;
-  margin-bottom: 20px;
+  margin-bottom: 16px;
 }
 
 .today-modal-header h1 {
@@ -766,14 +923,14 @@
 .today-modal-content {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 12px;
 }
 
 .today-modal-primary {
   border: 1px solid var(--panel-border, rgba(255, 255, 255, 0.1));
   border-radius: 16px;
   background: var(--panel-bg, rgba(255, 255, 255, 0.04));
-  padding: 20px;
+  padding: 16px;
 }
 
 .today-modal-time {
@@ -822,7 +979,7 @@
 .today-modal-stats {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 10px;
+  gap: 8px;
 }
 
 .today-modal-stat {
@@ -914,7 +1071,7 @@
   --title-accent: var(--accent-tasks);
   padding: 12px 14px 16px;
   border-radius: 18px;
-  border: 1px solid color-mix(in srgb, var(--accent-tasks) 35%, transparent);
+  border: 1px solid var(--panel-border, rgba(255, 255, 255, 0.08));
   background: var(--panel-bg, rgba(25, 25, 25, 0.4));
   -webkit-backdrop-filter: blur(8px) saturate(160%);
   backdrop-filter: blur(8px) saturate(160%);
@@ -926,19 +1083,13 @@
   margin: 4px 0 12px;
 }
 
-.home-tasks-empty {
-  color: var(--muted, #9a9a9a);
-  font-size: 14px;
-  margin: 6px 0 0;
-}
-
 .home-tasks-list {
   list-style: none;
   margin: 0;
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
 }
 
 .home-tasks-item {
@@ -952,7 +1103,7 @@
   gap: 10px;
   cursor: pointer;
   width: 100%;
-  padding: 6px 8px;
+  padding: 8px;
   border-radius: 10px;
   transition: background 0.15s ease;
 }
@@ -969,10 +1120,11 @@
   width: 18px;
   height: 18px;
   min-width: 18px;
+  flex-shrink: 0;
   border-radius: 5px;
   border: 1.5px solid var(--panel-border, rgba(255, 255, 255, 0.2));
   background: transparent;
-  display: inline-flex;
+  display: flex;
   align-items: center;
   justify-content: center;
   transition:
@@ -987,7 +1139,9 @@
 .home-tasks-text {
   font-size: 14px;
   color: var(--fg, #dcdcdc);
-  line-height: 1.4;
+  line-height: 1.3;
+  flex: 1;
+  min-width: 0;
 }
 
 /* Quick Note Widget */
@@ -995,7 +1149,7 @@
   --title-accent: var(--accent-note);
   padding: 12px 14px 16px;
   border-radius: 18px;
-  border: 1px solid color-mix(in srgb, var(--accent-note) 35%, transparent);
+  border: 1px solid var(--panel-border, rgba(255, 255, 255, 0.08));
   background: var(--panel-bg, rgba(25, 25, 25, 0.4));
   -webkit-backdrop-filter: blur(8px) saturate(160%);
   backdrop-filter: blur(8px) saturate(160%);
@@ -1080,7 +1234,7 @@
   --title-accent: var(--accent-focus);
   padding: 22px 22px 24px;
   border-radius: 18px;
-  border: 1px solid color-mix(in srgb, var(--accent-focus) 35%, transparent);
+  border: 1px solid var(--panel-border, rgba(255, 255, 255, 0.08));
   background: var(--panel-bg, rgba(25, 25, 25, 0.4));
   -webkit-backdrop-filter: blur(8px) saturate(160%);
   backdrop-filter: blur(8px) saturate(160%);
@@ -1131,7 +1285,7 @@
   --title-accent: var(--accent-countdown);
   padding: 12px 14px 16px;
   border-radius: 18px;
-  border: 1px solid color-mix(in srgb, var(--accent-countdown) 35%, transparent);
+  border: 1px solid var(--panel-border, rgba(255, 255, 255, 0.08));
   background: var(--panel-bg, rgba(25, 25, 25, 0.4));
   -webkit-backdrop-filter: blur(8px) saturate(160%);
   backdrop-filter: blur(8px) saturate(160%);
@@ -1145,9 +1299,11 @@
 
 .home-info h2,
 .home-pinned h2,
+.home-recent h2,
 .home-pomodoro h2,
 .home-tasks h2,
 .home-quick-note h2,
+.home-quick-actions h2,
 .home-focus-stats h2,
 .home-countdowns h2 {
   font-size: 13px;
@@ -1169,12 +1325,6 @@
   );
   border: 1px solid
     color-mix(in srgb, var(--title-accent, var(--fg, #dcdcdc)) 42%, transparent);
-}
-
-.home-countdowns-empty {
-  color: var(--muted, #9a9a9a);
-  font-size: 14px;
-  margin: 0 0 10px;
 }
 
 .countdown-list {
@@ -1522,6 +1672,7 @@
 .widget-edit-header {
   margin-bottom: 20px;
   padding-right: 36px;
+  padding-left: 50px;
 }
 
 .widget-edit-header h2 {
@@ -1644,19 +1795,22 @@
 
 .widget-edit-done {
   width: 100%;
-  padding: 10px;
-  border-radius: 12px;
-  background: var(--button-bg, rgba(255, 255, 255, 0.08));
-  border: 1px solid var(--button-border, rgba(255, 255, 255, 0.12));
+  padding: 7px 13px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--panel-border, rgba(255, 255, 255, 0.1));
   color: var(--fg, #dcdcdc);
-  font-size: 14px;
-  font-weight: 600;
+  font-size: 13px;
+  font-weight: 500;
   cursor: pointer;
-  transition: background 0.15s ease;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease;
 }
 
 .widget-edit-done:hover {
-  background: rgba(255, 255, 255, 0.13);
+  background: rgba(255, 255, 255, 0.09);
+  border-color: rgba(255, 255, 255, 0.18);
 }
 
 /* Widget size toggle */
@@ -1715,7 +1869,7 @@
 
   #home-content {
     gap: 10px;
-    padding: 0 10px 90px;
+    padding: 0 10px 0;
   }
 
   .home-info {
@@ -1749,9 +1903,11 @@
   }
 
   .home-pinned h2,
+  .home-recent h2,
   .home-pomodoro h2,
   .home-tasks h2,
   .home-quick-note h2,
+  .home-quick-actions h2,
   .home-focus-stats h2,
   .home-countdowns h2,
   .home-info h2 {
@@ -1779,12 +1935,27 @@
   }
 
   .home-pomodoro,
+  .home-recent,
   .home-tasks,
   .home-quick-note,
+  .home-quick-actions,
   .home-focus-stats,
   .home-countdowns {
     padding: 10px 12px 12px;
     border-radius: 16px;
+  }
+
+  .quick-action-btn {
+    padding: 8px 12px;
+    font-size: 12px;
+    gap: 8px;
+  }
+
+  .action-icon {
+    width: 20px;
+    height: 20px;
+    min-width: 20px;
+    font-size: 14px;
   }
 
   .focus-stats-grid {
@@ -1834,7 +2005,7 @@
 
   /* Note Modal */
   .note-modal-popup {
-    padding: 24px;
+    padding: 44px 24px 24px;
     max-width: calc(100vw - 24px);
     border-radius: 20px;
   }
@@ -1854,12 +2025,12 @@
     height: 32px;
     font-size: 18px;
     top: 12px;
-    right: 12px;
+    left: 12px;
   }
 
   /* Pomodoro Modal */
   .pomodoro-modal-popup {
-    padding: 24px;
+    padding: 44px 24px 24px;
     max-width: calc(100vw - 24px);
     border-radius: 20px;
   }
@@ -1884,8 +2055,8 @@
   }
 
   .pomodoro-modal-btn {
-    padding: 10px 20px;
-    font-size: 14px;
+    padding: 7px 13px;
+    font-size: 13px;
   }
 
   .pomodoro-settings {
@@ -1894,7 +2065,7 @@
 
   /* Today Modal */
   .today-modal-popup {
-    padding: 24px;
+    padding: 44px 24px 24px;
     max-width: calc(100vw - 24px);
     border-radius: 20px;
   }
@@ -1937,7 +2108,7 @@
   #home-content {
     grid-template-columns: 1fr;
     gap: 8px;
-    padding: 0 8px 80px;
+    padding: 0 8px 0;
   }
 
   .widget-cell,
@@ -1968,9 +2139,11 @@
   }
 
   .home-pinned,
+  .home-recent,
   .home-pomodoro,
   .home-tasks,
   .home-quick-note,
+  .home-quick-actions,
   .home-focus-stats,
   .home-countdowns {
     padding: 10px;
@@ -2047,7 +2220,7 @@
 
   /* Note Modal */
   .note-modal-popup {
-    padding: 20px;
+    padding: 40px 20px 20px;
     max-width: calc(100vw - 20px);
     border-radius: 16px;
     max-height: 90vh;
@@ -2067,12 +2240,12 @@
     height: 30px;
     font-size: 16px;
     top: 10px;
-    right: 10px;
+    left: 10px;
   }
 
   /* Pomodoro Modal */
   .pomodoro-modal-popup {
-    padding: 20px;
+    padding: 40px 20px 20px;
     max-width: calc(100vw - 20px);
     border-radius: 16px;
   }
@@ -2096,7 +2269,7 @@
   }
 
   .pomodoro-modal-btn {
-    padding: 10px 16px;
+    padding: 7px 13px;
     font-size: 13px;
   }
 
@@ -2106,7 +2279,7 @@
 
   /* Today Modal */
   .today-modal-popup {
-    padding: 20px;
+    padding: 40px 20px 20px;
     max-width: calc(100vw - 20px);
     border-radius: 16px;
   }

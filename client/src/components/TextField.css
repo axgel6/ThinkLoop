@@ -270,16 +270,15 @@
   align-self: center;
 }
 
-/* Format buttons (B/I/U/S, H1/H2, lists, etc.) */
 .format-btn {
   border: none !important;
   background: transparent !important;
   cursor: pointer;
-  padding: 0;
+  padding: 0 !important;
   font-size: 12px;
   font-weight: 600;
   color: var(--fg, #c0c0c0) !important;
-  opacity: 0.55;
+  opacity: 0.7;
   line-height: 1;
   transition:
     background 0.1s ease,
@@ -287,13 +286,28 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 26px;
+  width: 26px !important;
   height: 26px;
   flex-shrink: 0;
   user-select: none;
   border-radius: 6px !important;
   font-family: inherit !important;
   box-shadow: none !important;
+}
+
+.format-btn:has(.format-btn-label) {
+  width: auto !important;
+  gap: 3px;
+  padding: 0 6px !important;
+}
+
+.format-btn-label {
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.format-btn:not(:has(.format-btn-label)) {
+  gap: 0;
 }
 
 .format-btn:hover {
@@ -359,7 +373,7 @@
 /* Pinned toolbar actions */
 .toolbar-actions {
   display: inline-flex;
-  gap: 2px;
+  gap: 6px;
   align-items: center;
   position: absolute;
   right: 6px;
@@ -367,12 +381,9 @@
   transform: translateY(-50%);
   z-index: 40;
   pointer-events: none;
-  background: var(--panel-bg-solid, rgba(18, 18, 18, 0.95));
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  background: transparent;
   border-radius: 8px;
-  padding: 3px;
-  border: 1px solid var(--panel-border, rgba(255, 255, 255, 0.07));
+  padding: 6px 8px;
 }
 
 .toolbar-actions > * {
@@ -382,50 +393,55 @@
 .toolbar-actions .undo-btn,
 .toolbar-actions .redo-btn {
   background: transparent !important;
-  border: none !important;
-  border-radius: 5px !important;
-  padding: 0 !important;
-  width: 24px !important;
-  height: 24px !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 6px !important;
+  padding: 5px !important;
+  width: 28px !important;
+  height: 28px !important;
   color: var(--fg, #c0c0c0) !important;
-  opacity: 0.55 !important;
+  opacity: 0.65 !important;
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
   transition:
-    background 0.1s ease,
-    opacity 0.1s ease !important;
+    background 0.15s ease,
+    border-color 0.15s ease,
+    opacity 0.15s ease !important;
   font-family: inherit !important;
   font-size: inherit !important;
 }
 
 .toolbar-actions .undo-btn:hover,
 .toolbar-actions .redo-btn:hover {
-  background: rgba(255, 255, 255, 0.07) !important;
+  background: rgba(255, 255, 255, 0.08) !important;
+  border-color: rgba(255, 255, 255, 0.15) !important;
   opacity: 1 !important;
 }
 
 .toolbar-actions .done-btn {
-  background: rgba(128, 128, 128, 0.12) !important;
-  border: 1px solid rgba(128, 128, 128, 0.2) !important;
+  background: rgba(255, 255, 255, 0.08) !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
   border-radius: 6px !important;
-  padding: 3px 9px !important;
-  font-size: 11px !important;
-  font-weight: 500 !important;
+  padding: 5px 12px !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
   letter-spacing: 0.02em !important;
-  color: var(--fg, #c8c8c8) !important;
+  color: rgba(225, 225, 225, 0.95) !important;
   opacity: 1 !important;
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
-  gap: 4px !important;
-  transition: background 0.1s ease !important;
+  gap: 5px !important;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease !important;
   font-family: inherit !important;
 }
 
 .toolbar-actions .done-btn:hover {
-  background: rgba(128, 128, 128, 0.2) !important;
-  color: var(--fg, #eee) !important;
+  background: rgba(255, 255, 255, 0.15) !important;
+  border-color: rgba(255, 255, 255, 0.3) !important;
+  color: #e5e5e5 !important;
 }
 
 .toolbar-actions svg {
@@ -760,8 +776,90 @@
   flex-shrink: 0;
 }
 
-/* Code textarea (edit mode) */
+/* Code editor with highlighting + line numbers */
+.code-editor-wrapper {
+  display: flex;
+  position: relative;
+}
+
+.code-editor-wrapper.with-line-numbers {
+  margin-left: 50px;
+}
+
+.code-editor-wrapper.with-line-numbers .code-editor-line-numbers {
+  display: block;
+}
+
+.code-editor-line-numbers {
+  position: absolute;
+  left: -50px;
+  top: 0;
+  width: 50px;
+  background: rgba(255, 255, 255, 0.03);
+  border-right: 1px solid var(--panel-border, rgba(255, 255, 255, 0.08));
+  padding: 14px 0;
+  text-align: right;
+  padding-right: 12px;
+  font-family:
+    "JetBrains Mono", "Fira Code", Menlo, Monaco, Consolas, "Courier New",
+    monospace;
+  font-size: 13.5px;
+  line-height: 1.7;
+  color: var(--muted, #606060);
+  user-select: none;
+  overflow: hidden;
+  display: none;
+}
+
+.editor-line-number {
+  height: 1.7em;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+/* Highlight container (overlay behind textarea) */
+.code-editor-highlight-container {
+  position: relative;
+  width: 100%;
+  flex: 1;
+}
+
+.code-editor-highlight {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 14px 18px 14px 20px;
+  font-family:
+    "JetBrains Mono", "Fira Code", Menlo, Monaco, Consolas, "Courier New",
+    monospace;
+  font-size: 13.5px;
+  line-height: 1.7;
+  white-space: pre;
+  overflow-wrap: normal;
+  overflow: hidden;
+  pointer-events: none;
+  background: transparent;
+  color: transparent;
+  z-index: 0;
+}
+
+.code-editor-highlight code {
+  background: transparent;
+  padding: 0;
+  font-size: inherit;
+  font-family: inherit;
+  line-height: inherit;
+  color: inherit;
+}
+
+/* Textarea sits on top of highlight */
 .code-editor {
+  position: relative;
+  z-index: 1;
   display: block;
   width: 100%;
   box-sizing: border-box;
@@ -878,4 +976,60 @@
 .code-note .hljs {
   background: transparent;
   padding: 0;
+}
+
+/* Character count in footer */
+.char-count {
+  font-size: 10px;
+  color: var(--muted, #505050);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+/* Code view with line numbers */
+.code-view-wrapper {
+  position: relative;
+  display: flex;
+}
+
+.code-view-wrapper.with-line-numbers .code-view {
+  margin-left: 50px;
+  border-radius: 0;
+}
+
+.code-line-numbers {
+  position: absolute;
+  left: 0;
+  top: 0;
+  background: rgba(255, 255, 255, 0.03);
+  border-right: 1px solid var(--panel-border, rgba(255, 255, 255, 0.08));
+  padding: 14px 0;
+  min-width: 50px;
+  text-align: right;
+  padding-right: 12px;
+  font-family:
+    "JetBrains Mono", "Fira Code", Menlo, Monaco, Consolas, "Courier New",
+    monospace;
+  font-size: 13.5px;
+  line-height: 1.7;
+  color: var(--muted, #606060);
+  user-select: none;
+  overflow: hidden;
+}
+
+.line-number {
+  height: 1.7em;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+/* Footer metadata layout */
+.note-footer-meta {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  justify-content: center;
+  flex: 1;
+  min-width: 0;
 }

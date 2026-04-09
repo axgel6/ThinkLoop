@@ -67,8 +67,10 @@ interface FocusStats {
 type WidgetId =
   | "today"
   | "pinned"
+  | "recent"
   | "tasks"
   | "quick-note"
+  | "quick-actions"
   | "focus-stats"
   | "countdowns"
   | "pomodoro";
@@ -82,7 +84,9 @@ interface WidgetConfig {
 
 const DEFAULT_WIDGET_CONFIG: WidgetConfig[] = [
   { id: "today", label: "Today", visible: true, size: "half" },
+  { id: "quick-actions", label: "Quick Actions", visible: true, size: "full" },
   { id: "pinned", label: "Pinned Notes", visible: true, size: "half" },
+  { id: "recent", label: "Recent Notes", visible: true, size: "half" },
   { id: "tasks", label: "Tasks", visible: true, size: "half" },
   { id: "quick-note", label: "Quick Note", visible: true, size: "half" },
   { id: "focus-stats", label: "Focus Stats", visible: true, size: "full" },
@@ -189,7 +193,7 @@ function DatePickerSelects({
 }
 
 // --- Icons ---
-const PauseIcon = () => (
+const SvgIcon = ({ children }: { children: React.ReactNode }) => (
   <svg
     width="32"
     height="32"
@@ -197,33 +201,30 @@ const PauseIcon = () => (
     fill="currentColor"
     style={{ display: "block", margin: "0 auto" }}
   >
+    {children}
+  </svg>
+);
+
+const PauseIcon = () => (
+  <SvgIcon>
     <rect x="9" y="8" width="4" height="16" rx="2" />
     <rect x="19" y="8" width="4" height="16" rx="2" />
-  </svg>
+  </SvgIcon>
 );
+
 const PlayIcon = () => (
-  <svg
-    width="32"
-    height="32"
-    viewBox="0 0 32 32"
-    fill="currentColor"
-    style={{ display: "block", margin: "0 auto" }}
-  >
+  <SvgIcon>
     <path d="M9 9C9 7.8 10.3 7.2 11.3 7.8L23.3 14.8C24.2 15.4 24.2 16.6 23.3 17.2L11.3 24.2C10.3 24.8 9 24.2 9 23Z" />
-  </svg>
+  </SvgIcon>
 );
+
 const SkipIcon = () => (
-  <svg
-    width="32"
-    height="32"
-    viewBox="0 0 32 32"
-    fill="currentColor"
-    style={{ display: "block", margin: "0 auto" }}
-  >
+  <SvgIcon>
     <path d="M8 9C8 7.8 9.3 7.2 10.3 7.8L18.3 14.8C19.2 15.4 19.2 16.6 18.3 17.2L10.3 24.2C9.3 24.8 8 24.2 8 23Z" />
     <rect x="21" y="8" width="3" height="16" rx="1.5" />
-  </svg>
+  </SvgIcon>
 );
+
 const ResetIcon = () => (
   <svg
     width="32"
@@ -240,6 +241,7 @@ const ResetIcon = () => (
     <path d="M 12.5 4.5 L 16 8 L 12.5 11.5" />
   </svg>
 );
+
 const PencilIcon = () => (
   <svg
     width="15"
@@ -273,6 +275,7 @@ const CalendarIcon = () => (
     <line x1="3" y1="10" x2="21" y2="10" />
   </svg>
 );
+
 const CloudIcon = () => (
   <svg
     width="13"
@@ -315,6 +318,7 @@ export default function Home({
 
   const [now, setNow] = useState<Date>(new Date());
   const [pinnedNotes, setPinnedNotes] = useState<Note[]>([]);
+  const [recentNotes, setRecentNotes] = useState<Note[]>([]);
   const [expandedNote, setExpandedNote] = useState<Note | null>(null);
   const [expandedToday, setExpandedToday] = useState(false);
 
@@ -458,6 +462,32 @@ export default function Home({
       if (!res.ok) return [];
       const notes: Note[] = await res.json();
       return notes.filter((n) => n.isPinned) || [];
+    } catch {
+      return [];
+    }
+  }, [currentUser]);
+
+  // --- Recent notes ---
+  const getRecentNotes = useCallback(async () => {
+    if (!currentUser?.id) {
+      try {
+        const raw = localStorage.getItem("localNotes");
+        if (!raw) return [];
+        const local: Note[] = JSON.parse(raw);
+        return local
+          .sort((a, b) => (b.lastModified ?? 0) - (a.lastModified ?? 0))
+          .slice(0, 3);
+      } catch {
+        return [];
+      }
+    }
+    try {
+      const res = await fetch(`${API_URL}/notes?userId=${currentUser.id}`);
+      if (!res.ok) return [];
+      const notes: Note[] = await res.json();
+      return notes
+        .sort((a, b) => (b.lastModified ?? 0) - (a.lastModified ?? 0))
+        .slice(0, 3);
     } catch {
       return [];
     }
@@ -691,6 +721,22 @@ export default function Home({
   useEffect(() => {
     let active = true;
     const load = async () => {
+      const n = await getRecentNotes();
+      if (active) setRecentNotes(n);
+    };
+    load();
+    const id = setInterval(load, 15000);
+    window.addEventListener("storage", load);
+    return () => {
+      active = false;
+      clearInterval(id);
+      window.removeEventListener("storage", load);
+    };
+  }, [getRecentNotes]);
+
+  useEffect(() => {
+    let active = true;
+    const load = async () => {
       const t = await getTasks();
       if (active) setHomeTasks(t);
     };
@@ -744,11 +790,46 @@ export default function Home({
       </div>
     ),
 
+    "quick-actions": (
+      <div key="quick-actions" className="home-quick-actions">
+        <h2>Quick Actions</h2>
+        <div className="quick-actions-buttons">
+          <button
+            className="quick-action-btn"
+            onClick={() => console.log("New note - navigate to editor")}
+            title="Create a new note"
+          >
+            <span className="action-icon">+</span>
+            New Note
+          </button>
+          <button
+            className="quick-action-btn"
+            onClick={handlePomodoroToggle}
+            title="Start Pomodoro timer"
+          >
+            <span className="action-icon play">▶</span>
+            Start Timer
+          </button>
+          <button
+            className="quick-action-btn"
+            onClick={() => console.log("Navigate to notes")}
+            title="View all notes"
+          >
+            <span className="action-icon notes">≡</span>
+            All Notes
+          </button>
+        </div>
+      </div>
+    ),
+
     pinned: (
       <div key="pinned" className="home-pinned">
         <h2>Pinned Notes</h2>
         {pinnedNotes.length === 0 ? (
-          <p className="home-pinned-empty">No pinned notes yet</p>
+          <div className="home-empty-state">
+            <p className="home-empty-state-text">No pinned notes yet</p>
+            <p className="home-empty-state-hint">Pin a note to access it quickly</p>
+          </div>
         ) : (
           <div className="home-pinned-list">
             {pinnedNotes.map((note) => (
@@ -771,11 +852,54 @@ export default function Home({
       </div>
     ),
 
+    recent: (
+      <div key="recent" className="home-recent">
+        <h2>Recent Notes</h2>
+        {recentNotes.length === 0 ? (
+          <div className="home-empty-state">
+            <p className="home-empty-state-text">No notes yet</p>
+            <p className="home-empty-state-hint">Create your first note to get started</p>
+          </div>
+        ) : (
+          <div className="home-recent-list">
+            {recentNotes.map((note) => (
+              <div
+                key={note.id}
+                className="home-recent-card"
+                onClick={() => setExpandedNote(note)}
+              >
+                <div className="home-recent-title">
+                  {note.title?.trim() || "Untitled"}
+                </div>
+                <div className="home-recent-content">
+                  {stripHtml(note.content || "").slice(0, 150) ||
+                    "(No content)"}
+                </div>
+                <div className="home-recent-time">
+                  {note.lastModified
+                    ? new Date(note.lastModified).toLocaleDateString(undefined, {
+                        month: "short",
+                        day: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })
+                    : ""}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    ),
+
     tasks: (
       <div key="tasks" className="home-tasks">
         <h2>Tasks</h2>
         {homeTasks.length === 0 ? (
-          <p className="home-tasks-empty">All caught up!</p>
+          <div className="home-empty-state">
+            <p className="home-empty-state-text">All caught up</p>
+            <p className="home-empty-state-hint">Your tasks are all done</p>
+          </div>
         ) : (
           <ul className="home-tasks-list">
             {homeTasks.slice(0, 5).map((task) => (
@@ -932,7 +1056,10 @@ export default function Home({
           </div>
         )}
         {countdowns.length === 0 && !showAddCountdown && (
-          <p className="home-countdowns-empty">No countdowns yet</p>
+          <div className="home-empty-state">
+            <p className="home-empty-state-text">No countdowns yet</p>
+            <p className="home-empty-state-hint">Track important dates</p>
+          </div>
         )}
         {showAddCountdown ? (
           <form
@@ -1079,7 +1206,7 @@ export default function Home({
                 onClick={() => setIsEditingWidgets(false)}
                 aria-label="Close"
               >
-                ✕
+                ←
               </button>
               <div className="widget-edit-header">
                 <h2>Customize Widgets</h2>
@@ -1155,7 +1282,7 @@ export default function Home({
                 onClick={() => setExpandedNote(null)}
                 aria-label="Close note"
               >
-                ✕
+                ←
               </button>
               <div className="modal-note-title">
                 {expandedNote.title?.trim() || "Untitled"}
@@ -1191,7 +1318,7 @@ export default function Home({
                 onClick={() => setFullScreenPomodoro(false)}
                 aria-label="Close timer"
               >
-                ✕
+                ←
               </button>
               <div className="pomodoro-modal-header">
                 <h1>Pomodoro Timer</h1>
@@ -1320,7 +1447,7 @@ export default function Home({
                 onClick={() => setExpandedToday(false)}
                 aria-label="Close"
               >
-                ✕
+                ←
               </button>
               <div className="today-modal-header">
                 <h1>Today</h1>

@@ -276,16 +276,16 @@
 }
 
 .task-checkbox::after {
-  content: "";
+  content: "✓";
   position: absolute;
   display: none;
-  left: 5px;
-  top: 2px;
-  width: 4px;
-  height: 8px;
-  border: solid #fff;
-  border-width: 0 1.5px 1.5px 0;
-  transform: rotate(45deg);
+  font-size: 12px;
+  font-weight: bold;
+  color: #fff;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  line-height: 1;
 }
 
 .task-label input[type="checkbox"]:checked ~ .task-checkbox::after {

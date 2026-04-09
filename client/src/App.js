@@ -59,13 +59,17 @@ function App() {
   breakDurationRef.current = breakDuration;
 
   const handleLogin = (userData) => {
-    try { localStorage.setItem("currentUser", JSON.stringify(userData)); } catch {}
+    try {
+      localStorage.setItem("currentUser", JSON.stringify(userData));
+    } catch {}
     setCurrentUser(userData);
     setIsLoginModalOpen(false);
   };
 
   const handleLogout = () => {
-    try { localStorage.removeItem("currentUser"); } catch {}
+    try {
+      localStorage.removeItem("currentUser");
+    } catch {}
     setCurrentUser(null);
     localStorage.setItem("settings:selected", "zero");
     localStorage.setItem("settings:font", "zero");
@@ -76,35 +80,32 @@ function App() {
   };
 
   const handleChangeTab = (tab) => {
-    try { localStorage.setItem("activeTab", tab); } catch {}
+    try {
+      localStorage.setItem("activeTab", tab);
+    } catch {}
     setActiveTab(tab);
   };
 
   // Check backend connectivity (Render free tier sleeps).
-  // Run once: use a ref so the interval doesn't restart on every state change.
+  // Continuously monitor connection to detect if server goes to sleep mid-session.
   useEffect(() => {
-    const connectedRef = { current: false };
-
     const checkConnection = async () => {
       try {
         const res = await fetch(`${API_URL}/health`, { method: "GET" });
-        connectedRef.current = res.ok;
         setIsConnected(res.ok);
       } catch {
-        connectedRef.current = false;
         setIsConnected(false);
       }
     };
 
+    // Initial check
     checkConnection();
-    const interval = setInterval(async () => {
-      if (!connectedRef.current) await checkConnection();
-      else clearInterval(interval);
-    }, 3000);
+
+    // Keep checking every 3 seconds (works when disconnected, reconnects when server wakes)
+    const interval = setInterval(checkConnection, 3000);
 
     return () => clearInterval(interval);
   }, []);
-
 
   // Pomodoro timer — only restarts when isRunning changes, not every tick
   useEffect(() => {
@@ -116,10 +117,19 @@ function App() {
           setIsRunning(false);
           if (isWorkSessionRef.current) {
             try {
-              const record = { startedAt: Date.now(), duration: workDurationRef.current * 60, type: "work" };
-              const existing = JSON.parse(localStorage.getItem("focusStats:sessions") || "[]");
+              const record = {
+                startedAt: Date.now(),
+                duration: workDurationRef.current * 60,
+                type: "work",
+              };
+              const existing = JSON.parse(
+                localStorage.getItem("focusStats:sessions") || "[]",
+              );
               existing.push(record);
-              localStorage.setItem("focusStats:sessions", JSON.stringify(existing));
+              localStorage.setItem(
+                "focusStats:sessions",
+                JSON.stringify(existing),
+              );
               window.dispatchEvent(new Event("focusSessionComplete"));
             } catch {}
             setIsWorkSession(false);

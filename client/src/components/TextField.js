@@ -122,6 +122,8 @@ const TextField = ({
   const [noteLanguage, setNoteLanguage] = useState(
     languageProp ?? "javascript",
   );
+  // Show line numbers in code view
+  const [showLineNumbers, setShowLineNumbers] = useState(false);
   // Edit mode: controlled by parent when isEditing prop is provided, otherwise local
   const [localEditMode, setLocalEditMode] = useState(false);
   const isEditMode = isEditing !== undefined ? isEditing : localEditMode;
@@ -163,6 +165,8 @@ const TextField = ({
   }, [showFolderPicker]);
 
   const editorRef = useRef(null);
+  const codeEditorRef = useRef(null);
+  const codeHighlightRef = useRef(null);
   // Color picker refs
   const textColorRef = useRef(null);
   const highlightColorRef = useRef(null);
@@ -725,6 +729,38 @@ const TextField = ({
     return () => window.removeEventListener("keydown", handleEscape);
   }, [isEditMode, isFullScreen, onFullScreenChange, stopEdit]);
 
+  // Sync scroll and highlight code in edit mode
+  useEffect(() => {
+    if (noteType !== "code" || !isEditMode) return;
+
+    const editor = codeEditorRef.current;
+    const highlight = codeHighlightRef.current;
+    if (!editor || !highlight) return;
+
+    // Highlight the code
+    try {
+      const highlighted = hljs.highlight(value || "", {
+        language: noteLanguage,
+        ignoreIllegals: true,
+      }).value;
+      highlight.innerHTML = highlighted;
+    } catch {
+      const highlighted = hljs.highlightAuto(value || "").value;
+      highlight.innerHTML = highlighted;
+    }
+
+    // Sync scroll position
+    const handleScroll = () => {
+      if (highlight) {
+        highlight.scrollTop = editor.scrollTop;
+        highlight.scrollLeft = editor.scrollLeft;
+      }
+    };
+
+    editor.addEventListener("scroll", handleScroll);
+    return () => editor.removeEventListener("scroll", handleScroll);
+  }, [value, noteLanguage, isEditMode, noteType]);
+
   // --- Code note rendering ---
   if (noteType === "code") {
     const highlighted = (() => {
@@ -753,6 +789,64 @@ const TextField = ({
                   {noteTitle || "New code note"}
                 </div>
                 <span className="code-note-lang-badge">{noteLanguage}</span>
+                {folders.length > 0 && (
+                  <div
+                    className="note-folder-badge-wrapper"
+                    ref={folderPickerRef}
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <button
+                      className={`note-folder-badge${currentFolder ? " has-folder" : ""}`}
+                      onClick={() => setShowFolderPicker((v) => !v)}
+                      title={
+                        currentFolder
+                          ? `Folder: ${currentFolder.name}`
+                          : "Move to folder"
+                      }
+                    >
+                      <svg
+                        width="11"
+                        height="11"
+                        viewBox="0 0 15 15"
+                        fill="none"
+                        aria-hidden="true"
+                      >
+                        <path
+                          d="M1.5 4.5C1.5 3.95 1.95 3.5 2.5 3.5H5.5L7 5H12.5C13.05 5 13.5 5.45 13.5 6V11C13.5 11.55 13.05 12 12.5 12H2.5C1.95 12 1.5 11.55 1.5 11V4.5Z"
+                          stroke="currentColor"
+                          strokeWidth="1.2"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                      <span>{currentFolder ? currentFolder.name : "folder"}</span>
+                    </button>
+                    {showFolderPicker && (
+                      <div className="note-folder-picker">
+                        <button
+                          className={`note-folder-picker-item${!folderId ? " active" : ""}`}
+                          onClick={() => {
+                            onMoveNote?.(null);
+                            setShowFolderPicker(false);
+                          }}
+                        >
+                          No folder
+                        </button>
+                        {folders.map((f) => (
+                          <button
+                            key={f.id}
+                            className={`note-folder-picker-item${String(folderId) === String(f.id) ? " active" : ""}`}
+                            onClick={() => {
+                              onMoveNote?.(f.id);
+                              setShowFolderPicker(false);
+                            }}
+                          >
+                            {f.name}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
               {lastModified && (
                 <div className="note-last-modified-header">
@@ -776,6 +870,30 @@ const TextField = ({
                   }}
                 />
               </div>
+              <div className="toolbar-divider" />
+              <button
+                className={`format-btn${showLineNumbers ? " is-active" : ""}`}
+                onClick={() => setShowLineNumbers(!showLineNumbers)}
+                title="Toggle line numbers"
+              >
+                <svg
+                  width="15"
+                  height="15"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <polyline points="21 6 21 22 3 22 3 6" />
+                  <path d="M7 6V4a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v2" />
+                  <line x1="7" y1="12" x2="17" y2="12" />
+                  <line x1="7" y1="18" x2="17" y2="18" />
+                </svg>
+                <span className="format-btn-label">Lines</span>
+              </button>
+              <div className="toolbar-divider" />
               <div className="theme-picker">
                 <Dropdown
                   options={NOTE_THEME_OPTIONS}
@@ -823,39 +941,63 @@ const TextField = ({
         )}
 
         {isEditMode ? (
-          <textarea
-            className="code-editor"
-            value={value}
-            onChange={(e) => {
-              setValue(e.target.value);
-              if (onChange) onChange(e.target.value);
-            }}
-            onKeyDown={(e) => {
-              if (e.key === "Tab") {
-                e.preventDefault();
-                const ta = e.target;
-                const start = ta.selectionStart;
-                const end = ta.selectionEnd;
-                const spaces = "  ";
-                const newVal =
-                  value.substring(0, start) + spaces + value.substring(end);
-                setValue(newVal);
-                if (onChange) onChange(newVal);
-                requestAnimationFrame(() => {
-                  ta.selectionStart = ta.selectionEnd = start + spaces.length;
-                });
-              }
-            }}
-            spellCheck={false}
-            autoComplete="off"
-            autoCorrect="off"
-            autoCapitalize="off"
-            placeholder="Write your code here..."
-          />
+          <div className={`code-editor-wrapper${showLineNumbers ? " with-line-numbers" : ""}`}>
+            {showLineNumbers && (
+              <div className="code-editor-line-numbers">
+                {value.split("\n").map((_, idx) => (
+                  <div key={idx} className="editor-line-number">{idx + 1}</div>
+                ))}
+              </div>
+            )}
+            <div className="code-editor-highlight-container">
+              <pre className="code-editor-highlight">
+                <code ref={codeHighlightRef} />
+              </pre>
+              <textarea
+                ref={codeEditorRef}
+                className="code-editor"
+                value={value}
+                onChange={(e) => {
+                  setValue(e.target.value);
+                  if (onChange) onChange(e.target.value);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Tab") {
+                    e.preventDefault();
+                    const ta = e.target;
+                    const start = ta.selectionStart;
+                    const end = ta.selectionEnd;
+                    const spaces = "  ";
+                    const newVal =
+                      value.substring(0, start) + spaces + value.substring(end);
+                    setValue(newVal);
+                    if (onChange) onChange(newVal);
+                    requestAnimationFrame(() => {
+                      ta.selectionStart = ta.selectionEnd = start + spaces.length;
+                    });
+                  }
+                }}
+                spellCheck={false}
+                autoComplete="off"
+                autoCorrect="off"
+                autoCapitalize="off"
+                placeholder="Write your code here..."
+              />
+            </div>
+          </div>
         ) : (
-          <pre className="code-view">
-            <code dangerouslySetInnerHTML={{ __html: highlighted }} />
-          </pre>
+          <div className={`code-view-wrapper${showLineNumbers ? " with-line-numbers" : ""}`}>
+            {showLineNumbers && (
+              <div className="code-line-numbers">
+                {value.split("\n").map((_, idx) => (
+                  <div key={idx} className="line-number">{idx + 1}</div>
+                ))}
+              </div>
+            )}
+            <pre className="code-view">
+              <code dangerouslySetInnerHTML={{ __html: highlighted }} />
+            </pre>
+          </div>
         )}
 
         {isEditMode && (
@@ -1365,7 +1507,10 @@ const TextField = ({
         onKeyDown={handleEditorKeyDown}
         onClick={() => !isEditMode && startEdit()}
         suppressContentEditableWarning
+        role="textbox"
+        aria-multiline="true"
         aria-label="Note editor"
+        aria-describedby="editor-char-count"
         placeholder="Tap to edit"
         style={{
           fontFamily: FONT_MAP[noteFont] ?? undefined,
@@ -1385,16 +1530,21 @@ const TextField = ({
             aria-label="Note title"
           />
 
-          {/* Center: Last modified label (if available) */}
-          <div
-            className="note-last-modified"
-            role="status"
-            aria-live="polite"
-            aria-atomic="true"
-          >
-            {lastModified ? (
-              <span>Last modified: {formatRelative(lastModified)}</span>
-            ) : null}
+          {/* Center: Last modified label + character count */}
+          <div className="note-footer-meta">
+            <div
+              className="note-last-modified"
+              role="status"
+              aria-live="polite"
+              aria-atomic="true"
+            >
+              {lastModified && (
+                <span>Last modified: {formatRelative(lastModified)}</span>
+              )}
+            </div>
+            <span id="editor-char-count" className="char-count">
+              {value.replace(/<[^>]+>/g, "").length} characters
+            </span>
           </div>
 
           <div className="note-footer-actions">

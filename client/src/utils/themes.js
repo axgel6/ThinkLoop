@@ -250,8 +250,8 @@ export const THEME_VARS = {
   },
   windowsxp: {
     "--bg": "#3b6fb3",
-    "--fg": "#ffffff",
-    "--muted": "#d8e7ff",
+    "--fg": "#0b1f3a",
+    "--muted": "#365a8c",
     "--panel-bg": "rgba(47, 95, 165, 0.58)",
     "--panel-border": "rgba(255, 255, 255, 0.62)",
     "--panel-bg-solid": "#2d5a9f",

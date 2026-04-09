@@ -45,8 +45,14 @@
 }
 
 @keyframes settingsFadeIn {
-  from { opacity: 0; transform: translateY(6px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* ── Card Header ───────────────────────────────────────────── */
@@ -60,7 +66,7 @@
 .settings-card-icon {
   width: 34px;
   height: 34px;
-  border-radius: 9px;
+  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -70,9 +76,15 @@
   border: 1px solid var(--panel-border, rgba(255, 255, 255, 0.08));
 }
 
-.settings-card-icon--palette { background: rgba(124, 179, 255, 0.08); }
-.settings-card-icon--user    { background: rgba(76, 175, 110, 0.08); }
-.settings-card-icon--export  { background: rgba(251, 189, 47, 0.08); }
+.settings-card-icon--palette {
+  background: rgba(124, 179, 255, 0.08);
+}
+.settings-card-icon--user {
+  background: rgba(76, 175, 110, 0.08);
+}
+.settings-card-icon--export {
+  background: rgba(251, 189, 47, 0.08);
+}
 
 .settings-card-title {
   font-size: 0.95rem;
@@ -179,7 +191,10 @@
   border: 2px solid transparent;
   position: relative;
   overflow: hidden;
-  transition: transform 0.13s ease, border-color 0.13s ease, box-shadow 0.13s ease;
+  transition:
+    transform 0.13s ease,
+    border-color 0.13s ease,
+    box-shadow 0.13s ease;
   flex-shrink: 0;
 }
 
@@ -346,7 +361,10 @@
   font-family: inherit;
   cursor: pointer;
   border: 1px solid transparent;
-  transition: background 0.13s ease, border-color 0.13s ease, opacity 0.13s ease;
+  transition:
+    background 0.13s ease,
+    border-color 0.13s ease,
+    opacity 0.13s ease;
   white-space: nowrap;
 }
 
@@ -399,10 +417,13 @@
   padding: 16px 12px;
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid var(--panel-border, rgba(255, 255, 255, 0.08));
-  border-radius: 12px;
+  border-radius: 8px;
   cursor: pointer;
   font-family: inherit;
-  transition: background 0.13s ease, border-color 0.13s ease, transform 0.13s ease;
+  transition:
+    background 0.13s ease,
+    border-color 0.13s ease,
+    transform 0.13s ease;
 }
 
 .settings-export-btn:hover {
@@ -509,6 +530,10 @@
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
+.theme-windowsxp .settings-page {
+  color: #0b1f3a;
+}
+
 .theme-windowsxp .settings-card-title,
 .theme-windowsxp .settings-field-name,
 .theme-windowsxp .settings-account-name,
@@ -518,8 +543,99 @@
   color: #0b1f3a;
 }
 
+.theme-windowsxp .settings-page-subtitle,
+.theme-windowsxp .settings-card-desc,
+.theme-windowsxp .settings-field-value,
+.theme-windowsxp .settings-field-hint,
+.theme-windowsxp .settings-account-status,
+.theme-windowsxp .settings-signin-desc,
+.theme-windowsxp .settings-signin-note,
+.theme-windowsxp .theme-swatch-label,
+.theme-windowsxp .settings-export-format,
+.theme-windowsxp .settings-about-tagline,
+.theme-windowsxp .settings-about-sep,
+.theme-windowsxp .settings-about-link {
+  color: #214b7d;
+  opacity: 1;
+}
+
+.theme-windowsxp .settings-field-label,
+.theme-windowsxp .settings-field-label span,
+.theme-windowsxp .settings-about-link:hover,
+.theme-windowsxp .settings-about-link--accent,
+.theme-windowsxp .settings-about-link--accent:hover {
+  color: #0b1f3a;
+}
+
+.theme-windowsxp .settings-field-label,
+.theme-windowsxp .settings-field-icon,
+.theme-windowsxp .settings-export-icon,
+.theme-windowsxp .settings-signin-icon {
+  color: #0b1f3a;
+}
+
+.theme-windowsxp .theme-swatch-label {
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.theme-windowsxp .settings-signin-icon,
+.theme-windowsxp .settings-card-icon {
+  background: rgba(255, 255, 255, 0.65);
+  border-color: #7f9db9;
+}
+
+.theme-windowsxp .settings-avatar {
+  background: #f2f8ff;
+  border-color: #7f9db9;
+  color: #0b1f3a;
+}
+
+.theme-windowsxp .settings-btn--ghost {
+  color: #214b7d;
+  border: 1px solid #a9bfdc;
+  background: rgba(255, 255, 255, 0.45);
+}
+
+.theme-windowsxp .settings-btn--ghost:hover {
+  color: #0b1f3a;
+  border-color: #7f9db9;
+  background: rgba(255, 255, 255, 0.8);
+}
+
+.theme-windowsxp .settings-btn--primary,
+.theme-windowsxp .settings-btn--secondary {
+  color: #0b1f3a;
+  border-color: #7f9db9;
+  background: linear-gradient(#ffffff 0%, #e2ecfb 100%);
+}
+
+.theme-windowsxp .settings-btn--primary:hover,
+.theme-windowsxp .settings-btn--secondary:hover {
+  color: #0b1f3a;
+  border-color: #5b7fb5;
+  background: linear-gradient(#fff7d6 0%, #f5d889 100%);
+}
+
+.theme-windowsxp .settings-page .custom-select-button {
+  color: #0b1f3a;
+  border-color: #7f9db9;
+  background: linear-gradient(#ffffff 0%, #e2ecfb 100%);
+}
+
+.theme-windowsxp .settings-page .custom-select-button:hover {
+  color: #0b1f3a;
+  border-color: #5b7fb5;
+  background: linear-gradient(#fff7d6 0%, #f5d889 100%);
+}
+
 .theme-windowsxp .settings-divider {
-  background: linear-gradient(to right, transparent, rgba(127, 157, 185, 0.8), transparent);
+  background: linear-gradient(
+    to right,
+    transparent,
+    rgba(127, 157, 185, 0.8),
+    transparent
+  );
 }
 
 .theme-windowsxp .settings-export-btn {

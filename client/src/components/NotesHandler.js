@@ -22,13 +22,34 @@ const NoteItem = React.memo(function NoteItem({
   onRequestEdit,
   onExitEdit,
 }) {
-  const onChange = useCallback((val) => updateNote(note.id, { content: val }), [note.id, updateNote]);
-  const onTitleChange = useCallback((t) => updateNote(note.id, { title: t }), [note.id, updateNote]);
-  const onFontChange = useCallback((f) => updateNote(note.id, { font: f }), [note.id, updateNote]);
-  const onFontSizeChange = useCallback((sz) => updateNote(note.id, { fontSize: Number(sz) }), [note.id, updateNote]);
-  const onThemeChange = useCallback((th) => updateNote(note.id, { theme: th }), [note.id, updateNote]);
-  const onLanguageChange = useCallback((lang) => updateNote(note.id, { language: lang }), [note.id, updateNote]);
-  const onRemove = useCallback(() => handleRemove(note.id), [note.id, handleRemove]);
+  const onChange = useCallback(
+    (val) => updateNote(note.id, { content: val }),
+    [note.id, updateNote],
+  );
+  const onTitleChange = useCallback(
+    (t) => updateNote(note.id, { title: t }),
+    [note.id, updateNote],
+  );
+  const onFontChange = useCallback(
+    (f) => updateNote(note.id, { font: f }),
+    [note.id, updateNote],
+  );
+  const onFontSizeChange = useCallback(
+    (sz) => updateNote(note.id, { fontSize: Number(sz) }),
+    [note.id, updateNote],
+  );
+  const onThemeChange = useCallback(
+    (th) => updateNote(note.id, { theme: th }),
+    [note.id, updateNote],
+  );
+  const onLanguageChange = useCallback(
+    (lang) => updateNote(note.id, { language: lang }),
+    [note.id, updateNote],
+  );
+  const onRemove = useCallback(
+    () => handleRemove(note.id),
+    [note.id, handleRemove],
+  );
 
   const handleMoveTo = useCallback(
     (folderId) => onMoveNote(note.id, folderId),
@@ -198,7 +219,9 @@ const NotesHandler = ({ currentUser }) => {
       return;
     }
     try {
-      const response = await fetch(`${API_URL}/folders?userId=${currentUser.id}`);
+      const response = await fetch(
+        `${API_URL}/folders?userId=${currentUser.id}`,
+      );
       if (response.ok) {
         const data = await response.json();
         setFolders(data);
@@ -219,7 +242,11 @@ const NotesHandler = ({ currentUser }) => {
         const response = await fetch(`${API_URL}/folders`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ name, parentId: parentId || null, userId: currentUser.id }),
+          body: JSON.stringify({
+            name,
+            parentId: parentId || null,
+            userId: currentUser.id,
+          }),
         });
         if (response.ok) {
           const created = await response.json();
@@ -254,7 +281,12 @@ const NotesHandler = ({ currentUser }) => {
   const handleDeleteFolder = useCallback(
     async (folderId, folderName) => {
       if (!currentUser) return;
-      if (!window.confirm(`Delete folder "${folderName}"? Notes inside will be moved to root.`)) return;
+      if (
+        !window.confirm(
+          `Delete folder "${folderName}"? Notes inside will be moved to root.`,
+        )
+      )
+        return;
       // Optimistically collect descendant ids from local state
       const collectIds = (id) => {
         const ids = [id];
@@ -587,9 +619,10 @@ const NotesHandler = ({ currentUser }) => {
   const normalizedQuery = searchQuery.trim().toLowerCase();
 
   // Filter by folder first, then by search query
-  const folderFilteredNotes = selectedFolderId !== null
-    ? notes.filter((note) => note.folderId === selectedFolderId)
-    : notes;
+  const folderFilteredNotes =
+    selectedFolderId !== null
+      ? notes.filter((note) => note.folderId === selectedFolderId)
+      : notes;
 
   const visibleNotes = normalizedQuery
     ? folderFilteredNotes.filter((note) => {
@@ -621,7 +654,10 @@ const NotesHandler = ({ currentUser }) => {
           <FolderSidebar
             folders={folders}
             selectedFolderId={selectedFolderId}
-            onSelectFolder={(id) => { setSelectedFolderId(id); setSidebarOpen(false); }}
+            onSelectFolder={(id) => {
+              setSelectedFolderId(id);
+              setSidebarOpen(false);
+            }}
             onCreateFolder={handleCreateFolder}
             onRenameFolder={handleRenameFolder}
             onDeleteFolder={handleDeleteFolder}
@@ -631,169 +667,207 @@ const NotesHandler = ({ currentUser }) => {
           />
         )}
         <div className="notes-main">
-      <div className="notes-toolbar">
-        <div className="notes-toolbar-left">
-          {currentUser && (
-            <button
-              className="folder-sidebar-toggle"
-              onClick={() => setSidebarOpen(true)}
-              aria-label="Open folders"
-            >
-              <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
-                <line x1="2" y1="4.5" x2="16" y2="4.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
-                <line x1="2" y1="9" x2="16" y2="9" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
-                <line x1="2" y1="13.5" x2="16" y2="13.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
-              </svg>
-            </button>
+          <div className="notes-toolbar">
+            <div className="notes-toolbar-left">
+              {currentUser && (
+                <button
+                  className="folder-sidebar-toggle"
+                  onClick={() => setSidebarOpen(true)}
+                  aria-label="Open folders"
+                >
+                  <svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 18 18"
+                    fill="none"
+                    aria-hidden="true"
+                  >
+                    <line
+                      x1="2"
+                      y1="4.5"
+                      x2="16"
+                      y2="4.5"
+                      stroke="currentColor"
+                      strokeWidth="1.6"
+                      strokeLinecap="round"
+                    />
+                    <line
+                      x1="2"
+                      y1="9"
+                      x2="16"
+                      y2="9"
+                      stroke="currentColor"
+                      strokeWidth="1.6"
+                      strokeLinecap="round"
+                    />
+                    <line
+                      x1="2"
+                      y1="13.5"
+                      x2="16"
+                      y2="13.5"
+                      stroke="currentColor"
+                      strokeWidth="1.6"
+                      strokeLinecap="round"
+                    />
+                  </svg>
+                </button>
+              )}
+              <input
+                className="notes-search"
+                type="search"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search notes"
+                aria-label="Search notes"
+              />
+            </div>
+            <div className="notes-toolbar-right">
+              <Button
+                onClick={() => setShowOCRModal(true)}
+                className="icon-button"
+                aria-label="Scan image"
+                title="Scan image"
+              >
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+                  <circle cx="12" cy="13" r="4" />
+                </svg>
+              </Button>
+              <Button
+                onClick={() => handleNewNote("code")}
+                className="icon-button"
+                aria-label="New code note"
+                title="New code note"
+              >
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden="true"
+                >
+                  <polyline points="16 18 22 12 16 6" />
+                  <polyline points="8 6 2 12 8 18" />
+                </svg>
+              </Button>
+              <Button
+                onClick={() => handleNewNote("text")}
+                className="icon-button"
+                aria-label="New note"
+                title="New note"
+              >
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden="true"
+                >
+                  <line x1="12" y1="5" x2="12" y2="19" />
+                  <line x1="5" y1="12" x2="19" y2="12" />
+                </svg>
+              </Button>
+              <Button
+                onClick={handleRefresh}
+                className="icon-button"
+                aria-label="Refresh notes"
+                title="Refresh notes"
+              >
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="M21 12a9 9 0 1 1-2.64-6.36" />
+                  <polyline points="21 3 21 9 15 9" />
+                </svg>
+              </Button>
+            </div>
+          </div>
+
+          {selectedFolderName && (
+            <div className="folder-breadcrumb">
+              <span>🗒 All Notes</span>
+              <span className="folder-breadcrumb-sep">›</span>
+              <span>📂 {selectedFolderName}</span>
+            </div>
           )}
-          <input
-            className="notes-search"
-            type="search"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search notes"
-            aria-label="Search notes"
-          />
-        </div>
-        <div className="notes-toolbar-right">
-          <Button
-            onClick={() => setShowOCRModal(true)}
-            className="icon-button"
-            aria-label="Scan image"
-            title="Scan image"
-          >
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden="true"
-            >
-              <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
-              <circle cx="12" cy="13" r="4" />
-            </svg>
-          </Button>
-          <Button
-            onClick={() => handleNewNote("code")}
-            className="icon-button"
-            aria-label="New code note"
-            title="New code note"
-          >
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden="true"
-            >
-              <polyline points="16 18 22 12 16 6" />
-              <polyline points="8 6 2 12 8 18" />
-            </svg>
-          </Button>
-          <Button
-            onClick={() => handleNewNote("text")}
-            className="icon-button"
-            aria-label="New note"
-            title="New note"
-          >
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden="true"
-            >
-              <line x1="12" y1="5" x2="12" y2="19" />
-              <line x1="5" y1="12" x2="19" y2="12" />
-            </svg>
-          </Button>
-          <Button
-            onClick={handleRefresh}
-            className="icon-button"
-            aria-label="Refresh notes"
-            title="Refresh notes"
-          >
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden="true"
-            >
-              <path d="M21 12a9 9 0 1 1-2.64-6.36" />
-              <polyline points="21 3 21 9 15 9" />
-            </svg>
-          </Button>
-        </div>
-      </div>
 
-      {selectedFolderName && (
-        <div className="folder-breadcrumb">
-          <span>🗒 All Notes</span>
-          <span className="folder-breadcrumb-sep">›</span>
-          <span>📂 {selectedFolderName}</span>
-        </div>
-      )}
-
-      {visibleNotes.length === 0 ? (
-        <div className="empty-state">
-          <p>{hasSearch ? "No matching notes" : "No notes yet"}</p>
-          <p className="empty-state-subtitle">
-            {hasSearch ? "Try a different search" : 'Click "New Note" to begin'}
-          </p>
-        </div>
-      ) : (
-        sortedNotes.map((n) => (
-          <NoteItem
-            key={n.id}
-            note={n}
-            updateNote={updateNote}
-            handleRemove={handleRemove}
-            isPinned={pinnedIds.includes(String(n.id))}
-            onTogglePin={handleTogglePin}
-            folders={folders}
-            onMoveNote={handleMoveNote}
-            isEditing={editingNoteId === n.id}
-            onRequestEdit={() => setEditingNoteId(n.id)}
-            onExitEdit={() => setEditingNoteId(null)}
-          />
-        ))
-      )}
+          {visibleNotes.length === 0 ? (
+            <div className="empty-state">
+              <p>{hasSearch ? "No matching notes" : "No notes yet"}</p>
+              <p className="empty-state-subtitle">
+                {hasSearch
+                  ? "Try a different search"
+                  : 'Click "New Note" to begin'}
+              </p>
+            </div>
+          ) : (
+            sortedNotes.map((n) => (
+              <NoteItem
+                key={n.id}
+                note={n}
+                updateNote={updateNote}
+                handleRemove={handleRemove}
+                isPinned={pinnedIds.includes(String(n.id))}
+                onTogglePin={handleTogglePin}
+                folders={folders}
+                onMoveNote={handleMoveNote}
+                isEditing={editingNoteId === n.id}
+                onRequestEdit={() => setEditingNoteId(n.id)}
+                onExitEdit={() => setEditingNoteId(null)}
+              />
+            ))
+          )}
         </div>
       </div>
 
       {showOCRModal && (
-        <div className="ocr-modal-overlay">
-          <div className="ocr-modal-popup">
+        <div
+          className="ocr-modal-overlay"
+          onClick={() => setShowOCRModal(false)}
+        >
+          <div
+            className="ocr-modal-popup"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="ocr-modal-header">
-              <h2>Scan Image to Text</h2>
               <button
                 className="ocr-modal-close"
                 onClick={handleOCRCancel}
                 aria-label="Close"
               >
-                ✕
+                ←
               </button>
+              <h2>Scan Image to Text</h2>
             </div>
 
             <div className="ocr-modal-content">

@@ -30,6 +30,13 @@ export default function AccountModal({
   const [loading, setLoading] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
 
+  React.useEffect(() => {
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, []);
+
   const showAlert = (type: "error" | "success", message: string) => {
     setAlert({ type, message });
     if (type === "success") setTimeout(() => setAlert(null), 3000);
@@ -65,7 +72,9 @@ export default function AccountModal({
     e.preventDefault();
     const newName = new FormData(e.currentTarget).get("newName") as string;
     submit(
-      `${API_URL}/auth/user/${currentUser.id}/name`, "PUT", { newName },
+      `${API_URL}/auth/user/${currentUser.id}/name`,
+      "PUT",
+      { newName },
       (json) => {
         const updated = { ...currentUser, name: json.name };
         localStorage.setItem("currentUser", JSON.stringify(updated));
@@ -78,9 +87,13 @@ export default function AccountModal({
 
   const handleUpdateUsername = (e: React.SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const newUsername = new FormData(e.currentTarget).get("newUsername") as string;
+    const newUsername = new FormData(e.currentTarget).get(
+      "newUsername",
+    ) as string;
     submit(
-      `${API_URL}/auth/user/${currentUser.id}/username`, "PUT", { newUsername },
+      `${API_URL}/auth/user/${currentUser.id}/username`,
+      "PUT",
+      { newUsername },
       (json) => {
         const updated = { ...currentUser, username: json.username };
         localStorage.setItem("currentUser", JSON.stringify(updated));
@@ -95,8 +108,12 @@ export default function AccountModal({
     e.preventDefault();
     const data = new FormData(e.currentTarget);
     submit(
-      `${API_URL}/auth/user/${currentUser.id}/password`, "PUT",
-      { currentPassword: data.get("currentPassword"), newPassword: data.get("newPassword") },
+      `${API_URL}/auth/user/${currentUser.id}/password`,
+      "PUT",
+      {
+        currentPassword: data.get("currentPassword"),
+        newPassword: data.get("newPassword"),
+      },
       () => showAlert("success", "Password updated!"),
       e.currentTarget,
     );
@@ -104,10 +121,17 @@ export default function AccountModal({
 
   const handleDeleteAccount = (e: React.SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const password = new FormData(e.currentTarget).get("deletePassword") as string;
+    const password = new FormData(e.currentTarget).get(
+      "deletePassword",
+    ) as string;
     submit(
-      `${API_URL}/auth/user/${currentUser.id}`, "DELETE", { password },
-      () => { onLogout(); onClose(); },
+      `${API_URL}/auth/user/${currentUser.id}`,
+      "DELETE",
+      { password },
+      () => {
+        onLogout();
+        onClose();
+      },
       e.currentTarget,
     );
   };
@@ -118,13 +142,19 @@ export default function AccountModal({
         className="modal-content account-modal-content"
         onClick={(e) => e.stopPropagation()}
       >
-        <button className="modal-close" onClick={onClose} aria-label="Close">✕</button>
+        <button className="modal-close" onClick={onClose} aria-label="Close">
+          ←
+        </button>
 
         <h1>Account</h1>
-        <p>Signed in as <strong>{currentUser.username}</strong></p>
+        <p>
+          Signed in as <strong>{currentUser.username}</strong>
+        </p>
 
         {alert && (
-          <div className={`account-alert ${alert.type === "error" ? "account-alert-error" : "account-alert-success"}`}>
+          <div
+            className={`account-alert ${alert.type === "error" ? "account-alert-error" : "account-alert-success"}`}
+          >
             {alert.message}
           </div>
         )}
