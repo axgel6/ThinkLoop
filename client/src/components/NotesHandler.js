@@ -775,7 +775,7 @@ const NotesHandler = ({ currentUser }) => {
   const hasSearch = normalizedQuery.length > 0;
 
   const selectedFolderName = selectedFolderId
-    ? (folders.find((f) => f.id === selectedFolderId) || {}).name
+    ? folders.find((f) => f.id === selectedFolderId)?.name ?? null
     : null;
 
   return (

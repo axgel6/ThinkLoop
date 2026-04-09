@@ -82,7 +82,7 @@ const FolderNode = React.memo(function FolderNode({
   // Folders available to move into (exclude self and descendants)
   const excludedIds = getDescendantIds(node);
   const moveCandidates = allFolders.filter(
-    (f) => !excludedIds.includes(f.id) && f.id !== (node.parentId || null),
+    (f) => !excludedIds.includes(f.id) && f.id !== node.parentId,
   );
 
   return (

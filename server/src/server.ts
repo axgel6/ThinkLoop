@@ -71,10 +71,11 @@ app.get("/health", (_req, res) => {
 app.get("/notes", async (req, res) => {
   try {
     const { userId, folderId } = req.query;
-    const filter: any = userId ? { userId } : {};
+    const userIdStr = typeof userId === "string" ? userId : undefined;
+    const filter: any = userIdStr ? { userId: userIdStr } : {};
 
     if (folderId !== undefined) {
-      filter.folderId = folderId === "null" ? null : folderId;
+      filter.folderId = folderId === "null" ? null : String(folderId);
     }
 
     const notes = await notesCollection
@@ -280,11 +281,11 @@ async function getFolderDescendantIds(folderId: string): Promise<string[]> {
 app.get("/folders", async (req, res) => {
   try {
     const { userId } = req.query;
-    if (!userId) {
+    if (!userId || typeof userId !== "string") {
       return res.status(400).json({ error: "userId is required" });
     }
     const folders = await foldersCollection
-      .find({ userId })
+      .find({ userId: String(userId) })
       .sort({ createdAt: 1 })
       .toArray();
     res.json(
@@ -305,10 +306,10 @@ app.get("/folders", async (req, res) => {
 app.post("/folders", async (req, res) => {
   try {
     const { name, parentId, userId } = req.body;
-    if (!userId) {
+    if (!userId || typeof userId !== "string") {
       return res.status(400).json({ error: "userId is required" });
     }
-    if (!name || !name.trim()) {
+    if (!name || typeof name !== "string" || !name.trim()) {
       return res.status(400).json({ error: "Folder name is required" });
     }
     const nameSize = Buffer.byteLength(name.trim(), "utf8");
@@ -318,8 +319,8 @@ app.post("/folders", async (req, res) => {
     const now = Date.now();
     const newFolder = {
       name: name.trim(),
-      parentId: parentId || null,
-      userId,
+      parentId: typeof parentId === "string" ? parentId : null,
+      userId: String(userId),
       createdAt: now,
     };
     const result = await foldersCollection.insertOne(newFolder);
@@ -338,7 +339,7 @@ app.put("/folders/:id", async (req, res) => {
     const { name, parentId } = req.body;
     const updateFields: any = {};
     if (name !== undefined) {
-      if (!name.trim()) {
+      if (typeof name !== "string" || !name.trim()) {
         return res.status(400).json({ error: "Folder name cannot be empty" });
       }
       const nameSize = Buffer.byteLength(name.trim(), "utf8");
@@ -348,14 +349,15 @@ app.put("/folders/:id", async (req, res) => {
       updateFields.name = name.trim();
     }
     if (parentId !== undefined) {
+      const safeParentId = parentId === null ? null : String(parentId);
       // Prevent a folder from being moved into one of its own descendants
-      if (parentId !== null) {
+      if (safeParentId !== null) {
         const descendants = await getFolderDescendantIds(req.params.id);
-        if (descendants.includes(parentId)) {
+        if (descendants.includes(safeParentId)) {
           return res.status(400).json({ error: "Cannot move a folder into one of its own subfolders" });
         }
       }
-      updateFields.parentId = parentId;
+      updateFields.parentId = safeParentId;
     }
     if (Object.keys(updateFields).length === 0) {
       return res.status(400).json({ error: "Nothing to update" });
