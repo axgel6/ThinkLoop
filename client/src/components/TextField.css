@@ -451,6 +451,25 @@
   stroke-linecap: round;
 }
 
+/* Light theme variants for done button */
+.theme-cream .toolbar-actions .done-btn,
+.theme-windowsxp .toolbar-actions .done-btn,
+.theme-brightred .toolbar-actions .done-btn,
+.theme-purple .toolbar-actions .done-btn {
+  background: rgba(0, 0, 0, 0.06) !important;
+  border: 1px solid rgba(0, 0, 0, 0.15) !important;
+  color: rgba(61, 46, 31, 0.9) !important;
+}
+
+.theme-cream .toolbar-actions .done-btn:hover,
+.theme-windowsxp .toolbar-actions .done-btn:hover,
+.theme-brightred .toolbar-actions .done-btn:hover,
+.theme-purple .toolbar-actions .done-btn:hover {
+  background: rgba(0, 0, 0, 0.12) !important;
+  border-color: rgba(0, 0, 0, 0.25) !important;
+  color: rgba(50, 35, 20, 0.95) !important;
+}
+
 /* Font / theme / size pickers */
 .font-picker,
 .theme-picker,
