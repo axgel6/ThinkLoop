@@ -1,9 +1,7 @@
-import React, { useEffect, useState, useRef, useLayoutEffect } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { createPortal } from "react-dom";
 import "./Dropdown.css";
 
-// Generic accessible dropdown component
-// props: options: [{id,label}], value, onChange, fontPreview, fontMap
 const Dropdown = ({
   options = [],
   value = "",
@@ -14,17 +12,15 @@ const Dropdown = ({
 }) => {
   const [open, setOpen] = useState(false);
   const [highlight, setHighlight] = useState(-1);
-  const ref = useRef(null);
+  const btnRef = useRef(null);
   const menuRef = useRef(null);
-  const [menuRect, setMenuRect] = useState(null);
 
   useEffect(() => {
-    if (!open) setHighlight(-1);
-  }, [open]);
-
-  useEffect(() => {
+    if (!open) {
+      setHighlight(-1);
+      return;
+    }
     const onKey = (e) => {
-      if (!open) return;
       if (e.key === "ArrowDown") {
         e.preventDefault();
         setHighlight((h) => Math.min(h + 1, options.length - 1));
@@ -39,38 +35,25 @@ const Dropdown = ({
         setOpen(false);
       }
     };
+    const onOutside = (e) => {
+      if (!btnRef.current?.contains(e.target) && !menuRef.current?.contains(e.target))
+        setOpen(false);
+    };
     window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+    document.addEventListener("mousedown", onOutside);
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      document.removeEventListener("mousedown", onOutside);
+    };
   }, [open, highlight, options, onChange]);
 
-  useEffect(() => {
-    const onDoc = (e) => {
-      if (
-        (ref.current && ref.current.contains(e.target)) ||
-        (menuRef.current && menuRef.current.contains(e.target))
-      ) {
-        return;
-      }
-      setOpen(false);
-    };
-    document.addEventListener("mousedown", onDoc);
-    return () => document.removeEventListener("mousedown", onDoc);
-  }, []);
-
-  // Measure button rect when opening so the portal menu can be positioned
-  useLayoutEffect(() => {
-    if (open && ref.current) {
-      const r = ref.current.getBoundingClientRect();
-      setMenuRect(r);
-    }
-  }, [open]);
-
-  const selectedLabel =
-    options.find((o) => o.id === value)?.label || placeholder;
+  const selectedLabel = options.find((o) => o.id === value)?.label || placeholder;
+  const rect = open && btnRef.current ? btnRef.current.getBoundingClientRect() : null;
 
   return (
-    <div className="custom-select" ref={ref}>
+    <div className="custom-select">
       <button
+        ref={btnRef}
         type="button"
         className="custom-select-button"
         aria-haspopup="listbox"
@@ -81,44 +64,27 @@ const Dropdown = ({
         <span className="chev">▾</span>
       </button>
 
-      {open &&
-        // Render the list in a portal so it can float above other stacking contexts
+      {open && rect &&
         createPortal(
           <ul
-            role="listbox"
             ref={menuRef}
+            role="listbox"
             className="custom-select-list"
-            style={
-              menuRect
-                ? {
-                    position: "fixed",
-                    top: menuRect.bottom + 10,
-                    left: menuRect.left,
-                    minWidth: Math.max(menuRect.width, 180),
-                    zIndex: 10050,
-                  }
-                : { position: "fixed", zIndex: 10050 }
-            }
+            style={{
+              top: rect.bottom + 6,
+              left: rect.left,
+              minWidth: Math.max(rect.width, 180),
+            }}
           >
             {options.map((o, idx) => (
               <li
                 key={o.id}
                 role="option"
                 aria-selected={o.id === value}
-                className={
-                  "custom-select-option " +
-                  (idx === highlight ? "highlight" : "")
-                }
+                className={"custom-select-option" + (idx === highlight ? " highlight" : "")}
                 onMouseEnter={() => setHighlight(idx)}
-                onClick={() => {
-                  onChange(o.id);
-                  setOpen(false);
-                }}
-                style={
-                  fontPreview && fontMap[o.id]
-                    ? { fontFamily: fontMap[o.id] }
-                    : {}
-                }
+                onClick={() => { onChange(o.id); setOpen(false); }}
+                style={fontPreview && fontMap[o.id] ? { fontFamily: fontMap[o.id] } : undefined}
               >
                 {o.label}
               </li>

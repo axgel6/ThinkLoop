@@ -1,27 +1,22 @@
 .navbar {
   position: fixed;
   bottom: 24px;
-  left: 50%;
-  transform: translateX(-50%);
+  left: 24px;
   display: flex;
   justify-content: center;
   z-index: 1000;
   pointer-events: none;
-  width: auto;
-  max-width: calc(100% - 32px);
 }
 
-.navbar ul {
+.nav-links {
   pointer-events: auto;
-  list-style-type: none;
+  list-style: none;
   margin: 0;
-  padding: 8px 12px;
+  padding: 8px 10px;
   display: flex;
   align-items: center;
   gap: 4px;
   width: fit-content;
-  position: relative;
-  z-index: 2;
   background: var(--panel-bg, rgba(20, 20, 20, 0.85));
   border: 1px solid var(--panel-border, rgba(100, 100, 100, 0.4));
   border-radius: 30px;
@@ -30,26 +25,65 @@
     "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   font-size: 12px;
   backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
 }
 
-.navbar li {
+.nav-links li {
   display: inline-flex;
+  align-items: center;
 }
 
-.navbar li button {
+/* Brand */
+.nav-brand {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--fg, #e0e0e0);
+  padding: 6px 10px;
+  user-select: none;
+  animation: brandGlow 3s ease-in-out infinite;
+}
+
+@keyframes brandGlow {
+  0%, 100% {
+    text-shadow:
+      0 0 4px rgba(255, 255, 255, 0.1),
+      0 0 8px rgba(255, 255, 255, 0.05);
+    opacity: 0.85;
+  }
+  50% {
+    text-shadow:
+      0 0 8px rgba(255, 255, 255, 0.5),
+      0 0 18px rgba(255, 255, 255, 0.2),
+      0 0 32px rgba(255, 255, 255, 0.08);
+    opacity: 1;
+  }
+}
+
+/* Divider between brand and tabs */
+.nav-divider {
+  width: 1px;
+  height: 16px;
+  background: var(--panel-border, rgba(255, 255, 255, 0.15));
+  align-self: center;
+  margin: 0 4px;
+  flex-shrink: 0;
+}
+
+/* Icon buttons */
+.nav-links li button {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 6px 12px;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
   background: transparent;
   border: 1px solid transparent;
-  border-radius: 20px;
+  border-radius: 10px;
   cursor: pointer;
   color: var(--muted, #808080);
-  font-family: inherit;
-  font-size: 12px;
-  font-weight: 500;
-  letter-spacing: 0.3px;
   transition:
     background 0.15s ease,
     border-color 0.15s ease,
@@ -57,25 +91,60 @@
   outline: none;
 }
 
-.navbar li button:hover {
+.nav-links li button:hover {
   color: var(--fg, #d0d0d0);
   border-color: var(--panel-border, rgba(100, 100, 100, 0.3));
-  background: var(--panel-bg-hover, rgba(50, 50, 50, 0.3));
+  background: rgba(255, 255, 255, 0.06);
 }
 
-.navbar li button.active {
+.nav-links li button.active {
   color: var(--fg, #ffffff);
   border-color: var(--accent, #666666);
   background: var(--accent-bg, rgba(150, 150, 150, 0.15));
-  font-weight: 600;
 }
 
-.navbar li button.active:hover {
-  border-color: var(--accent, #666666);
+.nav-links li button.active:hover {
   background: var(--accent-bg, rgba(150, 150, 150, 0.25));
 }
 
-.theme-windowsxp .navbar ul {
+/* Pomodoro timer pill */
+.nav-links li button:has(.nav-timer-pill) {
+  width: auto;
+  padding: 0 10px;
+  gap: 0;
+}
+
+.nav-timer-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.nav-timer-pill--work .nav-timer-dot  { background: var(--accent-pomodoro, #2dd4bf); }
+.nav-timer-pill--break .nav-timer-dot { background: var(--accent-today, #fbbf24); }
+
+.nav-links li button:has(.nav-timer-pill--work) {
+  border-color: color-mix(in srgb, var(--accent-pomodoro, #2dd4bf) 45%, transparent);
+  background: color-mix(in srgb, var(--accent-pomodoro, #2dd4bf) 10%, transparent);
+  color: var(--accent-pomodoro, #2dd4bf);
+}
+
+.nav-links li button:has(.nav-timer-pill--break) {
+  border-color: color-mix(in srgb, var(--accent-today, #fbbf24) 45%, transparent);
+  background: color-mix(in srgb, var(--accent-today, #fbbf24) 10%, transparent);
+  color: var(--accent-today, #fbbf24);
+}
+
+.nav-timer-time {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+}
+
+/* Windows XP theme */
+.theme-windowsxp .nav-links {
   background: linear-gradient(180deg, #4f86d6 0%, #2f6fc2 55%, #1f5fb6 100%);
   border: 1px solid rgba(255, 255, 255, 0.55);
   box-shadow:
@@ -85,13 +154,13 @@
   backdrop-filter: none;
 }
 
-.theme-windowsxp .navbar li button {
+.theme-windowsxp .nav-links li button {
   color: #eaf3ff;
   text-shadow: 0 1px 0 rgba(0, 0, 0, 0.35);
   border-radius: 16px;
 }
 
-.theme-windowsxp .navbar li button:hover {
+.theme-windowsxp .nav-links li button:hover {
   border-color: rgba(255, 255, 255, 0.6);
   background: linear-gradient(
     180deg,
@@ -100,7 +169,7 @@
   );
 }
 
-.theme-windowsxp .navbar li button.active {
+.theme-windowsxp .nav-links li button.active {
   color: #0a2a0a;
   border-color: rgba(255, 255, 255, 0.6);
   background: linear-gradient(180deg, #b7f08a 0%, #7fda4c 55%, #4ea32f 100%);
@@ -109,25 +178,19 @@
     inset 0 -1px 0 rgba(0, 0, 0, 0.25);
 }
 
-.theme-windowsxp .navbar li button.active:hover {
+.theme-windowsxp .nav-links li button.active:hover {
   background: linear-gradient(180deg, #c7f7a2 0%, #8be65a 55%, #55b035 100%);
 }
 
-/* Mobile responsiveness */
+/* Mobile */
 @media (max-width: 768px) {
-  .navbar ul {
-    padding: 10px 14px;
-    gap: 6px;
-    font-size: 14px;
+  .navbar {
+    bottom: 16px;
+    left: 16px;
   }
 
-  .navbar li button {
-    padding: 8px 16px;
-    font-size: 14px;
-    min-height: 44px;
-  }
-
-  .navbar li button.active {
-    font-size: 16px;
+  .nav-links li button {
+    width: 40px;
+    height: 40px;
   }
 }

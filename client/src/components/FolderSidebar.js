@@ -18,6 +18,80 @@ function getDescendantIds(node) {
   return ids;
 }
 
+// SVG icon components
+const IconChevron = () => (
+  <svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true">
+    <path d="M2 3.5L5 6.5L8 3.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+
+const IconFolder = () => (
+  <svg width="15" height="15" viewBox="0 0 15 15" fill="none" aria-hidden="true">
+    <path
+      d="M1.5 4.5C1.5 3.95 1.95 3.5 2.5 3.5H5.5L7 5H12.5C13.05 5 13.5 5.45 13.5 6V11C13.5 11.55 13.05 12 12.5 12H2.5C1.95 12 1.5 11.55 1.5 11V4.5Z"
+      stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round"
+    />
+  </svg>
+);
+
+const IconAllNotes = () => (
+  <svg width="15" height="15" viewBox="0 0 15 15" fill="none" aria-hidden="true">
+    <rect x="2" y="2" width="11" height="11" rx="2" stroke="currentColor" strokeWidth="1.2" />
+    <line x1="4.5" y1="5.5" x2="10.5" y2="5.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+    <line x1="4.5" y1="7.5" x2="10.5" y2="7.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+    <line x1="4.5" y1="9.5" x2="8.5" y2="9.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+  </svg>
+);
+
+const IconNewFolder = () => (
+  <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+    <path
+      d="M1 3.5C1 2.95 1.45 2.5 2 2.5H5L6.5 4H11.5C12.05 4 12.5 4.45 12.5 5V10.5C12.5 11.05 12.05 11.5 11.5 11.5H2C1.45 11.5 1 11.05 1 10.5V3.5Z"
+      stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round"
+    />
+    <line x1="7" y1="6.5" x2="7" y2="9.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+    <line x1="5.5" y1="8" x2="8.5" y2="8" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+  </svg>
+);
+
+const IconDots = () => (
+  <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+    <circle cx="3" cy="7" r="1.2" fill="currentColor" />
+    <circle cx="7" cy="7" r="1.2" fill="currentColor" />
+    <circle cx="11" cy="7" r="1.2" fill="currentColor" />
+  </svg>
+);
+
+const IconRename = () => (
+  <svg width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true">
+    <path d="M2 11L4.5 10.5L10.5 4.5L8.5 2.5L2.5 8.5L2 11Z" stroke="currentColor" strokeWidth="1.1" strokeLinejoin="round" />
+    <line x1="8" y1="3" x2="10" y2="5" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" />
+  </svg>
+);
+
+const IconMove = () => (
+  <svg width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true">
+    <path d="M2 6.5H11M8 3.5L11 6.5L8 9.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+
+const IconDelete = () => (
+  <svg width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true">
+    <path d="M2 4H11M5 4V2.5H8V4M10 4L9.5 10.5H3.5L3 4" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+
+const IconSubfolder = () => (
+  <svg width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true">
+    <path
+      d="M1 3C1 2.45 1.45 2 2 2H4.5L5.5 3.5H10.5C11.05 3.5 11.5 3.95 11.5 4.5V9.5C11.5 10.05 11.05 10.5 10.5 10.5H2C1.45 10.5 1 10.05 1 9.5V3Z"
+      stroke="currentColor" strokeWidth="1.1" strokeLinejoin="round"
+    />
+    <line x1="6.5" y1="5.5" x2="6.5" y2="8.5" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" />
+    <line x1="5" y1="7" x2="8" y2="7" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" />
+  </svg>
+);
+
 const FolderNode = React.memo(function FolderNode({
   node,
   selectedFolderId,
@@ -92,19 +166,20 @@ const FolderNode = React.memo(function FolderNode({
         onClick={() => onSelectFolder(isSelected ? null : node.id)}
       >
         <button
-          className="folder-collapse-btn"
+          className={"folder-collapse-btn" + (collapsed ? " collapsed" : "")}
           onClick={(e) => {
             e.stopPropagation();
             setCollapsed((c) => !c);
           }}
           aria-label={collapsed ? "Expand folder" : "Collapse folder"}
           tabIndex={-1}
+          style={{ visibility: hasChildren ? "visible" : "hidden" }}
         >
-          {hasChildren ? (collapsed ? "▶" : "▼") : <span style={{ opacity: 0 }}>▶</span>}
+          <IconChevron />
         </button>
 
-        <span className="folder-icon" aria-hidden="true">
-          {isSelected ? "📂" : "📁"}
+        <span className="folder-icon">
+          <IconFolder />
         </span>
 
         {renaming ? (
@@ -132,7 +207,7 @@ const FolderNode = React.memo(function FolderNode({
           }}
           aria-label="Folder options"
         >
-          ⋯
+          <IconDots />
         </button>
       </div>
 
@@ -146,7 +221,7 @@ const FolderNode = React.memo(function FolderNode({
               setShowMenu(false);
             }}
           >
-            + New subfolder
+            <IconSubfolder /> New subfolder
           </button>
           <button
             className="folder-menu-item"
@@ -156,7 +231,7 @@ const FolderNode = React.memo(function FolderNode({
               setShowMenu(false);
             }}
           >
-            ✎ Rename
+            <IconRename /> Rename
           </button>
           <button
             className="folder-menu-item"
@@ -165,7 +240,7 @@ const FolderNode = React.memo(function FolderNode({
               setShowMoveMenu((v) => !v);
             }}
           >
-            ↗ Move to…
+            <IconMove /> Move to…
           </button>
           {showMoveMenu && (
             <div className="folder-move-submenu">
@@ -178,7 +253,7 @@ const FolderNode = React.memo(function FolderNode({
                   setShowMoveMenu(false);
                 }}
               >
-                / Root
+                Root
               </button>
               {moveCandidates.map((candidate) => (
                 <button
@@ -191,11 +266,12 @@ const FolderNode = React.memo(function FolderNode({
                     setShowMoveMenu(false);
                   }}
                 >
-                  📁 {candidate.name}
+                  {candidate.name}
                 </button>
               ))}
             </div>
           )}
+          <div className="folder-menu-divider" />
           <button
             className="folder-menu-item folder-menu-item--danger"
             onClick={(e) => {
@@ -204,7 +280,7 @@ const FolderNode = React.memo(function FolderNode({
               setShowMenu(false);
             }}
           >
-            🗑 Delete
+            <IconDelete /> Delete
           </button>
         </div>
       )}
@@ -231,6 +307,18 @@ const FolderNode = React.memo(function FolderNode({
   );
 });
 
+const IconChevronLeft = () => (
+  <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+    <path d="M9 2L4 7L9 12" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+  </svg>
+);
+
+const IconChevronRight = () => (
+  <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+    <path d="M5 2L10 7L5 12" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+  </svg>
+);
+
 const FolderSidebar = ({
   folders,
   selectedFolderId,
@@ -239,11 +327,24 @@ const FolderSidebar = ({
   onRenameFolder,
   onDeleteFolder,
   onMoveFolder,
+  isOpen,
+  onClose,
 }) => {
+  const [collapsed, setCollapsed] = useState(() => {
+    try { return localStorage.getItem("sidebar:collapsed") === "true"; } catch { return false; }
+  });
   const [newFolderName, setNewFolderName] = useState("");
   const [showNewInput, setShowNewInput] = useState(false);
   const [newFolderParentId, setNewFolderParentId] = useState(null);
   const inputRef = useRef(null);
+
+  const toggleCollapsed = () => {
+    setCollapsed((prev) => {
+      const next = !prev;
+      try { localStorage.setItem("sidebar:collapsed", String(next)); } catch {}
+      return next;
+    });
+  };
 
   useEffect(() => {
     if (showNewInput && inputRef.current) {
@@ -281,25 +382,36 @@ const FolderSidebar = ({
   const tree = buildTree(folders, null);
 
   return (
-    <div className="folder-sidebar">
+    <>
+    {isOpen && <div className="folder-sidebar-backdrop" onClick={onClose} />}
+    <div className={`folder-sidebar${isOpen ? " folder-sidebar--open" : ""}${collapsed ? " folder-sidebar--collapsed" : ""}`}>
       <div className="folder-sidebar-header">
-        <span className="folder-sidebar-title">Folders</span>
-        <Button
-          className="folder-new-btn icon-button"
-          onClick={() => handleCreateSubfolder(null)}
-          title="New folder"
-          aria-label="New folder"
-        >
-          <svg width="14" height="14" viewBox="0 0 50 50" aria-hidden="true">
-            <line x1="25" y1="5" x2="25" y2="45" stroke="currentColor" strokeWidth="10" />
-            <line x1="5" y1="25" x2="45" y2="25" stroke="currentColor" strokeWidth="10" />
-          </svg>
-        </Button>
+        {!collapsed && <span className="folder-sidebar-title">Folders</span>}
+        <div className="folder-sidebar-header-actions">
+          {!collapsed && (
+            <Button
+              className="folder-new-btn icon-button"
+              onClick={() => handleCreateSubfolder(null)}
+              title="New folder"
+              aria-label="New folder"
+            >
+              <IconNewFolder />
+            </Button>
+          )}
+          <button
+            className="folder-collapse-toggle"
+            onClick={toggleCollapsed}
+            title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+            aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+          >
+            {collapsed ? <IconChevronRight /> : <IconChevronLeft />}
+          </button>
+        </div>
       </div>
 
-      {showNewInput && (
+      {!collapsed && showNewInput && (
         <div className="folder-new-input-row">
-          <span className="folder-icon" aria-hidden="true">📁</span>
+          <span className="folder-icon"><IconFolder /></span>
           <input
             ref={inputRef}
             className="folder-rename-input"
@@ -315,9 +427,10 @@ const FolderSidebar = ({
       <div
         className={"folder-all-notes" + (selectedFolderId === null ? " folder-row--selected" : "")}
         onClick={() => onSelectFolder(null)}
+        title={collapsed ? "All Notes" : undefined}
       >
-        <span className="folder-icon" aria-hidden="true">🗒</span>
-        <span className="folder-name">All Notes</span>
+        <span className="folder-icon"><IconAllNotes /></span>
+        {!collapsed && <span className="folder-name">All Notes</span>}
       </div>
 
       {tree.length === 0 && !showNewInput ? (
@@ -339,6 +452,7 @@ const FolderSidebar = ({
         ))
       )}
     </div>
+    </>
   );
 };
 

@@ -1,284 +1,298 @@
-/* Tasks Page Container */
-.tasklist {
-  max-width: 800px;
+/* ── Tasks Layout ─────────────────────────────────────────── */
+.tasks-page {
+  padding: 32px 24px;
+  min-height: 100vh;
+  box-sizing: border-box;
+}
+
+.tasks-inner {
+  max-width: 1100px;
   margin: 0 auto;
-  padding: 20px;
 }
 
-/* Header Section */
-.checklist-header {
-  text-align: center;
-  margin-bottom: 32px;
-  animation: fadeInDown 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.checklist-header h2 {
-  font-size: 2em;
-  margin: 0 0 8px 0;
-  color: var(--fg, #dcdcdc);
-  font-weight: 600;
-}
-
-.muted {
-  color: var(--muted, #9a9a9a);
-  font-size: 0.9em;
-  margin: 0;
-}
-
-/* Add Task Form */
-.checklist-add {
+/* ── Header ───────────────────────────────────────────────── */
+.tasks-header {
   display: flex;
-  gap: 12px;
-  margin-bottom: 24px;
-  animation: fadeInUp 0.2s cubic-bezier(0.4, 0, 0.2, 1) 0.05s backwards;
-}
-
-.checklist-add .btn {
-  padding: 0;
-  width: 44px;
-  height: 44px;
-  flex-shrink: 0;
-  border-radius: 14px;
-}
-
-.checklist-input {
-  flex: 1;
-  background: linear-gradient(
-    135deg,
-    rgba(255, 255, 255, 0.05),
-    rgba(255, 255, 255, 0.02)
-  );
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 25px;
-  padding: 12px 18px;
-  color: var(--fg, #ffffff);
-  font-size: 14px;
-  outline: none;
-  transition: border-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
-  -webkit-backdrop-filter: blur(8px);
-  backdrop-filter: blur(8px);
-  text-align: center;
-  box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.15);
-}
-
-.checklist-input::placeholder {
-  color: var(--muted, #9a9a9a);
-}
-
-.checklist-input:focus {
-  border-color: rgba(255, 255, 255, 0.25);
-  background: linear-gradient(
-    135deg,
-    rgba(255, 255, 255, 0.08),
-    rgba(255, 255, 255, 0.04)
-  );
-  box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.2);
-}
-.checklist-input:hover {
-  background: linear-gradient(
-    135deg,
-    rgba(255, 255, 255, 0.07),
-    rgba(255, 255, 255, 0.03)
-  );
-  scale: calc(1.02);
-}
-
-/* Task List */
-.checklist-items {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.checklist-items .empty {
-  text-align: center;
-  padding: 60px 20px;
-  color: var(--muted, #9a9a9a);
-  border: 1px solid var(--panel-border, rgba(255, 255, 255, 0.08));
-  border-radius: 20px;
-  background: rgba(0, 0, 0, 0.2);
-  -webkit-backdrop-filter: blur(4px);
-  backdrop-filter: blur(4px);
-  font-size: 1.1em;
-  animation: fadeIn 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-/* Individual Task Item */
-.checklist-item {
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 16px;
-  background: linear-gradient(
-    135deg,
-    rgba(255, 255, 255, 0.05),
-    rgba(255, 255, 255, 0.02)
-  );
-  -webkit-backdrop-filter: blur(8px);
-  backdrop-filter: blur(8px);
-  box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.15);
-  padding: 16px 20px;
-  margin-bottom: 12px;
-  display: flex;
-  align-items: center;
+  align-items: baseline;
   justify-content: space-between;
-  transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
-  animation: slideIn 0.18s cubic-bezier(0.4, 0, 0.2, 1) backwards;
-}
-
-.checklist-item:hover {
-  box-shadow: 0 6px 20px 0 rgba(0, 0, 0, 0.22);
-  border-color: rgba(255, 255, 255, 0.14);
-}
-
-.checklist-item.completed {
-  background: linear-gradient(
-    135deg,
-    rgba(0, 255, 0, 0.05),
-    rgba(0, 255, 0, 0.02)
-  );
-  border-color: rgba(0, 255, 0, 0.15);
-  opacity: 0.7;
-}
-
-.checklist-item.completed:hover {
-  opacity: 0.9;
-}
-
-/* Label and Checkbox Container */
-.checklist-label {
-  display: flex;
-  align-items: center;
   gap: 12px;
-  cursor: pointer;
-  flex: 1;
-  user-select: none;
+  margin-bottom: 8px;
 }
 
-/* Hide default checkbox */
-.checklist-label input[type="checkbox"] {
-  position: absolute;
-  opacity: 0;
-  cursor: pointer;
-  height: 0;
-  width: 0;
+.tasks-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0;
+  color: var(--fg, #e0e0e0);
+  letter-spacing: -0.03em;
 }
 
-/* Custom Checkbox */
-.custom-checkbox {
-  position: relative;
-  width: 24px;
-  height: 24px;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  border-radius: 8px;
-  background: linear-gradient(
-    135deg,
-    rgba(255, 255, 255, 0.05),
-    rgba(255, 255, 255, 0.02)
-  );
-  transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+.tasks-date {
+  font-size: 0.8rem;
+  color: var(--muted, #666);
   flex-shrink: 0;
 }
 
-.checklist-label:hover .custom-checkbox {
-  border-color: rgba(255, 255, 255, 0.5);
-  background: linear-gradient(
-    135deg,
-    rgba(255, 255, 255, 0.1),
-    rgba(255, 255, 255, 0.05)
-  );
+/* ── Progress strip ───────────────────────────────────────── */
+.tasks-progress-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 20px;
 }
 
-/* Checkmark */
-.custom-checkbox::after {
-  content: "";
-  position: absolute;
-  display: none;
-  left: 7px;
-  top: 3px;
-  width: 6px;
-  height: 12px;
-  border: solid white;
-  border-width: 0 2px 2px 0;
-  transform: rotate(45deg);
-}
-
-/* Show checkmark when checked */
-.checklist-label input[type="checkbox"]:checked ~ .custom-checkbox::after {
-  display: block;
-  animation: checkmark 0.15s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.checklist-label input[type="checkbox"]:checked ~ .custom-checkbox {
-  background: linear-gradient(
-    135deg,
-    rgba(0, 255, 100, 0.5),
-    rgba(0, 200, 80, 0.4)
-  );
-  border-color: rgba(0, 255, 100, 0.6);
-  box-shadow: 0 0 12px rgba(0, 255, 100, 0.3);
-}
-
-/* Task Text */
-.checklist-label .text {
-  color: var(--fg, #dcdcdc);
-  font-size: 15px;
-  transition: color 0.2s ease;
+.tasks-progress-track {
   flex: 1;
-  padding-left: 10px;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 99px;
+  overflow: hidden;
 }
 
-.checklist-item.completed .text {
-  text-decoration: line-through;
-  color: var(--muted, #9a9a9a);
+.tasks-progress-fill {
+  height: 100%;
+  background: #4caf6e;
+  border-radius: 99px;
+  transition: width 0.35s ease;
 }
 
-/* Remove Button */
-.remove-task-btn {
-  background: rgba(150, 0, 0, 0.3);
-  color: #ffb3b3;
-  border: 1px solid rgba(255, 138, 138, 0.2);
+.tasks-progress-label {
+  font-size: 0.72rem;
+  color: var(--muted, #666);
+  min-width: 40px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+/* ── Add Form ─────────────────────────────────────────────── */
+.tasks-add-form {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 28px;
+}
+
+.tasks-input {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 8px;
-  width: 32px;
-  height: 32px;
+  padding: 10px 14px;
+  color: var(--fg, #e0e0e0);
+  font-size: 14px;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.tasks-input::placeholder {
+  color: var(--muted, #555);
+}
+
+.tasks-input:focus {
+  border-color: rgba(76, 175, 110, 0.5);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.tasks-add-btn {
+  background: #4caf6e;
+  border: none;
+  border-radius: 8px;
+  width: 38px;
+  height: 38px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease, opacity 0.15s ease;
-  font-size: 16px;
   flex-shrink: 0;
-  opacity: 0;
+  transition: background 0.15s ease;
+  color: #fff;
 }
 
-.checklist-item:hover .remove-task-btn {
+.tasks-add-btn:hover {
+  background: #3d9a5c;
+}
+
+.tasks-add-btn:active {
+  background: #317a4a;
+}
+
+/* ── Two-column body ──────────────────────────────────────── */
+.tasks-body {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  align-items: start;
+}
+
+.tasks-body.single-col {
+  grid-template-columns: 1fr;
+}
+
+/* ── Column ───────────────────────────────────────────────── */
+.tasks-col {
+  min-width: 0;
+}
+
+.tasks-col-label {
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted, #555);
+  margin: 0 0 10px 2px;
+}
+
+/* ── Task List ────────────────────────────────────────────── */
+.tasks-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.tasks-empty {
+  padding: 40px 20px;
+  text-align: center;
+  color: var(--muted, #555);
+  font-size: 0.9rem;
+  border: 1px dashed rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+}
+
+/* ── Task Row ─────────────────────────────────────────────── */
+.task-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  transition: border-color 0.15s ease, background 0.15s ease;
+  animation: taskSlideIn 0.15s ease backwards;
+}
+
+.task-item:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.13);
+}
+
+.task-item.completed {
+  border-color: rgba(76, 175, 110, 0.15);
+  background: rgba(76, 175, 110, 0.04);
+  opacity: 0.75;
+}
+
+.task-item.completed:hover {
+  opacity: 0.9;
+}
+
+/* ── Checkbox ─────────────────────────────────────────────── */
+.task-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  flex: 1;
+  min-width: 0;
+  user-select: none;
+}
+
+.task-label input[type="checkbox"] {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.task-checkbox {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.25);
+  background: transparent;
+  flex-shrink: 0;
+  position: relative;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.task-label:hover .task-checkbox {
+  border-color: rgba(76, 175, 110, 0.6);
+}
+
+.task-label input[type="checkbox"]:checked ~ .task-checkbox {
+  background: #4caf6e;
+  border-color: #4caf6e;
+}
+
+.task-checkbox::after {
+  content: "";
+  position: absolute;
+  display: none;
+  left: 5px;
+  top: 2px;
+  width: 4px;
+  height: 8px;
+  border: solid #fff;
+  border-width: 0 1.5px 1.5px 0;
+  transform: rotate(45deg);
+}
+
+.task-label input[type="checkbox"]:checked ~ .task-checkbox::after {
+  display: block;
+}
+
+/* ── Task Text ────────────────────────────────────────────── */
+.task-text {
+  font-size: 14px;
+  color: var(--fg, #e0e0e0);
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  transition: color 0.15s ease;
+}
+
+.task-item.completed .task-text {
+  text-decoration: line-through;
+  color: var(--muted, #555);
+}
+
+/* ── Remove Button ────────────────────────────────────────── */
+.task-remove-btn {
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--muted, #555);
+  font-size: 14px;
+  flex-shrink: 0;
+  opacity: 0;
+  transition: opacity 0.15s ease, color 0.15s ease, background 0.15s ease;
+}
+
+.task-item:hover .task-remove-btn {
   opacity: 1;
 }
 
-.remove-task-btn:hover {
-  background: rgba(223, 0, 0, 0.5);
-  border-color: rgba(255, 138, 138, 0.4);
-  transform: scale(1.1);
-  box-shadow: 0 2px 8px rgba(223, 0, 0, 0.25);
+.task-remove-btn:hover {
+  color: #ff6b6b;
+  background: rgba(255, 80, 80, 0.1);
 }
 
-.remove-task-btn:active {
-  /* slightly shrink on active press for tactile feedback */
-  transform: scale(0.96);
-}
-
-/* Animations */
-@keyframes fadeIn {
+/* ── Animations ───────────────────────────────────────────── */
+@keyframes taskSlideIn {
   from {
     opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-@keyframes fadeInDown {
-  from {
-    opacity: 0;
-    transform: translateY(-8px);
+    transform: translateY(4px);
   }
   to {
     opacity: 1;
@@ -286,36 +300,15 @@
   }
 }
 
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(8px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+@keyframes task-check {
+  0% { transform: rotate(45deg) scale(0); }
+  60% { transform: rotate(45deg) scale(1.2); }
+  100% { transform: rotate(45deg) scale(1); }
 }
 
-@keyframes slideIn {
-  from {
-    opacity: 0;
-    transform: translateX(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
-@keyframes checkmark {
-  0% {
-    transform: rotate(45deg) scale(0);
-  }
-  50% {
-    transform: rotate(45deg) scale(1.2);
-  }
-  100% {
-    transform: rotate(45deg) scale(1);
+/* ── Responsive ───────────────────────────────────────────── */
+@media (max-width: 640px) {
+  .tasks-body {
+    grid-template-columns: 1fr;
   }
 }

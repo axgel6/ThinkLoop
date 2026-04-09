@@ -11,12 +11,11 @@ import Home from "./components/Home";
 
 const API_URL = process.env.REACT_APP_API_URL || "http://localhost:3000";
 
-const TITLES = {
-  home: "Home",
-  notes: "Notes",
-  tasks: "Tasks",
-  settings: "Settings",
-};
+// Apply saved theme/font once at startup (before first render, no effect needed)
+try {
+  applyTheme(localStorage.getItem("settings:selected") || "zero");
+  applyFont(localStorage.getItem("settings:font") || "mono");
+} catch {}
 
 function App() {
   const [activeTab, setActiveTab] = useState(() => {
@@ -59,27 +58,14 @@ function App() {
   workDurationRef.current = workDuration;
   breakDurationRef.current = breakDuration;
 
-  const user = currentUser ? currentUser.name || currentUser.username : "Guest";
-
-  // Sync currentUser to localStorage
-  useEffect(() => {
-    try {
-      if (currentUser) {
-        localStorage.setItem("currentUser", JSON.stringify(currentUser));
-      } else {
-        localStorage.removeItem("currentUser");
-      }
-    } catch {
-      // ignore
-    }
-  }, [currentUser]);
-
   const handleLogin = (userData) => {
+    try { localStorage.setItem("currentUser", JSON.stringify(userData)); } catch {}
     setCurrentUser(userData);
     setIsLoginModalOpen(false);
   };
 
   const handleLogout = () => {
+    try { localStorage.removeItem("currentUser"); } catch {}
     setCurrentUser(null);
     localStorage.setItem("settings:selected", "zero");
     localStorage.setItem("settings:font", "zero");
@@ -89,14 +75,10 @@ function App() {
     setWeatherCity("Atlanta");
   };
 
-  // Save activeTab to localStorage whenever it changes
-  useEffect(() => {
-    try {
-      localStorage.setItem("activeTab", activeTab);
-    } catch {
-      // ignore
-    }
-  }, [activeTab]);
+  const handleChangeTab = (tab) => {
+    try { localStorage.setItem("activeTab", tab); } catch {}
+    setActiveTab(tab);
+  };
 
   // Check backend connectivity (Render free tier sleeps).
   // Run once: use a ref so the interval doesn't restart on every state change.
@@ -123,13 +105,6 @@ function App() {
     return () => clearInterval(interval);
   }, []);
 
-  // Initialize theme and font on app startup
-  useEffect(() => {
-    const savedTheme = localStorage.getItem("settings:selected") || "zero";
-    const savedFont = localStorage.getItem("settings:font") || "mono";
-    applyTheme(savedTheme);
-    applyFont(savedFont);
-  }, []);
 
   // Pomodoro timer — only restarts when isRunning changes, not every tick
   useEffect(() => {
@@ -232,7 +207,7 @@ function App() {
     };
 
     fetchSettingsFromServer();
-    const interval = setInterval(fetchSettingsFromServer, 5000);
+    const interval = setInterval(fetchSettingsFromServer, 30000);
     return () => clearInterval(interval);
   }, [currentUser]);
 
@@ -269,18 +244,6 @@ function App() {
           Waiting for backend to wake up... (This may take a moment)
         </div>
       )}
-      <div id="top-bar">
-        <h1 id="title" style={{ fontWeight: "bold" }}>
-          {"ThinkLoop/" + TITLES[activeTab]}
-        </h1>
-        <h1
-          id="user"
-          onClick={() => !currentUser && setIsLoginModalOpen(true)}
-          style={{ cursor: "pointer" }}
-        >
-          {"Hello, " + user + "!"}
-        </h1>
-      </div>
       {activeTab === "home" && (
         <Home
           weatherCity={weatherCity}
@@ -322,9 +285,10 @@ function App() {
 
       <Navbar
         activeTab={activeTab}
-        onChangeTab={setActiveTab}
+        onChangeTab={handleChangeTab}
         pomodoroTime={pomodoroTime}
         isRunning={isRunning}
+        isWorkSession={isWorkSession}
       />
     </div>
   );

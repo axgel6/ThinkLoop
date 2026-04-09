@@ -22,15 +22,20 @@ body {
   text-rendering: optimizeLegibility;
 
   background-color: black;
-  /* Page side padding (kept equal left/right). Change this value to adjust gutters. */
-  --side-padding: 14px;
+  --side-padding: 20px;
   padding-left: var(--side-padding);
   padding-right: var(--side-padding);
-  /* Ensure content can be scrolled above the fixed bottom navbar */
-  padding-bottom: 100px;
+  padding-bottom: 120px;
   color: #e0e0e0;
   /* Force scrollbar to always be visible to prevent layout shift */
   overflow-y: scroll;
+}
+
+@media (max-width: 640px) {
+  body {
+    --side-padding: 12px;
+    padding-bottom: 80px;
+  }
 }
 
 .connection-banner {
@@ -664,7 +669,7 @@ body {
 }
 
 /* Site-wide button outline: use theme panel border for non-note buttons */
-body :not(.text-field) button,
+body :not(.text-field) button:not(.theme-swatch),
 .navbar button {
   border: 1px solid var(--panel-border, rgba(255, 255, 255, 0.08));
 }
@@ -675,30 +680,6 @@ pre {
     "JetBrains Mono", Menlo, Monaco, Consolas, "Courier New", monospace;
 }
 
-#top-bar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 16px 24px;
-  gap: 20px;
-}
-
-#title {
-  color: var(--fg, white);
-  text-align: left;
-  padding: 0;
-  font-size: 28px;
-  font-weight: 600;
-  flex: 1;
-}
-
-#user {
-  color: var(--muted, #999999);
-  text-align: right;
-  padding: 0;
-  font-size: 16px;
-  font-weight: 500;
-}
 
 /* Theme classes applied to the root element (html or documentElement)
    Settings will toggle one of these: .theme-dark, .theme-blue, .theme-gray
@@ -716,6 +697,14 @@ pre {
     rgba(0, 0, 0, 0.195),
     rgba(255, 255, 255, 0.05)
   );
+  /* Widget accent colors */
+  --accent-today:     #fbbf24;
+  --accent-pinned:    #a78bfa;
+  --accent-tasks:     #34d399;
+  --accent-note:      #60a5fa;
+  --accent-focus:     #fb923c;
+  --accent-countdown: #f87171;
+  --accent-pomodoro:  #2dd4bf;
 }
 
 .theme-default {
@@ -781,6 +770,14 @@ pre {
   --panel-bg: rgba(235, 220, 200, 0.6);
   --panel-border: rgba(139, 115, 85, 0.25);
   --panel-bg-solid: #ebe4d6;
+  /* Darker accents for readability on light backgrounds */
+  --accent-today:     #92400e;
+  --accent-pinned:    #5b21b6;
+  --accent-tasks:     #065f46;
+  --accent-note:      #1e40af;
+  --accent-focus:     #9a3412;
+  --accent-countdown: #991b1b;
+  --accent-pomodoro:  #0f766e;
   --glass-bg: linear-gradient(
     135deg,
     rgba(250, 240, 225, 0.85),

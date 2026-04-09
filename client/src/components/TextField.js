@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import "./TextField.css";
 import Button from "./Button";
 import Dropdown from "./Dropdown";
@@ -8,7 +8,7 @@ import hljs from "highlight.js";
 import "highlight.js/styles/stackoverflow-dark.css";
 
 const LANGUAGE_OPTIONS = [
-  { id: "javascript", label: "JavaScripst" },
+  { id: "javascript", label: "JavaScript" },
   { id: "typescript", label: "TypeScript" },
   { id: "python", label: "Python" },
   { id: "java", label: "Java" },
@@ -68,6 +68,14 @@ const TextField = ({
   noteType = "text",
   language: languageProp = "javascript",
   onLanguageChange,
+  // single-edit control
+  isEditing,
+  onRequestEdit,
+  onExitEdit,
+  // folder assignment
+  folders = [],
+  folderId,
+  onMoveNote,
 }) => {
   // keep a ticking clock to refresh relative-time labels every minute
   const [now, setNow] = useState(Date.now());
@@ -114,9 +122,57 @@ const TextField = ({
   const [noteLanguage, setNoteLanguage] = useState(
     languageProp ?? "javascript",
   );
-  // Track edit mode state
-  const [isEditMode, setIsEditMode] = useState(false);
+  // Edit mode: controlled by parent when isEditing prop is provided, otherwise local
+  const [localEditMode, setLocalEditMode] = useState(false);
+  const isEditMode = isEditing !== undefined ? isEditing : localEditMode;
+  const [showFolderPicker, setShowFolderPicker] = useState(false);
+  const folderPickerRef = useRef(null);
+
+  const startEdit = () => {
+    setShowFolderPicker(false);
+    if (isEditing !== undefined) {
+      onRequestEdit?.();
+    } else {
+      setLocalEditMode(true);
+    }
+  };
+
+  const stopEdit = useCallback(() => {
+    if (isEditing !== undefined) {
+      onExitEdit?.();
+    } else {
+      setLocalEditMode(false);
+    }
+  }, [isEditing, onExitEdit]);
+
+  const currentFolder = folders?.find((f) => String(f.id) === String(folderId));
+
+  // Close folder picker on outside click
+  useEffect(() => {
+    if (!showFolderPicker) return;
+    const handler = (e) => {
+      if (folderPickerRef.current && !folderPickerRef.current.contains(e.target)) {
+        setShowFolderPicker(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [showFolderPicker]);
+
   const editorRef = useRef(null);
+  // Color picker refs
+  const textColorRef = useRef(null);
+  const highlightColorRef = useRef(null);
+  // Per-selection text / highlight colors
+  const [textColor, setTextColor] = useState("#e0e0e0");
+  const [highlightColor, setHighlightColor] = useState("#ffff00");
+  // Active format state – updated on selection change
+  const [formatState, setFormatState] = useState({
+    bold: false,
+    italic: false,
+    underline: false,
+    strikeThrough: false,
+  });
   // Undo/redo stacks for editor content (HTML strings)
   const undoStackRef = useRef([]);
   const redoStackRef = useRef([]);
@@ -177,6 +233,13 @@ const TextField = ({
         ) {
           // store a clone of the range inside editor
           lastEditorRangeRef.current = sel.getRangeAt(0).cloneRange();
+          // update active format state
+          setFormatState({
+            bold: document.queryCommandState("bold"),
+            italic: document.queryCommandState("italic"),
+            underline: document.queryCommandState("underline"),
+            strikeThrough: document.queryCommandState("strikeThrough"),
+          });
         }
       } catch (err) {
         // ignore
@@ -282,6 +345,22 @@ const TextField = ({
     document.execCommand(cmd, false, val);
     editorRef.current.focus();
     handleInput();
+  };
+
+  // Restore last editor selection then apply a color command
+  const applyColorFormat = (cmd, color) => {
+    const range = lastEditorRangeRef.current;
+    if (
+      range &&
+      editorRef.current &&
+      editorRef.current.contains(range.commonAncestorContainer)
+    ) {
+      editorRef.current.focus();
+      restoreEditorSelection(range);
+    } else {
+      editorRef.current?.focus();
+    }
+    handleFormat(cmd, color);
   };
 
   const handleTitleChange = (e) => {
@@ -439,14 +518,14 @@ const TextField = ({
         if (isFullScreen) {
           onFullScreenChange?.(null);
         } else {
-          setIsEditMode(false);
+          stopEdit();
         }
       }
     };
 
     window.addEventListener("keydown", handleEscape);
     return () => window.removeEventListener("keydown", handleEscape);
-  }, [isEditMode, isFullScreen, onFullScreenChange]);
+  }, [isEditMode, isFullScreen, onFullScreenChange, stopEdit]);
 
   // --- Code note rendering ---
   if (noteType === "code") {
@@ -465,7 +544,7 @@ const TextField = ({
       <div
         className={`text-field code-note ${isEditMode ? "edit-mode" : "view-mode"}`}
         style={themeVars}
-        onClick={() => !isEditMode && setIsEditMode(true)}
+        onClick={() => !isEditMode && startEdit()}
       >
         {!isEditMode && (
           <div className="note-header">
@@ -512,7 +591,7 @@ const TextField = ({
             <div className="toolbar-actions">
               <Button
                 className="done-btn"
-                onClick={() => setIsEditMode(false)}
+                onClick={() => stopEdit()}
                 aria-label="Done editing"
               >
                 <svg
@@ -666,9 +745,48 @@ const TextField = ({
     >
       {/* Top bar with title and last modified - shown in view mode */}
       {!isEditMode && (
-        <div className="note-header" onClick={() => setIsEditMode(true)}>
+        <div className="note-header" onClick={() => startEdit()}>
           <div className="note-header-content">
-            <div className="note-title-display">{noteTitle || "New note"}</div>
+            <div className="note-header-top-row">
+              <div className="note-title-display">{noteTitle || "New note"}</div>
+              {folders.length > 0 && (
+                <div
+                  className="note-folder-badge-wrapper"
+                  ref={folderPickerRef}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <button
+                    className={`note-folder-badge${currentFolder ? " has-folder" : ""}`}
+                    onClick={() => setShowFolderPicker((v) => !v)}
+                    title={currentFolder ? `Folder: ${currentFolder.name}` : "Move to folder"}
+                  >
+                    <svg width="11" height="11" viewBox="0 0 15 15" fill="none" aria-hidden="true">
+                      <path d="M1.5 4.5C1.5 3.95 1.95 3.5 2.5 3.5H5.5L7 5H12.5C13.05 5 13.5 5.45 13.5 6V11C13.5 11.55 13.05 12 12.5 12H2.5C1.95 12 1.5 11.55 1.5 11V4.5Z" stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round" />
+                    </svg>
+                    <span>{currentFolder ? currentFolder.name : "folder"}</span>
+                  </button>
+                  {showFolderPicker && (
+                    <div className="note-folder-picker">
+                      <button
+                        className={`note-folder-picker-item${!folderId ? " active" : ""}`}
+                        onClick={() => { onMoveNote?.(null); setShowFolderPicker(false); }}
+                      >
+                        No folder
+                      </button>
+                      {folders.map((f) => (
+                        <button
+                          key={f.id}
+                          className={`note-folder-picker-item${String(folderId) === String(f.id) ? " active" : ""}`}
+                          onClick={() => { onMoveNote?.(f.id); setShowFolderPicker(false); }}
+                        >
+                          {f.name}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
             {lastModified && (
               <div className="note-last-modified-header">
                 Last modified: {formatRelative(lastModified)}
@@ -682,123 +800,163 @@ const TextField = ({
       {isEditMode && (
         <div className="toolbar">
           <div className="toolbar-scroll">
-            <button onClick={() => handleFormat("bold")}>
-              <b>B</b>
-            </button>
-            <button onClick={() => handleFormat("italic")}>
-              <i>I</i>
-            </button>
-            <button onClick={() => handleFormat("underline")}>
-              <u>U</u>
-            </button>
-            <button onClick={() => handleFormat("insertUnorderedList")}>
-              Bullet List
-            </button>
-            <button onClick={() => handleFormat("insertOrderedList")}>
-              Numbered List
-            </button>
-            <button onClick={() => handleFormat("formatBlock", "H1")}>
-              Heading
-            </button>
-            {/* Per-note font selector using shared Dropdown component */}
+            {/* ── Text formatting ── */}
+            <div className="toolbar-group">
+              <button
+                className={`format-btn${formatState.bold ? " is-active" : ""}`}
+                onClick={() => handleFormat("bold")}
+                title="Bold (⌘B)"
+              >
+                <b>B</b>
+              </button>
+              <button
+                className={`format-btn${formatState.italic ? " is-active" : ""}`}
+                onClick={() => handleFormat("italic")}
+                title="Italic (⌘I)"
+              >
+                <i>I</i>
+              </button>
+              <button
+                className={`format-btn${formatState.underline ? " is-active" : ""}`}
+                onClick={() => handleFormat("underline")}
+                title="Underline (⌘U)"
+              >
+                <u>U</u>
+              </button>
+              <button
+                className={`format-btn${formatState.strikeThrough ? " is-active" : ""}`}
+                onClick={() => handleFormat("strikeThrough")}
+                title="Strikethrough"
+              >
+                <s>S</s>
+              </button>
+            </div>
+
+            <div className="toolbar-divider" />
+
+            {/* ── Headings ── */}
+            <div className="toolbar-group">
+              <button className="format-btn format-btn--label" onClick={() => handleFormat("formatBlock", "H1")} title="Heading 1">H1</button>
+              <button className="format-btn format-btn--label" onClick={() => handleFormat("formatBlock", "H2")} title="Heading 2">H2</button>
+              <button className="format-btn format-btn--label" onClick={() => handleFormat("formatBlock", "H3")} title="Heading 3">H3</button>
+            </div>
+
+            <div className="toolbar-divider" />
+
+            {/* ── Lists ── */}
+            <div className="toolbar-group">
+              <button className="format-btn" onClick={() => handleFormat("insertUnorderedList")} title="Bullet List">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="4" cy="6" r="1.5" fill="currentColor" stroke="none" />
+                  <circle cx="4" cy="12" r="1.5" fill="currentColor" stroke="none" />
+                  <circle cx="4" cy="18" r="1.5" fill="currentColor" stroke="none" />
+                  <line x1="9" y1="6" x2="21" y2="6" /><line x1="9" y1="12" x2="21" y2="12" /><line x1="9" y1="18" x2="21" y2="18" />
+                </svg>
+              </button>
+              <button className="format-btn" onClick={() => handleFormat("insertOrderedList")} title="Numbered List">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="10" y1="6" x2="21" y2="6" /><line x1="10" y1="12" x2="21" y2="12" /><line x1="10" y1="18" x2="21" y2="18" />
+                  <text x="2" y="8" fontSize="6.5" fill="currentColor" stroke="none" fontFamily="monospace">1.</text>
+                  <text x="2" y="14" fontSize="6.5" fill="currentColor" stroke="none" fontFamily="monospace">2.</text>
+                  <text x="2" y="20" fontSize="6.5" fill="currentColor" stroke="none" fontFamily="monospace">3.</text>
+                </svg>
+              </button>
+            </div>
+
+            <div className="toolbar-divider" />
+
+            {/* ── Font & Size ── */}
             <div className="font-picker">
-              {/* Local options and labels: mono, inter, paper, handwritten */}
-              {/** Options ids match global theme keys used elsewhere **/}
-              {/** Dropdown will call setNoteFont with the id string **/}
               <Dropdown
                 options={FONT_OPTIONS}
                 value={noteFont}
-                onChange={(v) => {
-                  setNoteFont(v);
-                  if (onFontChange) onFontChange(v);
-                }}
+                onChange={(v) => { setNoteFont(v); if (onFontChange) onFontChange(v); }}
                 fontPreview={true}
                 fontMap={FONT_MAP}
               />
             </div>
-            {/* Per-note font-size selector */}
             <div className="font-size-picker">
               <Dropdown
                 options={FONT_SIZE_OPTIONS}
                 value={noteFontSize}
-                onChange={(v) => {
-                  const size = Number(v);
-                  setNoteFontSize(size);
-                  if (onFontSizeChange) onFontSizeChange(size);
-                }}
+                onChange={(v) => { const size = Number(v); setNoteFontSize(size); if (onFontSizeChange) onFontSizeChange(size); }}
               />
             </div>
-            {/* Per-note theme selector */}
+
+            <div className="toolbar-divider" />
+
+            {/* ── Colors ── */}
+            <div className="toolbar-group">
+              <div className="color-btn-wrapper">
+                <button className="format-btn color-btn" title="Text Color" onClick={() => textColorRef.current?.click()}>
+                  <span className="color-btn-label">A</span>
+                  <span className="color-indicator" style={{ background: textColor }} />
+                </button>
+                <input ref={textColorRef} type="color" value={textColor}
+                  onChange={(e) => { setTextColor(e.target.value); applyColorFormat("foreColor", e.target.value); }}
+                  className="hidden-color-input" />
+              </div>
+              <div className="color-btn-wrapper">
+                <button className="format-btn color-btn" title="Highlight Color" onClick={() => highlightColorRef.current?.click()}>
+                  <span className="color-btn-label" style={{ background: highlightColor, color: "#111", borderRadius: "2px", padding: "0 2px" }}>A</span>
+                  <span className="color-indicator" style={{ background: highlightColor }} />
+                </button>
+                <input ref={highlightColorRef} type="color" value={highlightColor}
+                  onChange={(e) => { setHighlightColor(e.target.value); applyColorFormat("hiliteColor", e.target.value); }}
+                  className="hidden-color-input" />
+              </div>
+            </div>
+
+            <div className="toolbar-divider" />
+
+            {/* ── Note color / theme ── */}
             <div className="theme-picker">
               <Dropdown
                 options={NOTE_THEME_OPTIONS}
                 value={noteTheme}
-                onChange={(v) => {
-                  setNoteTheme(v);
-                  if (onThemeChange) onThemeChange(v);
-                }}
+                onChange={(v) => { setNoteTheme(v); if (onThemeChange) onThemeChange(v); }}
               />
             </div>
           </div>
-          {/* pinned right-side actions (outside scroll area so they stay put) */}
+
+          {/* ── Pinned right-side actions ── */}
           <div className="toolbar-actions">
             <Button
               className="undo-btn"
               onClick={() => {
                 const active = document.activeElement;
-                const inTitle =
-                  active &&
-                  active.classList &&
-                  active.classList.contains("note-title-input");
+                const inTitle = active?.classList?.contains("note-title-input");
                 undo(inTitle);
               }}
               aria-label="Undo"
               title="Undo (⌘Z)"
             >
-              Undo
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M3 7v6h6" /><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13" />
+              </svg>
             </Button>
             <Button
               className="redo-btn"
               onClick={() => {
                 const active = document.activeElement;
-                const inTitle =
-                  active &&
-                  active.classList &&
-                  active.classList.contains("note-title-input");
+                const inTitle = active?.classList?.contains("note-title-input");
                 redo(inTitle);
               }}
               aria-label="Redo"
               title="Redo (⌘⇧Z)"
             >
-              Redo
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 7v6h-6" /><path d="M3 17a9 9 0 0 1 9-9 9 9 0 0 1 6 2.3L21 13" />
+              </svg>
             </Button>
             <Button
               className="done-btn"
-              onClick={() => setIsEditMode(false)}
+              onClick={() => stopEdit()}
               aria-label="Done editing"
             >
-              <svg
-                width="15"
-                height="15"
-                viewBox="0 0 50 50"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <line
-                  x1="10"
-                  y1="25"
-                  x2="25"
-                  y2="40"
-                  strokeWidth="5"
-                  strokeLinecap="round"
-                />
-                <line
-                  x1="25"
-                  y1="40"
-                  x2="40"
-                  y2="10"
-                  strokeWidth="5"
-                  strokeLinecap="round"
-                />
+              <svg width="15" height="15" viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg">
+                <line x1="10" y1="25" x2="25" y2="40" strokeWidth="5" strokeLinecap="round" />
+                <line x1="25" y1="40" x2="40" y2="10" strokeWidth="5" strokeLinecap="round" />
               </svg>{" "}
               Done
             </Button>
@@ -817,7 +975,7 @@ const TextField = ({
             document.execCommand("insertText", false, "  ");
           }
         }}
-        onClick={() => !isEditMode && setIsEditMode(true)}
+        onClick={() => !isEditMode && startEdit()}
         suppressContentEditableWarning
         aria-label="Note editor"
         placeholder="Tap to edit"

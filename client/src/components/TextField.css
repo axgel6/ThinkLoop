@@ -51,6 +51,116 @@
   min-width: 0;
 }
 
+/* Title row — holds title + folder badge side-by-side */
+.note-header-top-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+/* Folder badge wrapper (relative so dropdown anchors to it) */
+.note-folder-badge-wrapper {
+  position: relative;
+  flex-shrink: 0;
+  /* hidden until the header is hovered */
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.view-mode .note-header:hover .note-folder-badge-wrapper {
+  opacity: 1;
+}
+
+/* Always show when a folder is actually assigned */
+.note-folder-badge-wrapper:has(.note-folder-badge.has-folder) {
+  opacity: 1;
+}
+
+/* The folder chip button */
+.note-folder-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 9px 3px 7px;
+  border-radius: 20px;
+  border: 1px solid var(--panel-border, rgba(255,255,255,0.10));
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--muted, #888);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+  line-height: 1;
+}
+
+.note-folder-badge:hover {
+  background: rgba(255, 255, 255, 0.09);
+  border-color: rgba(255, 255, 255, 0.2);
+  color: var(--fg, #dcdcdc);
+}
+
+/* Assigned-folder variant — slightly more visible accent */
+.note-folder-badge.has-folder {
+  border-color: rgba(167, 139, 250, 0.35);
+  background: rgba(139, 92, 246, 0.10);
+  color: rgba(196, 181, 253, 0.9);
+}
+
+.note-folder-badge.has-folder:hover {
+  background: rgba(139, 92, 246, 0.18);
+  border-color: rgba(167, 139, 250, 0.55);
+  color: #c4b5fd;
+}
+
+/* Folder picker dropdown */
+.note-folder-picker {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  z-index: 500;
+  min-width: 160px;
+  background: rgba(18, 18, 22, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  border-radius: 12px;
+  padding: 4px;
+  box-shadow: 0 12px 36px rgba(0,0,0,0.55), 0 2px 8px rgba(0,0,0,0.3);
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  animation: menuFadeInDown 0.13s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes menuFadeInDown {
+  from { opacity: 0; transform: translateY(-5px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0)   scale(1); }
+}
+
+.note-folder-picker-item {
+  display: block;
+  width: 100%;
+  padding: 7px 11px;
+  background: none;
+  border: none;
+  border-radius: 8px;
+  color: var(--fg, #dcdcdc);
+  font-size: 12.5px;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.1s ease;
+  white-space: nowrap;
+}
+
+.note-folder-picker-item:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.note-folder-picker-item.active {
+  color: #c4b5fd;
+  background: rgba(139, 92, 246, 0.12);
+}
+
 .note-title-display {
   font-size: 14px;
   font-weight: 600;
@@ -77,19 +187,17 @@
 .toolbar {
   border-bottom: 1px solid var(--panel-border, rgba(255, 255, 255, 0.06));
   background: rgba(255, 255, 255, 0.015);
-  padding: 6px 10px;
+  padding: 5px 8px;
   display: flex;
   gap: 4px;
   align-items: center;
-  justify-content: start;
   border-radius: 20px 20px 0 0;
   position: relative;
-  padding-right: 10px;
 }
 
 .toolbar-scroll {
   display: flex;
-  gap: 4px;
+  gap: 3px;
   flex-wrap: nowrap;
   overflow-x: auto;
   overflow-y: hidden;
@@ -98,28 +206,135 @@
   touch-action: pan-x;
   overscroll-behavior-x: contain;
   width: 100%;
-  padding-right: 200px;
+  padding-right: 110px;
   align-items: center;
+  scrollbar-width: none;
 }
+
+.toolbar-scroll::-webkit-scrollbar { display: none; }
 
 .toolbar-scroll::after {
   content: "";
   display: inline-block;
-  width: 200px;
+  width: 110px;
   height: 1px;
+  flex-shrink: 0;
+}
+
+/* Toolbar groups */
+.toolbar-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 1px;
+  flex-shrink: 0;
+}
+
+/* Dividers between groups */
+.toolbar-divider {
+  width: 1px;
+  height: 18px;
+  background: rgba(255, 255, 255, 0.09);
+  margin: 0 5px;
+  flex-shrink: 0;
+  align-self: center;
+}
+
+/* Format buttons (B/I/U/S, H1/H2, lists, etc.) */
+.format-btn {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  padding: 0;
+  border-radius: 7px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted, #888);
+  line-height: 1;
+  transition: background 0.12s ease, color 0.12s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+  user-select: none;
+}
+
+.format-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--fg, #ddd);
+}
+
+.format-btn.is-active {
+  background: rgba(255, 255, 255, 0.13);
+  color: var(--fg, #eee);
+}
+
+.format-btn--label {
+  width: auto;
+  padding: 0 7px;
+  font-size: 11px;
+  letter-spacing: 0.02em;
+}
+
+.format-btn svg {
+  stroke: currentColor;
+  flex-shrink: 0;
+}
+
+/* Color picker buttons */
+.color-btn-wrapper {
+  position: relative;
+  display: inline-flex;
+}
+
+.color-btn {
+  flex-direction: column;
+  gap: 2px;
+  width: 28px;
+  height: 28px;
+}
+
+.color-btn-label {
+  font-size: 12px;
+  font-weight: 700;
+  font-family: Georgia, serif;
+  line-height: 1;
+}
+
+.color-indicator {
+  display: block;
+  width: 16px;
+  height: 3px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.hidden-color-input {
+  position: absolute;
+  width: 0;
+  height: 0;
+  opacity: 0;
+  pointer-events: none;
 }
 
 /* Pinned toolbar actions */
 .toolbar-actions {
   display: inline-flex;
-  gap: 4px;
+  gap: 3px;
   align-items: center;
   position: absolute;
-  right: 10px;
+  right: 8px;
   top: 50%;
   transform: translateY(-50%);
   z-index: 40;
   pointer-events: none;
+  background: var(--panel-bg-solid, rgba(18, 18, 18, 0.92));
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-radius: 12px;
+  padding: 3px 4px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .toolbar-actions > * {
@@ -127,23 +342,18 @@
 }
 
 .toolbar-actions .undo-btn,
-.toolbar-actions .redo-btn,
-.toolbar-actions .done-btn {
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 10px;
-  padding: 4px 10px;
-  font-size: 11px;
-  font-weight: 500;
-  letter-spacing: 0.02em;
-  color: var(--muted, #999);
+.toolbar-actions .redo-btn {
+  background: transparent;
+  border: none;
+  border-radius: 7px;
+  padding: 0;
+  width: 26px;
+  height: 26px;
+  color: var(--muted, #777);
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 4px;
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  transition: background 0.15s ease, color 0.15s ease;
+  transition: background 0.12s ease, color 0.12s ease;
 }
 
 .toolbar-actions .undo-btn:hover,
@@ -154,47 +364,25 @@
 }
 
 .toolbar-actions .done-btn {
-  background: rgba(255, 255, 255, 0.06);
-  border-color: rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.11);
+  border-radius: 8px;
+  padding: 3px 10px;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
   color: var(--fg, #ccc);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  transition: background 0.12s ease, color 0.12s ease;
 }
 
 .toolbar-actions .done-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: var(--fg, #e8e8e8);
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--fg, #eee);
   box-shadow: none;
-}
-
-.toolbar-actions .done-btn svg {
-  stroke: currentColor;
-  fill: none;
-  stroke-linejoin: round;
-  stroke-linecap: round;
-}
-
-/* Toolbar buttons */
-.toolbar button {
-  border: 1px solid rgba(255, 255, 255, 0.07);
-  background: transparent;
-  cursor: pointer;
-  padding: 4px 10px;
-  border-radius: 10px;
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--muted, #888);
-  letter-spacing: 0.02em;
-  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
-  flex: 0 0 auto;
-  max-width: 120px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.toolbar button:hover {
-  background: rgba(255, 255, 255, 0.06);
-  border-color: rgba(255, 255, 255, 0.13);
-  color: var(--fg, #ddd);
 }
 
 .toolbar-actions svg {
@@ -211,15 +399,17 @@
   display: inline-flex;
   align-items: center;
   position: relative;
+  flex-shrink: 0;
 }
 
 .font-picker .custom-select-button,
 .theme-picker .custom-select-button,
 .font-size-picker .custom-select-button {
   background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.07);
-  padding: 4px 10px;
-  border-radius: 10px;
+  border: none;
+  padding: 0 8px;
+  height: 28px;
+  border-radius: 7px;
   font-size: 12px;
   font-weight: 500;
   letter-spacing: 0.02em;
@@ -227,21 +417,23 @@
   cursor: pointer;
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  transition: background 0.15s ease, color 0.15s ease;
+  gap: 4px;
+  transition: background 0.12s ease, color 0.12s ease;
 }
 
 .font-picker .custom-select-button:hover,
 .theme-picker .custom-select-button:hover,
 .font-size-picker .custom-select-button:hover {
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.08);
   color: var(--fg, #ddd);
   box-shadow: none;
 }
 
-.font-picker .custom-select-button .chev {
-  opacity: 0.5;
-  margin-left: 4px;
+.font-picker .custom-select-button .chev,
+.theme-picker .custom-select-button .chev,
+.font-size-picker .custom-select-button .chev {
+  opacity: 0.45;
+  margin-left: 2px;
 }
 
 /* Dropdown z-index override */
@@ -324,9 +516,10 @@
 @media (max-width: 640px) {
   .editor { padding: 10px 14px; padding-left: 24px; }
   .editor ol, .editor ul { padding-left: 1.2em; }
-  .toolbar { padding-right: 8px; }
-  .toolbar-scroll { padding-right: 160px; }
-  .toolbar-scroll::after { width: 160px; }
+  .toolbar { padding: 4px 6px; }
+  .toolbar-scroll { padding-right: 95px; }
+  .toolbar-scroll::after { width: 95px; }
+  .format-btn { width: 26px; height: 26px; }
 }
 
 /* ── Code note ─────────────────────────────────────────────────── */

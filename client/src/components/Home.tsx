@@ -8,7 +8,7 @@ const API_URL = process.env.REACT_APP_API_URL || "http://localhost:3000";
 // --- Types ---
 interface HomeProps {
   weatherCity?: string;
-  currentUser?: { id?: string | number } | null;
+  currentUser?: { id?: string | number; username?: string; name?: string } | null;
   pomodoroTime?: number;
   isRunning?: boolean;
   isWorkSession?: boolean;
@@ -77,14 +77,16 @@ interface WidgetConfig {
 }
 
 const DEFAULT_WIDGET_CONFIG: WidgetConfig[] = [
-  { id: "today",       label: "Today",          visible: true, size: "full" },
-  { id: "pinned",      label: "Pinned Notes",   visible: true, size: "full" },
-  { id: "tasks",       label: "Tasks",          visible: true, size: "full" },
-  { id: "quick-note",  label: "Quick Note",     visible: true, size: "full" },
+  { id: "today",       label: "Today",          visible: true, size: "half" },
+  { id: "pinned",      label: "Pinned Notes",   visible: true, size: "half" },
+  { id: "tasks",       label: "Tasks",          visible: true, size: "half" },
+  { id: "quick-note",  label: "Quick Note",     visible: true, size: "half" },
   { id: "focus-stats", label: "Focus Stats",    visible: true, size: "full" },
-  { id: "countdowns",  label: "Countdowns",     visible: true, size: "full" },
+  { id: "countdowns",  label: "Countdowns",     visible: true, size: "half" },
   { id: "pomodoro",    label: "Pomodoro Timer", visible: true, size: "full" },
 ];
+
+const WIDGET_CONFIG_KEY = "home:widget-config-v2";
 
 // --- Date helpers ---
 const MONTHS = [
@@ -250,6 +252,38 @@ const PencilIcon = () => (
   </svg>
 );
 
+const CalendarIcon = () => (
+  <svg
+    width="13"
+    height="13"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+    <line x1="16" y1="2" x2="16" y2="6" />
+    <line x1="8" y1="2" x2="8" y2="6" />
+    <line x1="3" y1="10" x2="21" y2="10" />
+  </svg>
+);
+const CloudIcon = () => (
+  <svg
+    width="13"
+    height="13"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z" />
+  </svg>
+);
+
 // --- Main Component ---
 export default function Home({
   weatherCity,
@@ -268,6 +302,13 @@ export default function Home({
   handlePomodoroReset = () => {},
   handlePomodoroSkip = () => {},
 }: HomeProps) {
+  const getGreeting = () => {
+    const h = new Date().getHours();
+    if (h < 12) return "Good morning";
+    if (h < 17) return "Good afternoon";
+    return "Good evening";
+  };
+
   const [now, setNow] = useState<Date>(new Date());
   const [pinnedNotes, setPinnedNotes] = useState<Note[]>([]);
   const [expandedNote, setExpandedNote] = useState<Note | null>(null);
@@ -309,7 +350,7 @@ export default function Home({
   const [widgetConfig, setWidgetConfig] = useState<WidgetConfig[]>(() => {
     try {
       const saved: WidgetConfig[] | null = JSON.parse(
-        localStorage.getItem("home:widget-config") || "null",
+        localStorage.getItem(WIDGET_CONFIG_KEY) || "null",
       );
       if (!Array.isArray(saved)) return DEFAULT_WIDGET_CONFIG;
       const savedIds = new Set(saved.map((w) => w.id));
@@ -634,7 +675,7 @@ export default function Home({
   }, [countdowns]);
   useEffect(() => {
     try {
-      localStorage.setItem("home:widget-config", JSON.stringify(widgetConfig));
+      localStorage.setItem(WIDGET_CONFIG_KEY, JSON.stringify(widgetConfig));
     } catch {}
   }, [widgetConfig]);
 
@@ -649,8 +690,14 @@ export default function Home({
       >
         <h2>Today</h2>
         <div className="home-info-time">{currentTime}</div>
-        <Weather city={weatherCity} />
-        <div className="home-info-date">{getCurrentDateLabel()}</div>
+        <div className="home-info-date-row">
+          <CalendarIcon />
+          <span className="home-info-date">{getCurrentDateLabel()}</span>
+        </div>
+        <div className="home-info-weather-row">
+          <CloudIcon />
+          <Weather city={weatherCity} />
+        </div>
       </div>
     ),
 
@@ -720,7 +767,6 @@ export default function Home({
             placeholder="Write something down..."
             value={quickNoteText}
             onChange={(e) => setQuickNoteText(e.target.value)}
-            rows={3}
           />
           <button
             type="submit"
@@ -942,6 +988,12 @@ export default function Home({
   };
 
   return (
+    <div id="home-wrapper">
+      <div className="home-welcome-banner">
+        <span className="home-welcome-greeting">
+          {getGreeting()}{currentUser ? `, ${currentUser.name || currentUser.username}` : ""}
+        </span>
+      </div>
     <div id="home-content">
       {/* Render widgets in configured order */}
       {widgetConfig.filter((w) => w.visible).map((w) => (
@@ -954,7 +1006,7 @@ export default function Home({
       ))}
 
       {/* Edit widgets button */}
-      <div className="widget-cell widget-cell-full">
+      <div className="widget-cell widget-cell-row">
         <button
           className="home-edit-btn"
           onClick={() => setIsEditingWidgets(true)}
@@ -1235,6 +1287,7 @@ export default function Home({
           </div>
         </div>
       )}
+    </div>
     </div>
   );
 }

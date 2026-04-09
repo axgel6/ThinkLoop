@@ -12,52 +12,26 @@ import "./FolderSidebar.css";
 // causing React to unmount/remount children (losing focus in editors).
 const NoteItem = React.memo(function NoteItem({
   note,
-  updateNoteContent,
-  updateNoteTitle,
-  updateNoteFont,
-  updateNoteTheme,
-  updateNoteFontSize,
-  updateNoteLanguage,
+  updateNote,
   handleRemove,
   isPinned,
   onTogglePin,
   folders,
   onMoveNote,
+  isEditing,
+  onRequestEdit,
+  onExitEdit,
 }) {
-  const onChange = useCallback(
-    (val) => updateNoteContent(note.id, val),
-    [note.id, updateNoteContent],
-  );
-  const onTitleChange = useCallback(
-    (t) => updateNoteTitle(note.id, t),
-    [note.id, updateNoteTitle],
-  );
-  const onFontChange = useCallback(
-    (f) => updateNoteFont(note.id, f),
-    [note.id, updateNoteFont],
-  );
-  const onFontSizeChange = useCallback(
-    (sz) => updateNoteFontSize(note.id, sz),
-    [note.id, updateNoteFontSize],
-  );
-  const onThemeChange = useCallback(
-    (th) => updateNoteTheme(note.id, th),
-    [note.id, updateNoteTheme],
-  );
-  const onLanguageChange = useCallback(
-    (lang) => updateNoteLanguage(note.id, lang),
-    [note.id, updateNoteLanguage],
-  );
-  const onRemove = useCallback(
-    () => handleRemove(note.id),
-    [note.id, handleRemove],
-  );
+  const onChange = useCallback((val) => updateNote(note.id, { content: val }), [note.id, updateNote]);
+  const onTitleChange = useCallback((t) => updateNote(note.id, { title: t }), [note.id, updateNote]);
+  const onFontChange = useCallback((f) => updateNote(note.id, { font: f }), [note.id, updateNote]);
+  const onFontSizeChange = useCallback((sz) => updateNote(note.id, { fontSize: Number(sz) }), [note.id, updateNote]);
+  const onThemeChange = useCallback((th) => updateNote(note.id, { theme: th }), [note.id, updateNote]);
+  const onLanguageChange = useCallback((lang) => updateNote(note.id, { language: lang }), [note.id, updateNote]);
+  const onRemove = useCallback(() => handleRemove(note.id), [note.id, handleRemove]);
 
-  const handleFolderChange = useCallback(
-    (e) => {
-      const value = e.target.value;
-      onMoveNote(note.id, value === "" ? null : value);
-    },
+  const handleMoveTo = useCallback(
+    (folderId) => onMoveNote(note.id, folderId),
     [note.id, onMoveNote],
   );
 
@@ -82,26 +56,13 @@ const NoteItem = React.memo(function NoteItem({
         onRemove={onRemove}
         isPinned={isPinned}
         onTogglePin={() => onTogglePin(note.id)}
+        isEditing={isEditing}
+        onRequestEdit={onRequestEdit}
+        onExitEdit={onExitEdit}
+        folders={folders}
+        folderId={note.folderId}
+        onMoveNote={handleMoveTo}
       />
-      {folders && folders.length > 0 && (
-        <div className="note-folder-row">
-          <span className="note-folder-label">📁</span>
-          <select
-            className="move-note-select"
-            value={note.folderId || ""}
-            onChange={handleFolderChange}
-            title="Move note to folder"
-            aria-label="Move note to folder"
-          >
-            <option value="">No folder</option>
-            {folders.map((f) => (
-              <option key={f.id} value={f.id}>
-                {f.name}
-              </option>
-            ))}
-          </select>
-        </div>
-      )}
     </div>
   );
 });
@@ -112,9 +73,11 @@ const NotesHandler = ({ currentUser }) => {
   const [notes, setNotes] = useState([]);
   const [folders, setFolders] = useState([]);
   const [selectedFolderId, setSelectedFolderId] = useState(null);
+  const [editingNoteId, setEditingNoteId] = useState(null);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [showOCRModal, setShowOCRModal] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [ocrImage, setOcrImage] = useState(null);
   const [ocrText, setOcrText] = useState("");
   const [ocrLoading, setOcrLoading] = useState(false);
@@ -587,151 +550,22 @@ const NotesHandler = ({ currentUser }) => {
     [currentUser, pinnedIds],
   );
 
-  const updateNoteContent = useCallback(
-    async (id, content) => {
-      // Always update locally
+  const updateNote = useCallback(
+    async (id, patch) => {
       setNotes((prev) =>
         prev.map((n) =>
-          n.id === id ? { ...n, content, lastModified: Date.now() } : n,
+          n.id === id ? { ...n, ...patch, lastModified: Date.now() } : n,
         ),
       );
-
-      // Only update server if logged in
       if (!currentUser) return;
-
       try {
         await fetch(`${API_URL}/notes/${id}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ content }),
+          body: JSON.stringify(patch),
         });
       } catch (error) {
-        console.error("Failed to update note content:", error);
-      }
-    },
-    [currentUser],
-  );
-
-  const updateNoteTitle = useCallback(
-    async (id, title) => {
-      // Always update locally
-      setNotes((prev) =>
-        prev.map((n) =>
-          n.id === id ? { ...n, title, lastModified: Date.now() } : n,
-        ),
-      );
-
-      // Only update server if logged in
-      if (!currentUser) return;
-
-      try {
-        await fetch(`${API_URL}/notes/${id}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ title }),
-        });
-      } catch (error) {
-        console.error("Failed to update note title:", error);
-      }
-    },
-    [currentUser],
-  );
-
-  const updateNoteFont = useCallback(
-    async (id, font) => {
-      // Always update locally
-      setNotes((prev) =>
-        prev.map((n) =>
-          n.id === id ? { ...n, font, lastModified: Date.now() } : n,
-        ),
-      );
-
-      // Only update server if logged in
-      if (!currentUser) return;
-
-      try {
-        await fetch(`${API_URL}/notes/${id}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ font }),
-        });
-      } catch (error) {
-        console.error("Failed to update note font:", error);
-      }
-    },
-    [currentUser],
-  );
-
-  const updateNoteTheme = useCallback(
-    async (id, theme) => {
-      // Always update locally
-      setNotes((prev) =>
-        prev.map((n) =>
-          n.id === id ? { ...n, theme, lastModified: Date.now() } : n,
-        ),
-      );
-
-      // Only update server if logged in
-      if (!currentUser) return;
-
-      try {
-        await fetch(`${API_URL}/notes/${id}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ theme }),
-        });
-      } catch (error) {
-        console.error("Failed to update note theme:", error);
-      }
-    },
-    [currentUser],
-  );
-
-  const updateNoteFontSize = useCallback(
-    async (id, fontSize) => {
-      // Always update locally
-      setNotes((prev) =>
-        prev.map((n) =>
-          n.id === id
-            ? { ...n, fontSize: Number(fontSize), lastModified: Date.now() }
-            : n,
-        ),
-      );
-
-      // Only update server if logged in
-      if (!currentUser) return;
-
-      try {
-        await fetch(`${API_URL}/notes/${id}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ fontSize: Number(fontSize) }),
-        });
-      } catch (error) {
-        console.error("Failed to update note font size:", error);
-      }
-    },
-    [currentUser],
-  );
-
-  const updateNoteLanguage = useCallback(
-    async (id, language) => {
-      setNotes((prev) =>
-        prev.map((n) =>
-          n.id === id ? { ...n, language, lastModified: Date.now() } : n,
-        ),
-      );
-
-      if (!currentUser) return;
-
-      try {
-        await fetch(`${API_URL}/notes/${id}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ language }),
-        });
-      } catch (error) {
-        console.error("Failed to update note language:", error);
+        console.error("Failed to update note:", error);
       }
     },
     [currentUser],
@@ -785,16 +619,31 @@ const NotesHandler = ({ currentUser }) => {
           <FolderSidebar
             folders={folders}
             selectedFolderId={selectedFolderId}
-            onSelectFolder={setSelectedFolderId}
+            onSelectFolder={(id) => { setSelectedFolderId(id); setSidebarOpen(false); }}
             onCreateFolder={handleCreateFolder}
             onRenameFolder={handleRenameFolder}
             onDeleteFolder={handleDeleteFolder}
             onMoveFolder={handleMoveFolder}
+            isOpen={sidebarOpen}
+            onClose={() => setSidebarOpen(false)}
           />
         )}
         <div className="notes-main">
       <div className="notes-toolbar">
         <div className="notes-toolbar-left">
+          {currentUser && (
+            <button
+              className="folder-sidebar-toggle"
+              onClick={() => setSidebarOpen(true)}
+              aria-label="Open folders"
+            >
+              <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
+                <line x1="2" y1="4.5" x2="16" y2="4.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
+                <line x1="2" y1="9" x2="16" y2="9" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
+                <line x1="2" y1="13.5" x2="16" y2="13.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
+              </svg>
+            </button>
+          )}
           <input
             className="notes-search"
             type="search"
@@ -925,17 +774,15 @@ const NotesHandler = ({ currentUser }) => {
           <NoteItem
             key={n.id}
             note={n}
-            updateNoteContent={updateNoteContent}
-            updateNoteTitle={updateNoteTitle}
-            updateNoteFont={updateNoteFont}
-            updateNoteTheme={updateNoteTheme}
-            updateNoteFontSize={updateNoteFontSize}
-            updateNoteLanguage={updateNoteLanguage}
+            updateNote={updateNote}
             handleRemove={handleRemove}
             isPinned={pinnedIds.includes(String(n.id))}
             onTogglePin={handleTogglePin}
             folders={folders}
             onMoveNote={handleMoveNote}
+            isEditing={editingNoteId === n.id}
+            onRequestEdit={() => setEditingNoteId(n.id)}
+            onExitEdit={() => setEditingNoteId(null)}
           />
         ))
       )}

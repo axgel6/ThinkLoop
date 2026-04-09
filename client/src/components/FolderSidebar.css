@@ -6,18 +6,91 @@
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  padding: 10px 8px;
-  border-radius: 16px;
-  border: 1px solid var(--panel-border, rgba(255, 255, 255, 0.07));
-  background: var(--panel-bg, rgba(20, 20, 20, 0.5));
-  backdrop-filter: blur(10px) saturate(140%);
-  -webkit-backdrop-filter: blur(10px) saturate(140%);
+  gap: 1px;
+  padding: 14px 10px;
+  border-radius: 18px;
+  border: 1px solid var(--panel-border, rgba(255, 255, 255, 0.08));
+  background: var(--panel-bg, rgba(25, 25, 25, 0.4));
+  backdrop-filter: blur(6px) saturate(150%);
+  -webkit-backdrop-filter: blur(6px) saturate(150%);
   overflow-y: auto;
-  max-height: calc(100vh - 120px);
+  scrollbar-width: none;
+  /* leave clearance for the fixed bottom navbar */
+  height: calc(100vh - 110px);
   position: sticky;
-  top: 10px;
+  top: 16px;
   align-self: flex-start;
+  box-sizing: border-box;
+  transition: width 0.22s cubic-bezier(0.4, 0, 0.2, 1),
+              min-width 0.22s cubic-bezier(0.4, 0, 0.2, 1),
+              max-width 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow-x: hidden;
+}
+
+/* Collapsed state — narrow icon rail */
+.folder-sidebar--collapsed {
+  width: 48px;
+  min-width: 48px;
+  max-width: 48px;
+  padding: 14px 8px;
+}
+
+/* Hide text labels when collapsed */
+.folder-sidebar--collapsed .folder-name,
+.folder-sidebar--collapsed .folder-rename-input,
+.folder-sidebar--collapsed .folder-empty,
+.folder-sidebar--collapsed .folder-collapse-btn,
+.folder-sidebar--collapsed .folder-menu-btn {
+  display: none;
+}
+
+/* Center icons when collapsed */
+.folder-sidebar--collapsed .folder-row,
+.folder-sidebar--collapsed .folder-all-notes {
+  justify-content: center;
+  padding: 6px 4px;
+}
+
+/* Collapse/expand toggle button */
+.folder-sidebar-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.folder-collapse-toggle {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--muted, #777);
+  width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 7px;
+  flex-shrink: 0;
+  transition: background 0.12s ease, color 0.12s ease;
+  padding: 0;
+}
+
+.folder-collapse-toggle:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--fg, #dcdcdc);
+}
+
+/* When collapsed, center the toggle in the header */
+.folder-sidebar--collapsed .folder-sidebar-header {
+  justify-content: center;
+  padding-bottom: 10px;
+}
+
+.folder-sidebar--collapsed .folder-sidebar-header-actions {
+  justify-content: center;
+}
+
+.folder-sidebar::-webkit-scrollbar {
+  display: none;
 }
 
 /* Sidebar header */
@@ -25,41 +98,43 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 2px 4px 8px 4px;
+  padding: 0 4px 10px 4px;
   border-bottom: 1px solid var(--panel-border, rgba(255, 255, 255, 0.07));
   margin-bottom: 4px;
+  flex-shrink: 0;
 }
 
 .folder-sidebar-title {
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
-  color: var(--muted, #888);
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  color: var(--fg, #dcdcdc);
+  letter-spacing: 0.01em;
 }
 
 .folder-new-btn {
   padding: 4px 6px !important;
   min-width: 26px !important;
   min-height: 26px !important;
+  border-radius: 8px !important;
 }
 
 /* "All Notes" row */
 .folder-all-notes {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   padding: 6px 8px;
-  border-radius: 8px;
+  border-radius: 10px;
   cursor: pointer;
   font-size: 13px;
   color: var(--fg, #dcdcdc);
-  transition: background 0.12s ease;
+  transition: background 0.15s ease;
   user-select: none;
+  margin-bottom: 2px;
 }
 
 .folder-all-notes:hover {
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.07);
 }
 
 /* Folder tree node */
@@ -71,23 +146,23 @@
   display: flex;
   align-items: center;
   gap: 5px;
-  padding: 5px 6px;
-  border-radius: 8px;
+  padding: 6px 8px;
+  border-radius: 10px;
   cursor: pointer;
   font-size: 13px;
   color: var(--fg, #dcdcdc);
-  transition: background 0.12s ease;
+  transition: background 0.15s ease;
   user-select: none;
   position: relative;
 }
 
 .folder-row:hover {
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.07);
 }
 
 .folder-row--selected {
-  background: rgba(255, 255, 255, 0.1) !important;
-  color: var(--fg, #ffffff);
+  background: rgba(255, 255, 255, 0.11) !important;
+  color: #ffffff;
 }
 
 /* Collapse toggle button */
@@ -96,26 +171,42 @@
   border: none;
   padding: 0;
   cursor: pointer;
-  color: var(--muted, #888);
-  font-size: 9px;
-  width: 14px;
-  height: 14px;
+  color: var(--muted, #777);
+  width: 16px;
+  height: 16px;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  border-radius: 3px;
-  transition: background 0.1s ease;
+  border-radius: 4px;
+  transition: background 0.12s ease, color 0.12s ease;
 }
 
 .folder-collapse-btn:hover {
   background: rgba(255, 255, 255, 0.1);
+  color: var(--fg, #dcdcdc);
+}
+
+.folder-collapse-btn svg {
+  transition: transform 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.folder-collapse-btn.collapsed svg {
+  transform: rotate(-90deg);
 }
 
 /* Folder icon */
 .folder-icon {
-  font-size: 14px;
+  display: flex;
+  align-items: center;
   flex-shrink: 0;
+  color: var(--muted, #888);
+  transition: color 0.15s ease;
+}
+
+.folder-row--selected .folder-icon,
+.folder-all-notes.folder-row--selected .folder-icon {
+  color: var(--fg, #dcdcdc);
 }
 
 /* Folder name */
@@ -131,14 +222,16 @@
 .folder-menu-btn {
   background: none;
   border: none;
-  color: var(--muted, #888);
+  color: var(--muted, #777);
   cursor: pointer;
-  font-size: 16px;
-  padding: 0 3px;
-  line-height: 1;
-  border-radius: 5px;
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
   opacity: 0;
-  transition: opacity 0.1s ease, background 0.1s ease;
+  transition: opacity 0.12s ease, background 0.12s ease, color 0.12s ease;
   flex-shrink: 0;
 }
 
@@ -156,76 +249,112 @@
 .folder-rename-input {
   flex: 1;
   background: rgba(255, 255, 255, 0.07);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 7px;
   color: var(--fg, #dcdcdc);
   font-size: 13px;
-  padding: 2px 6px;
+  padding: 3px 7px;
   outline: none;
   min-width: 0;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
 .folder-rename-input:focus {
-  border-color: rgba(255, 255, 255, 0.3);
+  border-color: rgba(255, 255, 255, 0.28);
   box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.05);
 }
 
 /* Context menu */
 .folder-menu {
   position: absolute;
-  top: 100%;
+  top: calc(100% + 2px);
   right: 0;
   z-index: 200;
-  background: var(--panel-bg, #1a1a1a);
+  background: var(--panel-bg-solid, rgba(30, 30, 30, 0.97));
   border: 1px solid var(--panel-border, rgba(255, 255, 255, 0.1));
-  border-radius: 10px;
+  border-radius: 12px;
   padding: 4px;
-  min-width: 160px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  min-width: 165px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45), 0 2px 8px rgba(0, 0, 0, 0.25);
+  backdrop-filter: blur(12px) saturate(150%);
+  -webkit-backdrop-filter: blur(12px) saturate(150%);
+  animation: menuFadeIn 0.12s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes menuFadeIn {
+  from { opacity: 0; transform: translateY(-4px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 .folder-menu-item {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   width: 100%;
   padding: 7px 10px;
   background: none;
   border: none;
-  border-radius: 7px;
+  border-radius: 8px;
   color: var(--fg, #dcdcdc);
-  font-size: 12px;
+  font-size: 13px;
   cursor: pointer;
   text-align: left;
   transition: background 0.1s ease;
   white-space: nowrap;
 }
 
+.folder-menu-item svg {
+  flex-shrink: 0;
+  color: var(--muted, #888);
+}
+
 .folder-menu-item:hover {
   background: rgba(255, 255, 255, 0.08);
 }
 
+.folder-menu-item:hover svg {
+  color: var(--fg, #dcdcdc);
+}
+
+.folder-menu-divider {
+  height: 1px;
+  background: var(--panel-border, rgba(255, 255, 255, 0.07));
+  margin: 3px 6px;
+}
+
 .folder-menu-item--danger {
-  color: rgba(255, 150, 150, 0.9);
+  color: rgba(255, 130, 130, 0.9);
+}
+
+.folder-menu-item--danger svg {
+  color: rgba(255, 130, 130, 0.7);
 }
 
 .folder-menu-item--danger:hover {
-  background: rgba(190, 30, 30, 0.25);
+  background: rgba(200, 40, 40, 0.2);
+}
+
+.folder-menu-item--danger:hover svg {
+  color: rgba(255, 130, 130, 0.9);
 }
 
 /* Move submenu */
 .folder-move-submenu {
-  margin-left: 8px;
-  border-left: 1px solid rgba(255, 255, 255, 0.06);
+  margin: 2px 0 0 0;
+  border-top: 1px solid var(--panel-border, rgba(255, 255, 255, 0.07));
+  padding-top: 2px;
   max-height: 180px;
   overflow-y: auto;
 }
 
 .folder-move-item {
-  padding-left: 12px;
-  font-size: 11px;
+  padding-left: 18px;
+  font-size: 12px;
+  color: var(--muted, #9a9a9a);
+}
+
+.folder-move-item:hover {
+  color: var(--fg, #dcdcdc);
 }
 
 /* Children indentation */
@@ -237,24 +366,25 @@
 .folder-new-input-row {
   display: flex;
   align-items: center;
-  gap: 5px;
-  padding: 5px 6px;
+  gap: 8px;
+  padding: 5px 8px;
 }
 
 /* Empty state */
 .folder-empty {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--muted, #666);
   text-align: center;
-  padding: 8px 4px;
+  padding: 10px 4px;
   margin: 0;
 }
 
 /* Notes layout when sidebar is present */
 .notes-layout {
   display: flex;
-  gap: 16px;
+  gap: 18px;
   align-items: flex-start;
+  padding-top: 20px;
 }
 
 .notes-main {
@@ -293,4 +423,86 @@
 .folder-breadcrumb-sep {
   color: var(--muted, #666);
   opacity: 0.5;
+}
+
+/* ── Hamburger toggle (mobile only) ── */
+.folder-sidebar-toggle {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  color: var(--fg, #dcdcdc);
+  cursor: pointer;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  flex-shrink: 0;
+  transition: background 0.15s ease;
+}
+.folder-sidebar-toggle:hover {
+  background: rgba(255,255,255,0.08);
+}
+
+/* ── Mobile drawer ── */
+@media (max-width: 640px) {
+  .folder-sidebar-toggle {
+    display: flex;
+  }
+
+  .folder-sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100dvh;
+    width: 75vw;
+    max-width: 280px;
+    min-width: 0;
+    border-radius: 0 18px 18px 0;
+    z-index: 500;
+    transform: translateX(-105%);
+    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    padding-top: 24px;
+  }
+
+  .folder-sidebar--open {
+    transform: translateX(0);
+  }
+
+  .folder-sidebar-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 499;
+    background: rgba(0, 0, 0, 0.55);
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
+    animation: backdropFadeIn 0.2s ease;
+  }
+
+  @keyframes backdropFadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+
+  /* Always show menu button on touch — no hover needed */
+  .folder-menu-btn {
+    opacity: 1;
+  }
+
+  /* Bigger touch targets for folder rows */
+  .folder-row,
+  .folder-all-notes {
+    padding: 10px 8px;
+    min-height: 44px;
+  }
+
+  .folder-menu-btn {
+    width: 36px;
+    height: 36px;
+  }
+
+  /* Hide sidebar from normal flow on mobile */
+  .notes-layout .folder-sidebar:not(.folder-sidebar--open) {
+    pointer-events: none;
+  }
 }
