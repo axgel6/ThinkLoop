@@ -4,6 +4,8 @@ import TextField from "./TextField";
 import "./NotesHandler.css";
 import "./ocr-styles.css";
 import Button from "./Button";
+import FolderSidebar from "./FolderSidebar";
+import "./FolderSidebar.css";
 
 // Stable NoteItem component defined outside the parent to avoid remounts on each render.
 // Defining a memoized component inside a parent recreates its type every render,
@@ -19,6 +21,8 @@ const NoteItem = React.memo(function NoteItem({
   handleRemove,
   isPinned,
   onTogglePin,
+  folders,
+  onMoveNote,
 }) {
   const onChange = useCallback(
     (val) => updateNoteContent(note.id, val),
@@ -49,6 +53,14 @@ const NoteItem = React.memo(function NoteItem({
     [note.id, handleRemove],
   );
 
+  const handleFolderChange = useCallback(
+    (e) => {
+      const value = e.target.value;
+      onMoveNote(note.id, value === "" ? null : value);
+    },
+    [note.id, onMoveNote],
+  );
+
   return (
     <div className="note-item">
       <TextField
@@ -71,6 +83,25 @@ const NoteItem = React.memo(function NoteItem({
         isPinned={isPinned}
         onTogglePin={() => onTogglePin(note.id)}
       />
+      {folders && folders.length > 0 && (
+        <div className="note-folder-row">
+          <span className="note-folder-label">📁</span>
+          <select
+            className="move-note-select"
+            value={note.folderId || ""}
+            onChange={handleFolderChange}
+            title="Move note to folder"
+            aria-label="Move note to folder"
+          >
+            <option value="">No folder</option>
+            {folders.map((f) => (
+              <option key={f.id} value={f.id}>
+                {f.name}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
     </div>
   );
 });
@@ -79,6 +110,8 @@ const API_URL = process.env.REACT_APP_API_URL || "http://localhost:3000";
 
 const NotesHandler = ({ currentUser }) => {
   const [notes, setNotes] = useState([]);
+  const [folders, setFolders] = useState([]);
+  const [selectedFolderId, setSelectedFolderId] = useState(null);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [showOCRModal, setShowOCRModal] = useState(false);
@@ -195,6 +228,137 @@ const NotesHandler = ({ currentUser }) => {
     fetchNotes();
   }, [fetchNotes]);
 
+  // Fetch folders when logged in
+  const fetchFolders = useCallback(async () => {
+    if (!currentUser) {
+      setFolders([]);
+      return;
+    }
+    try {
+      const response = await fetch(`${API_URL}/folders?userId=${currentUser.id}`);
+      if (response.ok) {
+        const data = await response.json();
+        setFolders(data);
+      }
+    } catch (error) {
+      console.error("Failed to fetch folders:", error);
+    }
+  }, [currentUser]);
+
+  useEffect(() => {
+    fetchFolders();
+  }, [fetchFolders]);
+
+  const handleCreateFolder = useCallback(
+    async (name, parentId) => {
+      if (!currentUser) return;
+      try {
+        const response = await fetch(`${API_URL}/folders`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name, parentId: parentId || null, userId: currentUser.id }),
+        });
+        if (response.ok) {
+          const created = await response.json();
+          setFolders((prev) => [...prev, created]);
+        }
+      } catch (error) {
+        console.error("Failed to create folder:", error);
+      }
+    },
+    [currentUser],
+  );
+
+  const handleRenameFolder = useCallback(
+    async (folderId, newName) => {
+      if (!currentUser) return;
+      setFolders((prev) =>
+        prev.map((f) => (f.id === folderId ? { ...f, name: newName } : f)),
+      );
+      try {
+        await fetch(`${API_URL}/folders/${folderId}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name: newName }),
+        });
+      } catch (error) {
+        console.error("Failed to rename folder:", error);
+      }
+    },
+    [currentUser],
+  );
+
+  const handleDeleteFolder = useCallback(
+    async (folderId, folderName) => {
+      if (!currentUser) return;
+      if (!window.confirm(`Delete folder "${folderName}"? Notes inside will be moved to root.`)) return;
+      // Optimistically collect descendant ids from local state
+      const collectIds = (id) => {
+        const ids = [id];
+        folders
+          .filter((f) => f.parentId === id)
+          .forEach((child) => ids.push(...collectIds(child.id)));
+        return ids;
+      };
+      const idsToRemove = collectIds(folderId);
+      setFolders((prev) => prev.filter((f) => !idsToRemove.includes(f.id)));
+      setNotes((prev) =>
+        prev.map((n) =>
+          idsToRemove.includes(n.folderId) ? { ...n, folderId: null } : n,
+        ),
+      );
+      if (selectedFolderId && idsToRemove.includes(selectedFolderId)) {
+        setSelectedFolderId(null);
+      }
+      try {
+        await fetch(`${API_URL}/folders/${folderId}`, { method: "DELETE" });
+      } catch (error) {
+        console.error("Failed to delete folder:", error);
+      }
+    },
+    [currentUser, folders, selectedFolderId],
+  );
+
+  const handleMoveFolder = useCallback(
+    async (folderId, newParentId) => {
+      if (!currentUser) return;
+      setFolders((prev) =>
+        prev.map((f) =>
+          f.id === folderId ? { ...f, parentId: newParentId } : f,
+        ),
+      );
+      try {
+        await fetch(`${API_URL}/folders/${folderId}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ parentId: newParentId }),
+        });
+      } catch (error) {
+        console.error("Failed to move folder:", error);
+      }
+    },
+    [currentUser],
+  );
+
+  const handleMoveNote = useCallback(
+    async (noteId, folderId) => {
+      setNotes((prev) =>
+        prev.map((n) => (n.id === noteId ? { ...n, folderId: folderId } : n)),
+      );
+      if (!currentUser) return;
+      try {
+        await fetch(`${API_URL}/notes/${noteId}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ folderId: folderId }),
+        });
+      } catch (error) {
+        console.error("Failed to move note:", error);
+      }
+    },
+    [currentUser],
+  );
+
   // Persist local notes to localStorage when logged out
   useEffect(() => {
     if (!loading && !currentUser && notes.length >= 0) {
@@ -217,6 +381,7 @@ const NotesHandler = ({ currentUser }) => {
         noteType,
         language: "python",
         userId: currentUser ? currentUser.id : null,
+        folderId: selectedFolderId,
       };
 
       // If logged out, only create locally
@@ -246,7 +411,7 @@ const NotesHandler = ({ currentUser }) => {
         console.error("Failed to create note:", error);
       }
     },
-    [currentUser],
+    [currentUser, selectedFolderId],
   );
 
   const workerRef = useRef(null);
@@ -584,15 +749,21 @@ const NotesHandler = ({ currentUser }) => {
   }, [notes, loading]);
 
   const normalizedQuery = searchQuery.trim().toLowerCase();
+
+  // Filter by folder first, then by search query
+  const folderFilteredNotes = selectedFolderId !== null
+    ? notes.filter((note) => note.folderId === selectedFolderId)
+    : notes;
+
   const visibleNotes = normalizedQuery
-    ? notes.filter((note) => {
+    ? folderFilteredNotes.filter((note) => {
         const title = (note.title || "").toLowerCase();
         const content = (note.content || "").toLowerCase();
         return (
           title.includes(normalizedQuery) || content.includes(normalizedQuery)
         );
       })
-    : notes;
+    : folderFilteredNotes;
 
   // Sort to show pinned notes at the top
   const sortedNotes = [...visibleNotes].sort((a, b) => {
@@ -603,8 +774,25 @@ const NotesHandler = ({ currentUser }) => {
 
   const hasSearch = normalizedQuery.length > 0;
 
+  const selectedFolderName = selectedFolderId
+    ? (folders.find((f) => f.id === selectedFolderId) || {}).name
+    : null;
+
   return (
     <>
+      <div className="notes-layout">
+        {currentUser && (
+          <FolderSidebar
+            folders={folders}
+            selectedFolderId={selectedFolderId}
+            onSelectFolder={setSelectedFolderId}
+            onCreateFolder={handleCreateFolder}
+            onRenameFolder={handleRenameFolder}
+            onDeleteFolder={handleDeleteFolder}
+            onMoveFolder={handleMoveFolder}
+          />
+        )}
+        <div className="notes-main">
       <div className="notes-toolbar">
         <div className="notes-toolbar-left">
           <input
@@ -717,6 +905,14 @@ const NotesHandler = ({ currentUser }) => {
         </div>
       </div>
 
+      {selectedFolderName && (
+        <div className="folder-breadcrumb">
+          <span>🗒 All Notes</span>
+          <span className="folder-breadcrumb-sep">›</span>
+          <span>📂 {selectedFolderName}</span>
+        </div>
+      )}
+
       {visibleNotes.length === 0 ? (
         <div className="empty-state">
           <p>{hasSearch ? "No matching notes" : "No notes yet"}</p>
@@ -738,9 +934,13 @@ const NotesHandler = ({ currentUser }) => {
             handleRemove={handleRemove}
             isPinned={pinnedIds.includes(String(n.id))}
             onTogglePin={handleTogglePin}
+            folders={folders}
+            onMoveNote={handleMoveNote}
           />
         ))
       )}
+        </div>
+      </div>
 
       {showOCRModal && (
         <div className="ocr-modal-overlay">

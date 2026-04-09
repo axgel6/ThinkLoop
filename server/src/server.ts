@@ -41,6 +41,7 @@ let db: any;
 let notesCollection: any;
 let tasksCollection: any;
 let userInfoCollection: any;
+let foldersCollection: any;
 
 // Connect to MongoDB
 async function connectDB() {
@@ -52,6 +53,7 @@ async function connectDB() {
     notesCollection = db.collection("notes");
     tasksCollection = db.collection("tasks");
     userInfoCollection = db.collection("users");
+    foldersCollection = db.collection("folders");
   } catch (error) {
     console.error("MongoDB connection error:", error);
     process.exit(1);
@@ -65,11 +67,15 @@ app.get("/health", (_req, res) => {
 
 // Routes for notes
 
-// Get all notes (filtered by user if userId provided)
+// Get all notes (filtered by user and optionally by folderId)
 app.get("/notes", async (req, res) => {
   try {
-    const { userId } = req.query;
-    const filter = userId ? { userId } : {};
+    const { userId, folderId } = req.query;
+    const filter: any = userId ? { userId } : {};
+
+    if (folderId !== undefined) {
+      filter.folderId = folderId === "null" ? null : folderId;
+    }
 
     const notes = await notesCollection
       .find(filter)
@@ -90,6 +96,7 @@ app.get("/notes", async (req, res) => {
       lastModified: note.lastModified || note.createdAt || Date.now(),
       userId: note.userId || null,
       isPinned: note.isPinned || false,
+      folderId: note.folderId || null,
     }));
 
     res.json(transformedNotes);
@@ -126,6 +133,7 @@ app.post("/notes", async (req, res) => {
       isPinned,
       noteType,
       language,
+      folderId,
     } = req.body;
 
     // Validate userId is provided for limit checking
@@ -170,6 +178,7 @@ app.post("/notes", async (req, res) => {
       language: language || "python",
       userId: userId || null,
       isPinned: isPinned || false,
+      folderId: folderId || null,
       createdAt: now,
       lastModified: now,
     };
@@ -186,7 +195,7 @@ app.post("/notes", async (req, res) => {
 // Update note
 app.put("/notes/:id", async (req, res) => {
   try {
-    const { title, content, font, fontSize, theme, isPinned, language } =
+    const { title, content, font, fontSize, theme, isPinned, language, folderId } =
       req.body;
     const updateFields: any = {
       lastModified: Date.now(),
@@ -218,6 +227,7 @@ app.put("/notes/:id", async (req, res) => {
     if (theme !== undefined) updateFields.theme = theme;
     if (isPinned !== undefined) updateFields.isPinned = isPinned;
     if (language !== undefined) updateFields.language = language;
+    if (folderId !== undefined) updateFields.folderId = folderId;
 
     const result = await notesCollection.updateOne(
       { _id: new ObjectId(req.params.id) },
@@ -244,6 +254,145 @@ app.delete("/notes/:id", async (req, res) => {
     res.json({ message: "Note deleted successfully" });
   } catch (error) {
     res.status(500).json({ error: "Failed to delete note" });
+  }
+});
+
+// Routes for folders
+
+// Helper: collect all descendant folder ids recursively
+async function getFolderDescendantIds(folderId: string): Promise<string[]> {
+  const ids: string[] = [];
+  const queue: string[] = [folderId];
+  while (queue.length > 0) {
+    const current = queue.shift()!;
+    ids.push(current);
+    const children = await foldersCollection
+      .find({ parentId: current })
+      .toArray();
+    for (const child of children) {
+      queue.push(child._id.toString());
+    }
+  }
+  return ids;
+}
+
+// Get all folders for a user
+app.get("/folders", async (req, res) => {
+  try {
+    const { userId } = req.query;
+    if (!userId) {
+      return res.status(400).json({ error: "userId is required" });
+    }
+    const folders = await foldersCollection
+      .find({ userId })
+      .sort({ createdAt: 1 })
+      .toArray();
+    res.json(
+      folders.map((f: any) => ({
+        id: f._id.toString(),
+        name: f.name,
+        parentId: f.parentId || null,
+        userId: f.userId,
+        createdAt: f.createdAt,
+      })),
+    );
+  } catch (error) {
+    res.status(500).json({ error: "Failed to fetch folders" });
+  }
+});
+
+// Create folder
+app.post("/folders", async (req, res) => {
+  try {
+    const { name, parentId, userId } = req.body;
+    if (!userId) {
+      return res.status(400).json({ error: "userId is required" });
+    }
+    if (!name || !name.trim()) {
+      return res.status(400).json({ error: "Folder name is required" });
+    }
+    const nameSize = Buffer.byteLength(name.trim(), "utf8");
+    if (nameSize > 500) {
+      return res.status(413).json({ error: "Folder name is too long (max 500 bytes)" });
+    }
+    const now = Date.now();
+    const newFolder = {
+      name: name.trim(),
+      parentId: parentId || null,
+      userId,
+      createdAt: now,
+    };
+    const result = await foldersCollection.insertOne(newFolder);
+    res.status(201).json({
+      id: result.insertedId.toString(),
+      ...newFolder,
+    });
+  } catch (error) {
+    res.status(500).json({ error: "Failed to create folder" });
+  }
+});
+
+// Rename or move a folder (update name and/or parentId)
+app.put("/folders/:id", async (req, res) => {
+  try {
+    const { name, parentId } = req.body;
+    const updateFields: any = {};
+    if (name !== undefined) {
+      if (!name.trim()) {
+        return res.status(400).json({ error: "Folder name cannot be empty" });
+      }
+      const nameSize = Buffer.byteLength(name.trim(), "utf8");
+      if (nameSize > 500) {
+        return res.status(413).json({ error: "Folder name is too long (max 500 bytes)" });
+      }
+      updateFields.name = name.trim();
+    }
+    if (parentId !== undefined) {
+      // Prevent a folder from being moved into one of its own descendants
+      if (parentId !== null) {
+        const descendants = await getFolderDescendantIds(req.params.id);
+        if (descendants.includes(parentId)) {
+          return res.status(400).json({ error: "Cannot move a folder into one of its own subfolders" });
+        }
+      }
+      updateFields.parentId = parentId;
+    }
+    if (Object.keys(updateFields).length === 0) {
+      return res.status(400).json({ error: "Nothing to update" });
+    }
+    const result = await foldersCollection.updateOne(
+      { _id: new ObjectId(req.params.id) },
+      { $set: updateFields },
+    );
+    if (result.matchedCount === 0) {
+      return res.status(404).json({ error: "Folder not found" });
+    }
+    res.json({ message: "Folder updated successfully" });
+  } catch (error) {
+    res.status(500).json({ error: "Failed to update folder" });
+  }
+});
+
+// Delete folder (and all descendants; notes are moved to root)
+app.delete("/folders/:id", async (req, res) => {
+  try {
+    const allIds = await getFolderDescendantIds(req.params.id);
+    // Move all notes in these folders back to root (null folderId)
+    await notesCollection.updateMany(
+      { folderId: { $in: allIds } },
+      { $set: { folderId: null } },
+    );
+    // Delete all descendant folders
+    const objectIds = allIds.map((id) => new ObjectId(id));
+    const result = await foldersCollection.deleteMany({
+      _id: { $in: objectIds },
+    });
+    if (result.deletedCount === 0) {
+      return res.status(404).json({ error: "Folder not found" });
+    }
+    res.json({ message: "Folder deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ error: "Failed to delete folder" });
   }
 });
 
@@ -639,6 +788,9 @@ app.delete("/auth/user/:userId", async (req, res) => {
 
     // Delete all user's notes
     await notesCollection.deleteMany({ userId: req.params.userId });
+
+    // Delete all user's folders
+    await foldersCollection.deleteMany({ userId: req.params.userId });
 
     // Delete user account
     await userInfoCollection.deleteOne({
