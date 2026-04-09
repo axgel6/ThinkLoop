@@ -680,7 +680,6 @@ pre {
     "JetBrains Mono", Menlo, Monaco, Consolas, "Courier New", monospace;
 }
 
-
 /* Theme classes applied to the root element (html or documentElement)
    Settings will toggle one of these: .theme-dark, .theme-blue, .theme-gray
    Use CSS variables so components can inherit colors consistently. */
@@ -698,13 +697,13 @@ pre {
     rgba(255, 255, 255, 0.05)
   );
   /* Widget accent colors */
-  --accent-today:     #fbbf24;
-  --accent-pinned:    #a78bfa;
-  --accent-tasks:     #34d399;
-  --accent-note:      #60a5fa;
-  --accent-focus:     #fb923c;
+  --accent-today: #fbbf24;
+  --accent-pinned: #a78bfa;
+  --accent-tasks: #34d399;
+  --accent-note: #60a5fa;
+  --accent-focus: #fb923c;
   --accent-countdown: #f87171;
-  --accent-pomodoro:  #2dd4bf;
+  --accent-pomodoro: #2dd4bf;
 }
 
 .theme-default {
@@ -771,13 +770,13 @@ pre {
   --panel-border: rgba(139, 115, 85, 0.25);
   --panel-bg-solid: #ebe4d6;
   /* Darker accents for readability on light backgrounds */
-  --accent-today:     #92400e;
-  --accent-pinned:    #5b21b6;
-  --accent-tasks:     #065f46;
-  --accent-note:      #1e40af;
-  --accent-focus:     #9a3412;
+  --accent-today: #92400e;
+  --accent-pinned: #5b21b6;
+  --accent-tasks: #065f46;
+  --accent-note: #1e40af;
+  --accent-focus: #9a3412;
   --accent-countdown: #991b1b;
-  --accent-pomodoro:  #0f766e;
+  --accent-pomodoro: #0f766e;
   --glass-bg: linear-gradient(
     135deg,
     rgba(250, 240, 225, 0.85),
@@ -800,58 +799,62 @@ pre {
 }
 
 .theme-purple {
-  --bg: #ceb4ff;
-  --fg: #2d1b4e;
-  --muted: #7c5cba;
-  --panel-bg: rgba(230, 220, 255, 0.6);
-  --panel-border: rgba(124, 92, 186, 0.25);
-  --panel-bg-solid: #e6dcff;
+  --bg: #c3abf6;
+  --fg: #24123f;
+  --muted: #4f3a87;
+  --accent-today: #c58a14;
+  --panel-bg: rgba(245, 240, 255, 0.9);
+  --panel-border: rgba(79, 58, 135, 0.28);
+  --panel-bg-solid: #f2ecff;
   --glass-bg: linear-gradient(
     135deg,
-    rgba(110, 80, 170, 0.32),
-    rgba(255, 255, 255, 0.04)
+    rgba(114, 82, 180, 0.22),
+    rgba(255, 255, 255, 0.24)
   );
 }
 
 .theme-pink {
-  --bg: #fff1f6;
-  --fg: #3a1228;
-  --muted: #b76a93;
-  --panel-bg: rgba(255, 240, 245, 0.62);
-  --panel-border: rgba(150, 100, 130, 0.12);
-  --panel-bg-solid: #ffe6ef;
+  --bg: #ffe9f1;
+  --fg: #2f1022;
+  --muted: #7a3d5f;
+  --accent-today: #c58a14;
+  --panel-bg: rgba(255, 244, 248, 0.9);
+  --panel-border: rgba(122, 61, 95, 0.24);
+  --panel-bg-solid: #fff3f8;
   --glass-bg: linear-gradient(
     135deg,
-    rgba(255, 230, 245, 0.6),
-    rgba(255, 255, 255, 0.02)
+    rgba(255, 214, 234, 0.34),
+    rgba(255, 255, 255, 0.26)
   );
 }
 
 .theme-skyblue {
-  --bg: #e3f2fd;
-  --fg: #1e3a5f;
-  --muted: #4a90c7;
-  --panel-bg: rgba(220, 240, 255, 0.7);
-  --panel-border: rgba(74, 144, 199, 0.25);
-  --panel-bg-solid: #d1e9ff;
+  --bg: #d8eaf8;
+  --fg: #163553;
+  --muted: #355f8b;
+  --accent-today: #b97a0e;
+  --panel-bg: rgba(237, 247, 255, 0.9);
+  --panel-border: rgba(53, 95, 139, 0.22);
+  --panel-bg-solid: #edf6ff;
   --glass-bg: linear-gradient(
     135deg,
-    rgba(200, 230, 250, 0.9),
-    rgba(74, 144, 199, 0.04)
+    rgba(193, 223, 247, 0.35),
+    rgba(255, 255, 255, 0.22)
   );
 }
 
 .theme-sage {
-  --bg: #e8f3e8;
-  --fg: #2d4a2d;
-  --muted: #6b8e6b;
-  --panel-bg: rgba(220, 235, 220, 0.7);
-  --panel-border: rgba(107, 142, 107, 0.25);
-  --panel-bg-solid: #d8ead8;
+  --bg: #ddeee0;
+  --fg: #1f3b2f;
+  --muted: #486a56;
+  --accent-today: #b97a0e;
+  --panel-bg: rgba(235, 246, 236, 0.9);
+  --panel-border: rgba(72, 106, 86, 0.24);
+  --panel-bg-solid: #ecf8ed;
   --glass-bg: linear-gradient(
     135deg,
-    rgba(220, 235, 220, 0.9),
-    rgba(107, 142, 107, 0.04)
+    rgba(188, 216, 193, 0.34),
+    rgba(255, 255, 255, 0.22)
   );
 }
 
@@ -910,7 +913,7 @@ pre {
 .theme-gold {
   --bg: #cb9a2e;
   --fg: #fff8e1;
-  --muted: #ffffff;
+  --muted: #f2d089;
   --panel-bg: rgba(30, 20, 5, 0.65);
   --panel-border: rgba(255, 215, 128, 0.25);
   --panel-bg-solid: #2c1f0c;
@@ -967,15 +970,15 @@ pre {
 
 .theme-windowsxp {
   --bg: #3b6fb3;
-  --fg: #0b1f3a;
-  --muted: #365a8c;
-  --panel-bg: rgba(20, 70, 150, 0.4);
-  --panel-border: rgba(255, 255, 255, 0.5);
-  --panel-bg-solid: #2f5fa5;
+  --fg: #ffffff;
+  --muted: #d8e7ff;
+  --panel-bg: rgba(47, 95, 165, 0.58);
+  --panel-border: rgba(255, 255, 255, 0.62);
+  --panel-bg-solid: #2d5a9f;
   --glass-bg: linear-gradient(
     135deg,
-    rgba(190, 230, 255, 0.55),
-    rgba(255, 255, 255, 0.15)
+    rgba(214, 238, 255, 0.5),
+    rgba(255, 255, 255, 0.22)
   );
 }
 
@@ -1008,16 +1011,12 @@ pre {
 }
 
 .theme-gruvbox .btn,
-.theme-gruvbox .toolbar button,
 .theme-gruvbox .login-submit-btn,
-.theme-gruvbox .settings-toggles button,
-.theme-gruvbox .toolbar-actions .undo-btn,
-.theme-gruvbox .toolbar-actions .redo-btn,
-.theme-gruvbox .toolbar-actions .done-btn {
+.theme-gruvbox .settings-toggles button {
   background: #fabd2f;
   color: #282828;
   border: none;
-  border-radius: 25px;
+  border-radius: 8px;
   backdrop-filter: none;
   box-shadow: none;
 }
@@ -1032,35 +1031,63 @@ pre {
 }
 
 .theme-gruvbox .btn:hover,
-.theme-gruvbox .toolbar button:hover,
 .theme-gruvbox .login-submit-btn:hover,
-.theme-gruvbox .settings-toggles button:hover,
-.theme-gruvbox .toolbar-actions .undo-btn:hover,
-.theme-gruvbox .toolbar-actions .redo-btn:hover,
-.theme-gruvbox .toolbar-actions .done-btn:hover {
+.theme-gruvbox .settings-toggles button:hover {
   background: #d3869b;
   color: #282828;
   border-color: transparent;
 }
 
-.theme-gruvbox .custom-select-button {
+/* Gruvbox toolbar: restore neutral colors for undo/redo/done — override the blanket .btn rule */
+.theme-gruvbox .toolbar-actions .undo-btn,
+.theme-gruvbox .toolbar-actions .redo-btn {
+  background: transparent !important;
+  color: #ebdbb2 !important;
+  border: none !important;
+  border-radius: 5px !important;
+}
+
+.theme-gruvbox .toolbar-actions .undo-btn svg *,
+.theme-gruvbox .toolbar-actions .redo-btn svg * {
+  stroke: currentColor !important;
+}
+
+.theme-gruvbox .toolbar-actions .done-btn {
+  background: rgba(250, 189, 47, 0.15) !important;
+  border: 1px solid rgba(250, 189, 47, 0.3) !important;
+  color: #fabd2f !important;
+  border-radius: 6px !important;
+}
+
+.theme-gruvbox .toolbar-actions .done-btn svg * {
+  stroke: currentColor !important;
+}
+
+.theme-gruvbox .toolbar-actions .done-btn:hover {
+  background: rgba(250, 189, 47, 0.25) !important;
+}
+
+/* Gruvbox dropdowns outside toolbar: keep accent style */
+.theme-gruvbox .notes-toolbar .custom-select-button,
+.theme-gruvbox .settings-page .custom-select-button {
   background: #fabd2f;
   color: #282828;
   border: none;
-  border-radius: 25px;
+  border-radius: 8px;
   backdrop-filter: none;
 }
 
-.theme-gruvbox .custom-select-button:hover {
+.theme-gruvbox .notes-toolbar .custom-select-button:hover,
+.theme-gruvbox .settings-page .custom-select-button:hover {
   background: #d3869b;
   color: #282828;
-  transform: none;
 }
 
 .theme-light {
   --bg: #ffffff;
   --fg: #1a1a1a;
   --muted: #666666;
+  --accent-today: #b97a0e;
   --panel-bg: rgba(220, 220, 220, 0.4);
   --panel-border: rgba(100, 100, 100, 0.2);
   --panel-bg-solid: #f0f0f0;

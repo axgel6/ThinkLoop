@@ -63,9 +63,10 @@
 
 /* Icon buttons in toolbar */
 .icon-button {
-  padding: 7px 10px;
-  min-width: 34px;
-  min-height: 34px;
+  padding: 6px 8px;
+  min-width: 30px;
+  min-height: 30px;
+  border-radius: 8px;
 }
 
 .icon-button svg {

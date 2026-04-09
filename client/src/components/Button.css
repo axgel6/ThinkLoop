@@ -1,46 +1,31 @@
-/* Liquid glass morphism button styles */
 .btn {
-  background: linear-gradient(
-    135deg,
-    rgba(255, 255, 255, 0.1),
-    rgba(255, 255, 255, 0.05)
-  );
-  color: var(--fg, #ffffff);
-  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--fg, #e0e0e0);
+  border-radius: 8px;
   width: fit-content;
-  padding: 12px 20px;
+  padding: 7px 13px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 6px;
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.12);
-  -webkit-backdrop-filter: blur(12px) saturate(180%);
-  backdrop-filter: blur(12px) saturate(180%);
+  border: 1px solid var(--panel-border, rgba(255, 255, 255, 0.1));
   transition:
-    background 0.15s ease,
-    border-color 0.15s ease,
-    box-shadow 0.15s ease;
-  font-size: 14px;
+    background 0.13s ease,
+    border-color 0.13s ease;
+  font-size: 0.78rem;
   font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  white-space: nowrap;
 }
 
 .btn:hover {
-  box-shadow:
-    0 4px 16px 0 rgba(0, 0, 0, 0.18),
-    inset 0 1px 0 0 rgba(255, 255, 255, 0.18);
-  background: linear-gradient(
-    135deg,
-    rgba(255, 255, 255, 0.15),
-    rgba(255, 255, 255, 0.08)
-  );
-  border-color: rgba(255, 255, 255, 0.25);
-  cursor: pointer;
+  background: rgba(255, 255, 255, 0.09);
+  border-color: rgba(255, 255, 255, 0.18);
 }
 
 .btn:active {
   transform: scale(0.98);
-  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.08);
 }
 
 .btn:focus {
@@ -48,9 +33,14 @@
   outline-offset: 3px;
 }
 
-/* Variant: primary (bigger) */
+/* Variant: primary */
 .btn.primary {
-  padding: 12px 22px;
+  background: var(--panel-border, rgba(255, 255, 255, 0.12));
+  border-color: rgba(255, 255, 255, 0.15);
   font-weight: 600;
-  font-size: 15px;
+}
+
+.btn.primary:hover {
+  background: rgba(255, 255, 255, 0.16);
+  border-color: rgba(255, 255, 255, 0.22);
 }

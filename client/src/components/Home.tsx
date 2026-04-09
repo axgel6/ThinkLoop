@@ -8,7 +8,11 @@ const API_URL = process.env.REACT_APP_API_URL || "http://localhost:3000";
 // --- Types ---
 interface HomeProps {
   weatherCity?: string;
-  currentUser?: { id?: string | number; username?: string; name?: string } | null;
+  currentUser?: {
+    id?: string | number;
+    username?: string;
+    name?: string;
+  } | null;
   pomodoroTime?: number;
   isRunning?: boolean;
   isWorkSession?: boolean;
@@ -77,13 +81,13 @@ interface WidgetConfig {
 }
 
 const DEFAULT_WIDGET_CONFIG: WidgetConfig[] = [
-  { id: "today",       label: "Today",          visible: true, size: "half" },
-  { id: "pinned",      label: "Pinned Notes",   visible: true, size: "half" },
-  { id: "tasks",       label: "Tasks",          visible: true, size: "half" },
-  { id: "quick-note",  label: "Quick Note",     visible: true, size: "half" },
-  { id: "focus-stats", label: "Focus Stats",    visible: true, size: "full" },
-  { id: "countdowns",  label: "Countdowns",     visible: true, size: "half" },
-  { id: "pomodoro",    label: "Pomodoro Timer", visible: true, size: "full" },
+  { id: "today", label: "Today", visible: true, size: "half" },
+  { id: "pinned", label: "Pinned Notes", visible: true, size: "half" },
+  { id: "tasks", label: "Tasks", visible: true, size: "half" },
+  { id: "quick-note", label: "Quick Note", visible: true, size: "half" },
+  { id: "focus-stats", label: "Focus Stats", visible: true, size: "full" },
+  { id: "countdowns", label: "Countdowns", visible: true, size: "half" },
+  { id: "pomodoro", label: "Pomodoro Timer", visible: true, size: "full" },
 ];
 
 const WIDGET_CONFIG_KEY = "home:widget-config-v2";
@@ -396,6 +400,45 @@ export default function Home({
     const day = now.getDate();
     return `${weekday} ${month} ${day}${getOrdinalSuffix(day)}`;
   };
+
+  const getTimeZoneShort = (d: Date) => {
+    const part = new Intl.DateTimeFormat(undefined, {
+      timeZoneName: "short",
+    })
+      .formatToParts(d)
+      .find((p) => p.type === "timeZoneName")?.value;
+    return part || "Local";
+  };
+
+  const getIsoWeek = (d: Date) => {
+    const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+    const dayNum = date.getUTCDay() || 7;
+    date.setUTCDate(date.getUTCDate() + 4 - dayNum);
+    const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
+    return Math.ceil(
+      ((date.getTime() - yearStart.getTime()) / 86400000 + 1) / 7,
+    );
+  };
+
+  const getDayOfYear = (d: Date) => {
+    const start = new Date(d.getFullYear(), 0, 0);
+    const diff = d.getTime() - start.getTime();
+    return Math.floor(diff / 86400000);
+  };
+
+  const getDaysInYear = (year: number) =>
+    new Date(year, 1, 29).getMonth() === 1 ? 366 : 365;
+
+  const dayElapsedSeconds =
+    now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds();
+  const dayProgressPercent = Math.max(
+    0,
+    Math.min(100, Math.round((dayElapsedSeconds / 86400) * 100)),
+  );
+  const isoWeek = getIsoWeek(now);
+  const dayOfYear = getDayOfYear(now);
+  const daysInYear = getDaysInYear(now.getFullYear());
+  const timezoneLabel = getTimeZoneShort(now);
 
   const stripHtml = (v: string) =>
     v
@@ -991,303 +1034,352 @@ export default function Home({
     <div id="home-wrapper">
       <div className="home-welcome-banner">
         <span className="home-welcome-greeting">
-          {getGreeting()}{currentUser ? `, ${currentUser.name || currentUser.username}` : ""}
+          {getGreeting()}
+          {currentUser ? `, ${currentUser.name || currentUser.username}` : ""}
         </span>
       </div>
-    <div id="home-content">
-      {/* Render widgets in configured order */}
-      {widgetConfig.filter((w) => w.visible).map((w) => (
-        <div
-          key={w.id}
-          className={`widget-cell${w.size === "full" ? " widget-cell-full" : ""}`}
-        >
-          {widgetMap[w.id]}
-        </div>
-      ))}
-
-      {/* Edit widgets button */}
-      <div className="widget-cell widget-cell-row">
-        <button
-          className="home-edit-btn"
-          onClick={() => setIsEditingWidgets(true)}
-          aria-label="Customize widgets"
-          title="Customize widgets"
-        >
-          <PencilIcon />
-          <span>Edit Widgets</span>
-        </button>
-      </div>
-
-      {/* --- Widget Edit Modal --- */}
-      {isEditingWidgets && (
-        <div
-          className="note-modal-overlay"
-          onClick={() => setIsEditingWidgets(false)}
-        >
-          <div
-            className="widget-edit-popup"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <button
-              className="modal-close-btn"
-              onClick={() => setIsEditingWidgets(false)}
-              aria-label="Close"
+      <div id="home-content">
+        {/* Render widgets in configured order */}
+        {widgetConfig
+          .filter((w) => w.visible)
+          .map((w) => (
+            <div
+              key={w.id}
+              className={`widget-cell${w.size === "full" ? " widget-cell-full" : ""}`}
             >
-              ✕
-            </button>
-            <div className="widget-edit-header">
-              <h2>Customize Widgets</h2>
-              <p>Toggle visibility and reorder</p>
+              {widgetMap[w.id]}
             </div>
-            <ul className="widget-edit-list">
-              {widgetConfig.map((w, i) => (
-                <li key={w.id} className="widget-edit-item">
-                  <button
-                    className={`widget-toggle${w.visible ? " on" : " off"}`}
-                    onClick={() => toggleWidgetVisible(w.id)}
-                    aria-label={w.visible ? "Hide" : "Show"}
-                  >
-                    <span className="widget-toggle-knob" />
-                  </button>
+          ))}
+
+        {/* Edit widgets button */}
+        <div className="widget-cell widget-cell-row">
+          <button
+            className="home-edit-btn"
+            onClick={() => setIsEditingWidgets(true)}
+            aria-label="Customize widgets"
+            title="Customize widgets"
+          >
+            <PencilIcon />
+            <span>Edit Widgets</span>
+          </button>
+        </div>
+
+        {/* --- Widget Edit Modal --- */}
+        {isEditingWidgets && (
+          <div
+            className="note-modal-overlay"
+            onClick={() => setIsEditingWidgets(false)}
+          >
+            <div
+              className="widget-edit-popup"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                className="modal-close-btn"
+                onClick={() => setIsEditingWidgets(false)}
+                aria-label="Close"
+              >
+                ✕
+              </button>
+              <div className="widget-edit-header">
+                <h2>Customize Widgets</h2>
+                <p>Toggle visibility and reorder</p>
+              </div>
+              <ul className="widget-edit-list">
+                {widgetConfig.map((w, i) => (
+                  <li key={w.id} className="widget-edit-item">
+                    <button
+                      className={`widget-toggle${w.visible ? " on" : " off"}`}
+                      onClick={() => toggleWidgetVisible(w.id)}
+                      aria-label={w.visible ? "Hide" : "Show"}
+                    >
+                      <span className="widget-toggle-knob" />
+                    </button>
+                    <span
+                      className={`widget-edit-label${!w.visible ? " muted" : ""}`}
+                    >
+                      {w.label}
+                    </span>
+                    <button
+                      className={`widget-size-btn${w.size === "half" ? " is-half" : ""}`}
+                      onClick={() => toggleWidgetSize(w.id)}
+                      title={w.size === "half" ? "Half width" : "Full width"}
+                      aria-label="Toggle width"
+                    >
+                      <span className="size-icon-block" />
+                      <span className="size-icon-block" />
+                    </button>
+                    <div className="widget-edit-arrows">
+                      <button
+                        className="widget-arrow-btn"
+                        disabled={i === 0}
+                        onClick={() => moveWidget(i, -1)}
+                        aria-label="Move up"
+                      >
+                        ▲
+                      </button>
+                      <button
+                        className="widget-arrow-btn"
+                        disabled={i === widgetConfig.length - 1}
+                        onClick={() => moveWidget(i, 1)}
+                        aria-label="Move down"
+                      >
+                        ▼
+                      </button>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+              <button
+                className="widget-edit-done"
+                onClick={() => setIsEditingWidgets(false)}
+              >
+                Done
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* --- Expanded Note Modal --- */}
+        {expandedNote && (
+          <div
+            className="note-modal-overlay"
+            onClick={() => setExpandedNote(null)}
+          >
+            <div
+              className="note-modal-popup"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                className="modal-close-btn"
+                onClick={() => setExpandedNote(null)}
+                aria-label="Close note"
+              >
+                ✕
+              </button>
+              <div className="modal-note-title">
+                {expandedNote.title?.trim() || "Untitled"}
+              </div>
+              <div
+                className="modal-note-content"
+                dangerouslySetInnerHTML={{
+                  __html: expandedNote.content || "(No content)",
+                }}
+              />
+              {expandedNote.lastModified && (
+                <div className="modal-note-footer">
+                  Last modified:{" "}
+                  {new Date(expandedNote.lastModified).toLocaleString()}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* --- Full Screen Pomodoro Modal --- */}
+        {fullScreenPomodoro && (
+          <div
+            className="note-modal-overlay"
+            onClick={() => setFullScreenPomodoro(false)}
+          >
+            <div
+              className="pomodoro-modal-popup"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                className="modal-close-btn"
+                onClick={() => setFullScreenPomodoro(false)}
+                aria-label="Close timer"
+              >
+                ✕
+              </button>
+              <div className="pomodoro-modal-header">
+                <h1>Pomodoro Timer</h1>
+              </div>
+              <div
+                className={`pomodoro-modal-display ${isWorkSession ? "work" : "break"}`}
+              >
+                <div className="pomodoro-modal-session">
+                  {isWorkSession ? "Work Session" : "Break Time"}
+                </div>
+                <div className="pomodoro-modal-time">
+                  {formatTime(pomodoroTime)}
+                </div>
+              </div>
+              <div className="pomodoro-modal-controls">
+                <button
+                  className="pomodoro-modal-btn"
+                  onClick={handlePomodoroToggle}
+                >
                   <span
-                    className={`widget-edit-label${!w.visible ? " muted" : ""}`}
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 8,
+                    }}
                   >
-                    {w.label}
+                    {isRunning ? (
+                      <>
+                        <PauseIcon /> Pause
+                      </>
+                    ) : (
+                      <>
+                        <PlayIcon /> Start
+                      </>
+                    )}
                   </span>
-                  <button
-                    className={`widget-size-btn${w.size === "half" ? " is-half" : ""}`}
-                    onClick={() => toggleWidgetSize(w.id)}
-                    title={w.size === "half" ? "Half width" : "Full width"}
-                    aria-label="Toggle width"
+                </button>
+                <button
+                  className="pomodoro-modal-btn"
+                  onClick={handlePomodoroSkip}
+                >
+                  <span
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 8,
+                    }}
                   >
-                    <span className="size-icon-block" />
-                    <span className="size-icon-block" />
-                  </button>
-                  <div className="widget-edit-arrows">
-                    <button
-                      className="widget-arrow-btn"
-                      disabled={i === 0}
-                      onClick={() => moveWidget(i, -1)}
-                      aria-label="Move up"
-                    >
-                      ▲
-                    </button>
-                    <button
-                      className="widget-arrow-btn"
-                      disabled={i === widgetConfig.length - 1}
-                      onClick={() => moveWidget(i, 1)}
-                      aria-label="Move down"
-                    >
-                      ▼
-                    </button>
+                    <SkipIcon /> Skip
+                  </span>
+                </button>
+                <button
+                  className="pomodoro-modal-btn"
+                  onClick={handlePomodoroReset}
+                >
+                  <span
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 8,
+                    }}
+                  >
+                    <ResetIcon /> Reset
+                  </span>
+                </button>
+              </div>
+              <div className="pomodoro-settings">
+                <h3>Customize Duration</h3>
+                <div className="setting-group">
+                  <label>
+                    Work Session (minutes):
+                    <input
+                      type="number"
+                      min="1"
+                      max="60"
+                      value={workDuration}
+                      onChange={(e) => {
+                        const v = Math.max(
+                          1,
+                          Math.min(60, parseInt(e.target.value) || 1),
+                        );
+                        setWorkDuration(v);
+                        if (isWorkSession && !isRunning)
+                          setPomodoroTime(v * 60);
+                      }}
+                    />
+                  </label>
+                </div>
+                <div className="setting-group">
+                  <label>
+                    Break Session (minutes):
+                    <input
+                      type="number"
+                      min="1"
+                      max="30"
+                      value={breakDuration}
+                      onChange={(e) => {
+                        const v = Math.max(
+                          1,
+                          Math.min(30, parseInt(e.target.value) || 1),
+                        );
+                        setBreakDuration(v);
+                        if (!isWorkSession && !isRunning)
+                          setPomodoroTime(v * 60);
+                      }}
+                    />
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* --- Expanded Today Modal --- */}
+        {expandedToday && (
+          <div
+            className="note-modal-overlay"
+            onClick={() => setExpandedToday(false)}
+          >
+            <div
+              className="today-modal-popup"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                className="modal-close-btn"
+                onClick={() => setExpandedToday(false)}
+                aria-label="Close"
+              >
+                ✕
+              </button>
+              <div className="today-modal-header">
+                <h1>Today</h1>
+              </div>
+              <div className="today-modal-content">
+                <div className="today-modal-primary">
+                  <div className="today-modal-time">
+                    {currentTimeWithSeconds}
                   </div>
-                </li>
-              ))}
-            </ul>
-            <button
-              className="widget-edit-done"
-              onClick={() => setIsEditingWidgets(false)}
-            >
-              Done
-            </button>
-          </div>
-        </div>
-      )}
+                  <div className="today-modal-date-row">
+                    <CalendarIcon />
+                    <span className="today-modal-date">
+                      {getCurrentDateLabel()}
+                    </span>
+                  </div>
+                  <div className="today-modal-weather-row">
+                    <CloudIcon />
+                    <Weather city={weatherCity} />
+                  </div>
+                </div>
 
-      {/* --- Expanded Note Modal --- */}
-      {expandedNote && (
-        <div
-          className="note-modal-overlay"
-          onClick={() => setExpandedNote(null)}
-        >
-          <div
-            className="note-modal-popup"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <button
-              className="modal-close-btn"
-              onClick={() => setExpandedNote(null)}
-              aria-label="Close note"
-            >
-              ✕
-            </button>
-            <div className="modal-note-title">
-              {expandedNote.title?.trim() || "Untitled"}
-            </div>
-            <div
-              className="modal-note-content"
-              dangerouslySetInnerHTML={{
-                __html: expandedNote.content || "(No content)",
-              }}
-            />
-            {expandedNote.lastModified && (
-              <div className="modal-note-footer">
-                Last modified:{" "}
-                {new Date(expandedNote.lastModified).toLocaleString()}
-              </div>
-            )}
-          </div>
-        </div>
-      )}
+                <div className="today-modal-stats">
+                  <div className="today-modal-stat">
+                    <span className="today-modal-stat-label">Week</span>
+                    <span className="today-modal-stat-value">{isoWeek}</span>
+                  </div>
+                  <div className="today-modal-stat">
+                    <span className="today-modal-stat-label">Day</span>
+                    <span className="today-modal-stat-value">{dayOfYear}</span>
+                  </div>
+                  <div className="today-modal-stat">
+                    <span className="today-modal-stat-label">Timezone</span>
+                    <span className="today-modal-stat-value">
+                      {timezoneLabel}
+                    </span>
+                  </div>
+                </div>
 
-      {/* --- Full Screen Pomodoro Modal --- */}
-      {fullScreenPomodoro && (
-        <div
-          className="note-modal-overlay"
-          onClick={() => setFullScreenPomodoro(false)}
-        >
-          <div
-            className="pomodoro-modal-popup"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <button
-              className="modal-close-btn"
-              onClick={() => setFullScreenPomodoro(false)}
-              aria-label="Close timer"
-            >
-              ✕
-            </button>
-            <div className="pomodoro-modal-header">
-              <h1>Pomodoro Timer</h1>
-            </div>
-            <div
-              className={`pomodoro-modal-display ${isWorkSession ? "work" : "break"}`}
-            >
-              <div className="pomodoro-modal-session">
-                {isWorkSession ? "Work Session" : "Break Time"}
-              </div>
-              <div className="pomodoro-modal-time">
-                {formatTime(pomodoroTime)}
-              </div>
-            </div>
-            <div className="pomodoro-modal-controls">
-              <button
-                className="pomodoro-modal-btn"
-                onClick={handlePomodoroToggle}
-              >
-                <span
-                  style={{
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: 8,
-                  }}
-                >
-                  {isRunning ? (
-                    <>
-                      <PauseIcon /> Pause
-                    </>
-                  ) : (
-                    <>
-                      <PlayIcon /> Start
-                    </>
-                  )}
-                </span>
-              </button>
-              <button
-                className="pomodoro-modal-btn"
-                onClick={handlePomodoroSkip}
-              >
-                <span
-                  style={{
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: 8,
-                  }}
-                >
-                  <SkipIcon /> Skip
-                </span>
-              </button>
-              <button
-                className="pomodoro-modal-btn"
-                onClick={handlePomodoroReset}
-              >
-                <span
-                  style={{
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: 8,
-                  }}
-                >
-                  <ResetIcon /> Reset
-                </span>
-              </button>
-            </div>
-            <div className="pomodoro-settings">
-              <h3>Customize Duration</h3>
-              <div className="setting-group">
-                <label>
-                  Work Session (minutes):
-                  <input
-                    type="number"
-                    min="1"
-                    max="60"
-                    value={workDuration}
-                    onChange={(e) => {
-                      const v = Math.max(
-                        1,
-                        Math.min(60, parseInt(e.target.value) || 1),
-                      );
-                      setWorkDuration(v);
-                      if (isWorkSession && !isRunning) setPomodoroTime(v * 60);
-                    }}
-                  />
-                </label>
-              </div>
-              <div className="setting-group">
-                <label>
-                  Break Session (minutes):
-                  <input
-                    type="number"
-                    min="1"
-                    max="30"
-                    value={breakDuration}
-                    onChange={(e) => {
-                      const v = Math.max(
-                        1,
-                        Math.min(30, parseInt(e.target.value) || 1),
-                      );
-                      setBreakDuration(v);
-                      if (!isWorkSession && !isRunning) setPomodoroTime(v * 60);
-                    }}
-                  />
-                </label>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+                <div className="today-day-progress">
+                  <div className="today-day-progress-header">
+                    <span>Day Progress</span>
+                    <span>{dayProgressPercent}%</span>
+                  </div>
+                  <div className="today-day-progress-track">
+                    <div
+                      className="today-day-progress-fill"
+                      style={{ width: `${dayProgressPercent}%` }}
+                    />
+                  </div>
+                </div>
 
-      {/* --- Expanded Today Modal --- */}
-      {expandedToday && (
-        <div
-          className="note-modal-overlay"
-          onClick={() => setExpandedToday(false)}
-        >
-          <div
-            className="today-modal-popup"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <button
-              className="modal-close-btn"
-              onClick={() => setExpandedToday(false)}
-              aria-label="Close"
-            >
-              ✕
-            </button>
-            <div className="today-modal-header">
-              <h1>Today</h1>
-            </div>
-            <div className="today-modal-content">
-              <div className="today-modal-time">{currentTimeWithSeconds}</div>
-              <div className="today-modal-date">{getCurrentDateLabel()}</div>
-              <div className="today-modal-weather">
-                <Weather city={weatherCity} />
+                <div className="today-modal-meta">
+                  {dayOfYear} of {daysInYear} days this year
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      )}
-    </div>
+        )}
+      </div>
     </div>
   );
 }

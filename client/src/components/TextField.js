@@ -151,7 +151,10 @@ const TextField = ({
   useEffect(() => {
     if (!showFolderPicker) return;
     const handler = (e) => {
-      if (folderPickerRef.current && !folderPickerRef.current.contains(e.target)) {
+      if (
+        folderPickerRef.current &&
+        !folderPickerRef.current.contains(e.target)
+      ) {
         setShowFolderPicker(false);
       }
     };
@@ -193,6 +196,7 @@ const TextField = ({
 
   const lastEditorRangeRef = useRef(null);
   const lastTitleSelRef = useRef({ start: null, end: null });
+  const prevEditModeRef = useRef(isEditMode);
 
   // Stable refs for keyboard handler
   const undoRef = useRef(null);
@@ -311,6 +315,22 @@ const TextField = ({
       editorRef.current.innerHTML = value;
     }
   }, [value]);
+
+  // On entering edit mode, focus editor and place cursor at the end.
+  useEffect(() => {
+    const enteringEditMode = isEditMode && !prevEditModeRef.current;
+    prevEditModeRef.current = isEditMode;
+    if (!enteringEditMode || !editorRef.current) return;
+
+    editorRef.current.focus();
+    const sel = window.getSelection();
+    if (!sel) return;
+    const range = document.createRange();
+    range.selectNodeContents(editorRef.current);
+    range.collapse(false);
+    sel.removeAllRanges();
+    sel.addRange(range);
+  }, [isEditMode]);
 
   // Handle content changes
   const handleInput = () => {
@@ -478,6 +498,186 @@ const TextField = ({
   undoRef.current = undo;
   redoRef.current = redo;
 
+  const getClosestBlock = (node) => {
+    const editor = editorRef.current;
+    if (!editor || !node) return null;
+    let cur = node.nodeType === Node.TEXT_NODE ? node.parentNode : node;
+    while (cur && cur !== editor) {
+      const tag = cur.nodeName;
+      if (
+        [
+          "P",
+          "DIV",
+          "LI",
+          "H1",
+          "H2",
+          "H3",
+          "H4",
+          "H5",
+          "H6",
+          "BLOCKQUOTE",
+          "PRE",
+        ].includes(tag)
+      ) {
+        return cur;
+      }
+      cur = cur.parentNode;
+    }
+    return editor;
+  };
+
+  const buildRangeInNodeByChars = (root, startChar, endChar) => {
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null);
+    let charCount = 0;
+    let startNode = null;
+    let endNode = null;
+    let startOffset = 0;
+    let endOffset = 0;
+
+    while (walker.nextNode()) {
+      const textNode = walker.currentNode;
+      const len = textNode.nodeValue.length;
+      const nextCount = charCount + len;
+
+      if (!startNode && startChar >= charCount && startChar <= nextCount) {
+        startNode = textNode;
+        startOffset = startChar - charCount;
+      }
+
+      if (!endNode && endChar >= charCount && endChar <= nextCount) {
+        endNode = textNode;
+        endOffset = endChar - charCount;
+        break;
+      }
+
+      charCount = nextCount;
+    }
+
+    if (!startNode || !endNode) return null;
+    const range = document.createRange();
+    range.setStart(startNode, Math.max(0, startOffset));
+    range.setEnd(endNode, Math.max(0, endOffset));
+    return range;
+  };
+
+  const getBlockPrefixAtCaret = () => {
+    const editor = editorRef.current;
+    if (!editor) return null;
+    const sel = window.getSelection();
+    if (!sel || sel.rangeCount === 0 || !sel.isCollapsed) return null;
+
+    const caretRange = sel.getRangeAt(0);
+    if (!editor.contains(caretRange.startContainer)) return null;
+
+    const block = getClosestBlock(caretRange.startContainer);
+    if (!block) return null;
+
+    const blockRange = document.createRange();
+    blockRange.selectNodeContents(block);
+    blockRange.setEnd(caretRange.startContainer, caretRange.startOffset);
+
+    return {
+      block,
+      prefix: blockRange.toString(),
+      caretRange,
+    };
+  };
+
+  const stripPrefixToken = (block, tokenLength) => {
+    const range = buildRangeInNodeByChars(block, 0, tokenLength);
+    if (!range) return;
+    range.deleteContents();
+  };
+
+  const tryApplyMarkdownShortcut = () => {
+    const blockData = getBlockPrefixAtCaret();
+    if (!blockData) return false;
+
+    const typed = `${blockData.prefix} `;
+    const normalized = typed.replace(/\u00a0/g, " ");
+    const shortcuts = [
+      {
+        token: "# ",
+        apply: () => document.execCommand("formatBlock", false, "H1"),
+      },
+      {
+        token: "## ",
+        apply: () => document.execCommand("formatBlock", false, "H2"),
+      },
+      {
+        token: "### ",
+        apply: () => document.execCommand("formatBlock", false, "H3"),
+      },
+      {
+        token: "> ",
+        apply: () => document.execCommand("formatBlock", false, "BLOCKQUOTE"),
+      },
+      {
+        token: "``` ",
+        apply: () => document.execCommand("formatBlock", false, "PRE"),
+      },
+      {
+        token: "- ",
+        apply: () => document.execCommand("insertUnorderedList", false, null),
+      },
+      {
+        token: "* ",
+        apply: () => document.execCommand("insertUnorderedList", false, null),
+      },
+      {
+        token: "1. ",
+        apply: () => document.execCommand("insertOrderedList", false, null),
+      },
+    ];
+
+    const match = shortcuts.find((s) => normalized === s.token);
+    if (!match) return false;
+
+    stripPrefixToken(blockData.block, match.token.length - 1);
+    match.apply();
+    handleInput();
+    return true;
+  };
+
+  const tryBreakOutOfStyledBlockOnEnter = () => {
+    const blockData = getBlockPrefixAtCaret();
+    if (!blockData) return false;
+
+    const { block, prefix } = blockData;
+    const tag = block.nodeName;
+    const isHeading = ["H1", "H2", "H3", "H4", "H5", "H6"].includes(tag);
+    const isQuote = tag === "BLOCKQUOTE";
+    if (!isHeading && !isQuote) return false;
+
+    const fullText = (block.innerText || "").replace(/\u00a0/g, " ");
+    const isAtEnd = prefix.length === fullText.length;
+    if (!isAtEnd) return false;
+
+    document.execCommand("insertParagraph", false, null);
+    document.execCommand("formatBlock", false, "P");
+    handleInput();
+    return true;
+  };
+
+  const handleEditorKeyDown = (e) => {
+    if (!isEditMode) return;
+
+    if (e.key === "Tab") {
+      e.preventDefault();
+      document.execCommand("insertText", false, "  ");
+      return;
+    }
+
+    if (e.key === " " && tryApplyMarkdownShortcut()) {
+      e.preventDefault();
+      return;
+    }
+
+    if (e.key === "Enter" && tryBreakOutOfStyledBlockOnEnter()) {
+      e.preventDefault();
+    }
+  };
+
   // Keyboard shortcuts (Cmd/Ctrl+Z, Cmd/Ctrl+Shift+Z or Ctrl+Y)
   useEffect(() => {
     const onKeyDown = (e) => {
@@ -550,6 +750,7 @@ const TextField = ({
           <div className="note-header">
             <div className="note-header-content">
               <div className="note-title-display-row">
+                {isPinned && <span className="note-pin-indicator">Pinned</span>}
                 <div className="note-title-display">
                   {noteTitle || "New code note"}
                 </div>
@@ -748,7 +949,10 @@ const TextField = ({
         <div className="note-header" onClick={() => startEdit()}>
           <div className="note-header-content">
             <div className="note-header-top-row">
-              <div className="note-title-display">{noteTitle || "New note"}</div>
+              {isPinned && <span className="note-pin-indicator">Pinned</span>}
+              <div className="note-title-display">
+                {noteTitle || "New note"}
+              </div>
               {folders.length > 0 && (
                 <div
                   className="note-folder-badge-wrapper"
@@ -758,10 +962,25 @@ const TextField = ({
                   <button
                     className={`note-folder-badge${currentFolder ? " has-folder" : ""}`}
                     onClick={() => setShowFolderPicker((v) => !v)}
-                    title={currentFolder ? `Folder: ${currentFolder.name}` : "Move to folder"}
+                    title={
+                      currentFolder
+                        ? `Folder: ${currentFolder.name}`
+                        : "Move to folder"
+                    }
                   >
-                    <svg width="11" height="11" viewBox="0 0 15 15" fill="none" aria-hidden="true">
-                      <path d="M1.5 4.5C1.5 3.95 1.95 3.5 2.5 3.5H5.5L7 5H12.5C13.05 5 13.5 5.45 13.5 6V11C13.5 11.55 13.05 12 12.5 12H2.5C1.95 12 1.5 11.55 1.5 11V4.5Z" stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round" />
+                    <svg
+                      width="11"
+                      height="11"
+                      viewBox="0 0 15 15"
+                      fill="none"
+                      aria-hidden="true"
+                    >
+                      <path
+                        d="M1.5 4.5C1.5 3.95 1.95 3.5 2.5 3.5H5.5L7 5H12.5C13.05 5 13.5 5.45 13.5 6V11C13.5 11.55 13.05 12 12.5 12H2.5C1.95 12 1.5 11.55 1.5 11V4.5Z"
+                        stroke="currentColor"
+                        strokeWidth="1.2"
+                        strokeLinejoin="round"
+                      />
                     </svg>
                     <span>{currentFolder ? currentFolder.name : "folder"}</span>
                   </button>
@@ -769,7 +988,10 @@ const TextField = ({
                     <div className="note-folder-picker">
                       <button
                         className={`note-folder-picker-item${!folderId ? " active" : ""}`}
-                        onClick={() => { onMoveNote?.(null); setShowFolderPicker(false); }}
+                        onClick={() => {
+                          onMoveNote?.(null);
+                          setShowFolderPicker(false);
+                        }}
                       >
                         No folder
                       </button>
@@ -777,7 +999,10 @@ const TextField = ({
                         <button
                           key={f.id}
                           className={`note-folder-picker-item${String(folderId) === String(f.id) ? " active" : ""}`}
-                          onClick={() => { onMoveNote?.(f.id); setShowFolderPicker(false); }}
+                          onClick={() => {
+                            onMoveNote?.(f.id);
+                            setShowFolderPicker(false);
+                          }}
                         >
                           {f.name}
                         </button>
@@ -836,29 +1061,122 @@ const TextField = ({
 
             {/* ── Headings ── */}
             <div className="toolbar-group">
-              <button className="format-btn format-btn--label" onClick={() => handleFormat("formatBlock", "H1")} title="Heading 1">H1</button>
-              <button className="format-btn format-btn--label" onClick={() => handleFormat("formatBlock", "H2")} title="Heading 2">H2</button>
-              <button className="format-btn format-btn--label" onClick={() => handleFormat("formatBlock", "H3")} title="Heading 3">H3</button>
+              <button
+                className="format-btn format-btn--label"
+                onClick={() => handleFormat("formatBlock", "H1")}
+                title="Heading 1"
+              >
+                H1
+              </button>
+              <button
+                className="format-btn format-btn--label"
+                onClick={() => handleFormat("formatBlock", "H2")}
+                title="Heading 2"
+              >
+                H2
+              </button>
+              <button
+                className="format-btn format-btn--label"
+                onClick={() => handleFormat("formatBlock", "H3")}
+                title="Heading 3"
+              >
+                H3
+              </button>
             </div>
 
             <div className="toolbar-divider" />
 
             {/* ── Lists ── */}
             <div className="toolbar-group">
-              <button className="format-btn" onClick={() => handleFormat("insertUnorderedList")} title="Bullet List">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="4" cy="6" r="1.5" fill="currentColor" stroke="none" />
-                  <circle cx="4" cy="12" r="1.5" fill="currentColor" stroke="none" />
-                  <circle cx="4" cy="18" r="1.5" fill="currentColor" stroke="none" />
-                  <line x1="9" y1="6" x2="21" y2="6" /><line x1="9" y1="12" x2="21" y2="12" /><line x1="9" y1="18" x2="21" y2="18" />
+              <button
+                className="format-btn"
+                onClick={() => handleFormat("insertUnorderedList")}
+                title="Bullet List"
+              >
+                <svg
+                  width="15"
+                  height="15"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <circle
+                    cx="4"
+                    cy="6"
+                    r="1.5"
+                    fill="currentColor"
+                    stroke="none"
+                  />
+                  <circle
+                    cx="4"
+                    cy="12"
+                    r="1.5"
+                    fill="currentColor"
+                    stroke="none"
+                  />
+                  <circle
+                    cx="4"
+                    cy="18"
+                    r="1.5"
+                    fill="currentColor"
+                    stroke="none"
+                  />
+                  <line x1="9" y1="6" x2="21" y2="6" />
+                  <line x1="9" y1="12" x2="21" y2="12" />
+                  <line x1="9" y1="18" x2="21" y2="18" />
                 </svg>
               </button>
-              <button className="format-btn" onClick={() => handleFormat("insertOrderedList")} title="Numbered List">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <line x1="10" y1="6" x2="21" y2="6" /><line x1="10" y1="12" x2="21" y2="12" /><line x1="10" y1="18" x2="21" y2="18" />
-                  <text x="2" y="8" fontSize="6.5" fill="currentColor" stroke="none" fontFamily="monospace">1.</text>
-                  <text x="2" y="14" fontSize="6.5" fill="currentColor" stroke="none" fontFamily="monospace">2.</text>
-                  <text x="2" y="20" fontSize="6.5" fill="currentColor" stroke="none" fontFamily="monospace">3.</text>
+              <button
+                className="format-btn"
+                onClick={() => handleFormat("insertOrderedList")}
+                title="Numbered List"
+              >
+                <svg
+                  width="15"
+                  height="15"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <line x1="10" y1="6" x2="21" y2="6" />
+                  <line x1="10" y1="12" x2="21" y2="12" />
+                  <line x1="10" y1="18" x2="21" y2="18" />
+                  <text
+                    x="2"
+                    y="8"
+                    fontSize="6.5"
+                    fill="currentColor"
+                    stroke="none"
+                    fontFamily="monospace"
+                  >
+                    1.
+                  </text>
+                  <text
+                    x="2"
+                    y="14"
+                    fontSize="6.5"
+                    fill="currentColor"
+                    stroke="none"
+                    fontFamily="monospace"
+                  >
+                    2.
+                  </text>
+                  <text
+                    x="2"
+                    y="20"
+                    fontSize="6.5"
+                    fill="currentColor"
+                    stroke="none"
+                    fontFamily="monospace"
+                  >
+                    3.
+                  </text>
                 </svg>
               </button>
             </div>
@@ -870,7 +1188,10 @@ const TextField = ({
               <Dropdown
                 options={FONT_OPTIONS}
                 value={noteFont}
-                onChange={(v) => { setNoteFont(v); if (onFontChange) onFontChange(v); }}
+                onChange={(v) => {
+                  setNoteFont(v);
+                  if (onFontChange) onFontChange(v);
+                }}
                 fontPreview={true}
                 fontMap={FONT_MAP}
               />
@@ -879,7 +1200,11 @@ const TextField = ({
               <Dropdown
                 options={FONT_SIZE_OPTIONS}
                 value={noteFontSize}
-                onChange={(v) => { const size = Number(v); setNoteFontSize(size); if (onFontSizeChange) onFontSizeChange(size); }}
+                onChange={(v) => {
+                  const size = Number(v);
+                  setNoteFontSize(size);
+                  if (onFontSizeChange) onFontSizeChange(size);
+                }}
               />
             </div>
 
@@ -888,22 +1213,60 @@ const TextField = ({
             {/* ── Colors ── */}
             <div className="toolbar-group">
               <div className="color-btn-wrapper">
-                <button className="format-btn color-btn" title="Text Color" onClick={() => textColorRef.current?.click()}>
+                <button
+                  className="format-btn color-btn"
+                  title="Text Color"
+                  onClick={() => textColorRef.current?.click()}
+                >
                   <span className="color-btn-label">A</span>
-                  <span className="color-indicator" style={{ background: textColor }} />
+                  <span
+                    className="color-indicator"
+                    style={{ background: textColor }}
+                  />
                 </button>
-                <input ref={textColorRef} type="color" value={textColor}
-                  onChange={(e) => { setTextColor(e.target.value); applyColorFormat("foreColor", e.target.value); }}
-                  className="hidden-color-input" />
+                <input
+                  ref={textColorRef}
+                  type="color"
+                  value={textColor}
+                  onChange={(e) => {
+                    setTextColor(e.target.value);
+                    applyColorFormat("foreColor", e.target.value);
+                  }}
+                  className="hidden-color-input"
+                />
               </div>
               <div className="color-btn-wrapper">
-                <button className="format-btn color-btn" title="Highlight Color" onClick={() => highlightColorRef.current?.click()}>
-                  <span className="color-btn-label" style={{ background: highlightColor, color: "#111", borderRadius: "2px", padding: "0 2px" }}>A</span>
-                  <span className="color-indicator" style={{ background: highlightColor }} />
+                <button
+                  className="format-btn color-btn"
+                  title="Highlight Color"
+                  onClick={() => highlightColorRef.current?.click()}
+                >
+                  <span
+                    className="color-btn-label"
+                    style={{
+                      background: highlightColor,
+                      color: "#111",
+                      borderRadius: "2px",
+                      padding: "0 2px",
+                    }}
+                  >
+                    A
+                  </span>
+                  <span
+                    className="color-indicator"
+                    style={{ background: highlightColor }}
+                  />
                 </button>
-                <input ref={highlightColorRef} type="color" value={highlightColor}
-                  onChange={(e) => { setHighlightColor(e.target.value); applyColorFormat("hiliteColor", e.target.value); }}
-                  className="hidden-color-input" />
+                <input
+                  ref={highlightColorRef}
+                  type="color"
+                  value={highlightColor}
+                  onChange={(e) => {
+                    setHighlightColor(e.target.value);
+                    applyColorFormat("hiliteColor", e.target.value);
+                  }}
+                  className="hidden-color-input"
+                />
               </div>
             </div>
 
@@ -914,7 +1277,10 @@ const TextField = ({
               <Dropdown
                 options={NOTE_THEME_OPTIONS}
                 value={noteTheme}
-                onChange={(v) => { setNoteTheme(v); if (onThemeChange) onThemeChange(v); }}
+                onChange={(v) => {
+                  setNoteTheme(v);
+                  if (onThemeChange) onThemeChange(v);
+                }}
               />
             </div>
           </div>
@@ -931,8 +1297,18 @@ const TextField = ({
               aria-label="Undo"
               title="Undo (⌘Z)"
             >
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M3 7v6h6" /><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13" />
+              <svg
+                width="13"
+                height="13"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M3 7v6h6" />
+                <path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13" />
               </svg>
             </Button>
             <Button
@@ -945,8 +1321,18 @@ const TextField = ({
               aria-label="Redo"
               title="Redo (⌘⇧Z)"
             >
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M21 7v6h-6" /><path d="M3 17a9 9 0 0 1 9-9 9 9 0 0 1 6 2.3L21 13" />
+              <svg
+                width="13"
+                height="13"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M21 7v6h-6" />
+                <path d="M3 17a9 9 0 0 1 9-9 9 9 0 0 1 6 2.3L21 13" />
               </svg>
             </Button>
             <Button
@@ -954,9 +1340,18 @@ const TextField = ({
               onClick={() => stopEdit()}
               aria-label="Done editing"
             >
-              <svg width="15" height="15" viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg">
-                <line x1="10" y1="25" x2="25" y2="40" strokeWidth="5" strokeLinecap="round" />
-                <line x1="25" y1="40" x2="40" y2="10" strokeWidth="5" strokeLinecap="round" />
+              <svg
+                width="12"
+                height="12"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <polyline points="20 6 9 17 4 12" />
               </svg>{" "}
               Done
             </Button>
@@ -969,12 +1364,7 @@ const TextField = ({
         className="editor"
         contentEditable={isEditMode}
         onInput={handleInput}
-        onKeyDown={(e) => {
-          if (e.key === "Tab") {
-            e.preventDefault();
-            document.execCommand("insertText", false, "  ");
-          }
-        }}
+        onKeyDown={handleEditorKeyDown}
         onClick={() => !isEditMode && startEdit()}
         suppressContentEditableWarning
         aria-label="Note editor"
