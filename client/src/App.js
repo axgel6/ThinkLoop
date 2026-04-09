@@ -7,6 +7,7 @@ import NotFound from "./components/NotFound";
 import LoginModal from "./components/Login";
 import { applyTheme } from "./utils/themes";
 import { applyFont } from "./utils/fonts";
+import { applyUIFontSize, normalizeUIFontSize } from "./utils/fontSize";
 import Home from "./components/Home";
 
 const API_URL = process.env.REACT_APP_API_URL || "http://localhost:3000";
@@ -15,6 +16,9 @@ const API_URL = process.env.REACT_APP_API_URL || "http://localhost:3000";
 try {
   applyTheme(localStorage.getItem("settings:selected") || "zero");
   applyFont(localStorage.getItem("settings:font") || "mono");
+  applyUIFontSize(
+    normalizeUIFontSize(localStorage.getItem("settings:fontSize")),
+  );
 } catch {}
 
 function App() {
@@ -54,9 +58,11 @@ function App() {
   const isWorkSessionRef = useRef(isWorkSession);
   const workDurationRef = useRef(workDuration);
   const breakDurationRef = useRef(breakDuration);
+  const currentUserRef = useRef(currentUser);
   isWorkSessionRef.current = isWorkSession;
   workDurationRef.current = workDuration;
   breakDurationRef.current = breakDuration;
+  currentUserRef.current = currentUser;
 
   const handleLogin = (userData) => {
     try {
@@ -73,9 +79,11 @@ function App() {
     setCurrentUser(null);
     localStorage.setItem("settings:selected", "zero");
     localStorage.setItem("settings:font", "zero");
+    localStorage.setItem("settings:fontSize", "16");
     localStorage.setItem("settings:weatherCity", "Atlanta");
     applyTheme("zero");
     applyFont("zero");
+    applyUIFontSize(16);
     setWeatherCity("Atlanta");
   };
 
@@ -130,6 +138,16 @@ function App() {
                 "focusStats:sessions",
                 JSON.stringify(existing),
               );
+              if (currentUserRef.current?.id) {
+                fetch(
+                  `${API_URL}/auth/user/${currentUserRef.current.id}/settings`,
+                  {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ focusSessions: existing }),
+                  },
+                ).catch(() => {});
+              }
               window.dispatchEvent(new Event("focusSessionComplete"));
             } catch {}
             setIsWorkSession(false);
@@ -191,10 +209,14 @@ function App() {
           const settings = await response.json();
           const newTheme = settings.colorTheme || "zero";
           const newFont = settings.fontTheme || "zero";
+          const newFontSize = normalizeUIFontSize(settings.fontSize);
           const newCity = settings.weatherCity || "Atlanta";
 
           const currentTheme = localStorage.getItem("settings:selected");
           const currentFont = localStorage.getItem("settings:font");
+          const currentFontSize = normalizeUIFontSize(
+            localStorage.getItem("settings:fontSize"),
+          );
           const currentCity = localStorage.getItem("settings:weatherCity");
 
           if (newTheme !== currentTheme) {
@@ -204,6 +226,10 @@ function App() {
           if (newFont !== currentFont) {
             localStorage.setItem("settings:font", newFont);
             applyFont(newFont);
+          }
+          if (newFontSize !== currentFontSize) {
+            localStorage.setItem("settings:fontSize", String(newFontSize));
+            applyUIFontSize(newFontSize);
           }
           if (newCity !== currentCity) {
             localStorage.setItem("settings:weatherCity", newCity);
@@ -228,6 +254,8 @@ function App() {
         applyTheme(e.newValue || "zero");
       } else if (e.key === "settings:font") {
         applyFont(e.newValue || "mono");
+      } else if (e.key === "settings:fontSize") {
+        applyUIFontSize(normalizeUIFontSize(e.newValue));
       } else if (e.key === "settings:weatherCity") {
         setWeatherCity(e.newValue || "Atlanta");
       }

@@ -195,8 +195,16 @@ app.post("/notes", async (req, res) => {
 // Update note
 app.put("/notes/:id", async (req, res) => {
   try {
-    const { title, content, font, fontSize, theme, isPinned, language, folderId } =
-      req.body;
+    const {
+      title,
+      content,
+      font,
+      fontSize,
+      theme,
+      isPinned,
+      language,
+      folderId,
+    } = req.body;
     const updateFields: any = {
       lastModified: Date.now(),
     };
@@ -313,7 +321,9 @@ app.post("/folders", async (req, res) => {
     }
     const nameSize = Buffer.byteLength(name.trim(), "utf8");
     if (nameSize > 500) {
-      return res.status(413).json({ error: "Folder name is too long (max 500 bytes)" });
+      return res
+        .status(413)
+        .json({ error: "Folder name is too long (max 500 bytes)" });
     }
     const now = Date.now();
     const newFolder = {
@@ -343,7 +353,9 @@ app.put("/folders/:id", async (req, res) => {
       }
       const nameSize = Buffer.byteLength(name.trim(), "utf8");
       if (nameSize > 500) {
-        return res.status(413).json({ error: "Folder name is too long (max 500 bytes)" });
+        return res
+          .status(413)
+          .json({ error: "Folder name is too long (max 500 bytes)" });
       }
       updateFields.name = name.trim();
     }
@@ -352,7 +364,9 @@ app.put("/folders/:id", async (req, res) => {
       if (parentId !== null) {
         const descendants = await getFolderDescendantIds(req.params.id);
         if (descendants.includes(parentId)) {
-          return res.status(400).json({ error: "Cannot move a folder into one of its own subfolders" });
+          return res.status(400).json({
+            error: "Cannot move a folder into one of its own subfolders",
+          });
         }
       }
       updateFields.parentId = parentId;
@@ -881,7 +895,13 @@ app.get("/auth/user/:userId/settings", async (req, res) => {
     res.json({
       colorTheme: user.colorTheme || "zero",
       fontTheme: user.fontTheme || "zero",
+      fontSize: user.fontSize || 16,
       weatherCity: user.weatherCity || "Atlanta",
+      countdowns: Array.isArray(user.countdowns) ? user.countdowns : [],
+      widgetConfig: Array.isArray(user.widgetConfig) ? user.widgetConfig : [],
+      focusSessions: Array.isArray(user.focusSessions)
+        ? user.focusSessions
+        : [],
     });
   } catch (error) {
     res.status(500).json({ error: "Failed to fetch settings" });
@@ -891,12 +911,104 @@ app.get("/auth/user/:userId/settings", async (req, res) => {
 // Update user settings (themes, fonts, weather)
 app.put("/auth/user/:userId/settings", async (req, res) => {
   try {
-    const { colorTheme, fontTheme, weatherCity } = req.body;
+    const {
+      colorTheme,
+      fontTheme,
+      fontSize,
+      weatherCity,
+      countdowns,
+      widgetConfig,
+      focusSessions,
+    } = req.body;
 
     const updateFields: any = {};
     if (colorTheme !== undefined) updateFields.colorTheme = colorTheme;
     if (fontTheme !== undefined) updateFields.fontTheme = fontTheme;
+    if (fontSize !== undefined) {
+      const parsedFontSize = Number(fontSize);
+      const allowedFontSizes = [14, 16, 18, 20];
+      if (!allowedFontSizes.includes(parsedFontSize)) {
+        return res.status(400).json({
+          error: "Invalid fontSize. Allowed values are 14, 16, 18, 20",
+        });
+      }
+      updateFields.fontSize = parsedFontSize;
+    }
     if (weatherCity !== undefined) updateFields.weatherCity = weatherCity;
+
+    if (countdowns !== undefined) {
+      if (!Array.isArray(countdowns)) {
+        return res.status(400).json({ error: "countdowns must be an array" });
+      }
+      const validDate = /^\d{4}-\d{2}-\d{2}$/;
+      updateFields.countdowns = countdowns
+        .slice(0, 100)
+        .map((c: any) => ({
+          id: typeof c?.id === "string" ? c.id : "",
+          label:
+            typeof c?.label === "string" ? c.label.trim().slice(0, 80) : "",
+          targetDate:
+            typeof c?.targetDate === "string" ? c.targetDate.trim() : "",
+        }))
+        .filter((c: any) => c.id && c.label && validDate.test(c.targetDate));
+    }
+
+    if (widgetConfig !== undefined) {
+      if (!Array.isArray(widgetConfig)) {
+        return res.status(400).json({ error: "widgetConfig must be an array" });
+      }
+      const allowedIds = new Set([
+        "today",
+        "pinned",
+        "recent",
+        "tasks",
+        "quick-note",
+        "quick-actions",
+        "focus-stats",
+        "countdowns",
+        "pomodoro",
+      ]);
+      const seen = new Set<string>();
+      const cleaned = widgetConfig
+        .slice(0, 20)
+        .map((w: any) => {
+          const id = typeof w?.id === "string" ? w.id : "";
+          if (!id || !allowedIds.has(id) || seen.has(id)) return null;
+          seen.add(id);
+          return {
+            id,
+            label: typeof w?.label === "string" ? w.label.slice(0, 60) : id,
+            visible: w?.visible !== false,
+            size: w?.size === "full" ? "full" : "half",
+          };
+        })
+        .filter(Boolean);
+      updateFields.widgetConfig = cleaned;
+    }
+
+    if (focusSessions !== undefined) {
+      if (!Array.isArray(focusSessions)) {
+        return res
+          .status(400)
+          .json({ error: "focusSessions must be an array" });
+      }
+      updateFields.focusSessions = focusSessions
+        .slice(-5000)
+        .map((s: any) => ({
+          startedAt: Number(s?.startedAt),
+          duration: Number(s?.duration),
+          type: s?.type,
+        }))
+        .filter(
+          (s: any) =>
+            Number.isFinite(s.startedAt) &&
+            s.startedAt > 0 &&
+            Number.isFinite(s.duration) &&
+            s.duration > 0 &&
+            s.duration <= 43200 &&
+            (s.type === "work" || s.type === "break"),
+        );
+    }
 
     const result = await userInfoCollection.updateOne(
       { _id: new ObjectId(req.params.userId) },

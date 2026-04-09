@@ -776,7 +776,7 @@ const TextField = ({
 
     return (
       <div
-        className={`text-field code-note ${isEditMode ? "edit-mode" : "view-mode"}`}
+        className={`text-field code-note note-theme-${noteTheme} ${isEditMode ? "edit-mode" : "view-mode"}`}
         style={themeVars}
         onClick={() => !isEditMode && startEdit()}
       >
@@ -818,7 +818,9 @@ const TextField = ({
                           strokeLinejoin="round"
                         />
                       </svg>
-                      <span>{currentFolder ? currentFolder.name : "folder"}</span>
+                      <span>
+                        {currentFolder ? currentFolder.name : "folder"}
+                      </span>
                     </button>
                     {showFolderPicker && (
                       <div className="note-folder-picker">
@@ -941,11 +943,15 @@ const TextField = ({
         )}
 
         {isEditMode ? (
-          <div className={`code-editor-wrapper${showLineNumbers ? " with-line-numbers" : ""}`}>
+          <div
+            className={`code-editor-wrapper${showLineNumbers ? " with-line-numbers" : ""}`}
+          >
             {showLineNumbers && (
               <div className="code-editor-line-numbers">
                 {value.split("\n").map((_, idx) => (
-                  <div key={idx} className="editor-line-number">{idx + 1}</div>
+                  <div key={idx} className="editor-line-number">
+                    {idx + 1}
+                  </div>
                 ))}
               </div>
             )}
@@ -973,7 +979,8 @@ const TextField = ({
                     setValue(newVal);
                     if (onChange) onChange(newVal);
                     requestAnimationFrame(() => {
-                      ta.selectionStart = ta.selectionEnd = start + spaces.length;
+                      ta.selectionStart = ta.selectionEnd =
+                        start + spaces.length;
                     });
                   }
                 }}
@@ -986,11 +993,15 @@ const TextField = ({
             </div>
           </div>
         ) : (
-          <div className={`code-view-wrapper${showLineNumbers ? " with-line-numbers" : ""}`}>
+          <div
+            className={`code-view-wrapper${showLineNumbers ? " with-line-numbers" : ""}`}
+          >
             {showLineNumbers && (
               <div className="code-line-numbers">
                 {value.split("\n").map((_, idx) => (
-                  <div key={idx} className="line-number">{idx + 1}</div>
+                  <div key={idx} className="line-number">
+                    {idx + 1}
+                  </div>
                 ))}
               </div>
             )}
@@ -1081,7 +1092,7 @@ const TextField = ({
 
   return (
     <div
-      className={`text-field ${isEditMode ? "edit-mode" : "view-mode"}`}
+      className={`text-field note-theme-${noteTheme} ${isEditMode ? "edit-mode" : "view-mode"}`}
       style={themeVars}
     >
       {/* Top bar with title and last modified - shown in view mode */}

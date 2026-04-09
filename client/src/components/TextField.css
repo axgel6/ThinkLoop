@@ -190,6 +190,22 @@
   line-height: 1.5;
 }
 
+/* Keep pin label readable on light palettes */
+.theme-light .text-field.note-theme-default .note-pin-indicator,
+.text-field.note-theme-light .note-pin-indicator,
+.text-field.note-theme-cream .note-pin-indicator,
+.text-field.note-theme-purple .note-pin-indicator,
+.text-field.note-theme-pink .note-pin-indicator,
+.text-field.note-theme-skyblue .note-pin-indicator,
+.text-field.note-theme-sage .note-pin-indicator,
+.text-field.note-theme-windowsxp .note-pin-indicator {
+  color: #fff3cc;
+  background: rgba(110, 68, 0, 0.82);
+  border-color: rgba(68, 40, 0, 0.92);
+  font-weight: 700;
+  font-size: 11px;
+}
+
 .note-title-display {
   font-size: 14px;
   font-weight: 600;
@@ -628,8 +644,8 @@
 
 /* Editor area */
 .editor {
-  padding: 14px 18px;
-  padding-left: 32px;
+  padding: 10px 16px;
+  padding-left: 18px;
   min-height: 120px;
   overflow-y: auto;
   outline: none;
@@ -744,8 +760,8 @@
 /* Mobile */
 @media (max-width: 640px) {
   .editor {
-    padding: 10px 14px;
-    padding-left: 24px;
+    padding: 8px 12px;
+    padding-left: 14px;
   }
   .editor ol,
   .editor ul {

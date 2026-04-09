@@ -3,6 +3,11 @@ import Dropdown from "./Dropdown";
 import AccountModal from "./AccountModal";
 import "./settings-page.css";
 import { FONT_OPTIONS, FONT_MAP, applyFont } from "../utils/fonts";
+import {
+  UI_FONT_SIZE_OPTIONS,
+  applyUIFontSize,
+  normalizeUIFontSize,
+} from "../utils/fontSize";
 import { COLOR_OPTIONS, applyTheme } from "../utils/themes";
 
 const API_URL = process.env.REACT_APP_API_URL || "http://localhost:3000";
@@ -256,30 +261,52 @@ const Settings = ({
     }
   });
 
+  const [fontSizeVal, setFontSizeVal] = React.useState(() => {
+    try {
+      return normalizeUIFontSize(localStorage.getItem("settings:fontSize"));
+    } catch {
+      return 16;
+    }
+  });
+
   const [showAccountModal, setShowAccountModal] = useState(false);
   const [isLoadingSettings, setIsLoadingSettings] = useState(false);
+  const [hasLoadedRemoteSettings, setHasLoadedRemoteSettings] =
+    useState(!currentUser);
 
   React.useEffect(() => {
+    let cancelled = false;
     const loadUserSettings = async () => {
-      if (!currentUser) return;
+      if (!currentUser) {
+        setHasLoadedRemoteSettings(true);
+        return;
+      }
+      setHasLoadedRemoteSettings(false);
       setIsLoadingSettings(true);
       try {
         const response = await fetch(
           `${API_URL}/auth/user/${currentUser.id}/settings`,
         );
-        if (response.ok) {
+        if (response.ok && !cancelled) {
           const settings = await response.json();
           setVal(settings.colorTheme || "zero");
           setFontVal(settings.fontTheme || "zero");
+          setFontSizeVal(normalizeUIFontSize(settings.fontSize));
           setWeatherCity(settings.weatherCity || "Atlanta");
         }
       } catch (error) {
         console.error("Failed to load user settings:", error);
       } finally {
-        setIsLoadingSettings(false);
+        if (!cancelled) {
+          setIsLoadingSettings(false);
+          setHasLoadedRemoteSettings(true);
+        }
       }
     };
     loadUserSettings();
+    return () => {
+      cancelled = true;
+    };
   }, [currentUser]);
 
   React.useEffect(() => {
@@ -287,7 +314,7 @@ const Settings = ({
     try {
       localStorage.setItem("settings:selected", val);
       applyTheme(val);
-      if (currentUser) {
+      if (currentUser && hasLoadedRemoteSettings) {
         fetch(`${API_URL}/auth/user/${currentUser.id}/settings`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
@@ -297,14 +324,14 @@ const Settings = ({
     } catch (e) {
       /* ignore */
     }
-  }, [val, currentUser, isLoadingSettings]);
+  }, [val, currentUser, isLoadingSettings, hasLoadedRemoteSettings]);
 
   React.useEffect(() => {
     if (isLoadingSettings) return;
     try {
       localStorage.setItem("settings:font", fontVal);
       applyFont(fontVal);
-      if (currentUser) {
+      if (currentUser && hasLoadedRemoteSettings) {
         fetch(`${API_URL}/auth/user/${currentUser.id}/settings`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
@@ -314,14 +341,14 @@ const Settings = ({
     } catch (e) {
       /* ignore */
     }
-  }, [fontVal, currentUser, isLoadingSettings]);
+  }, [fontVal, currentUser, isLoadingSettings, hasLoadedRemoteSettings]);
 
   React.useEffect(() => {
     if (isLoadingSettings) return;
     try {
       localStorage.setItem("settings:weatherCity", weatherCity);
       window.dispatchEvent(new Event("weatherCityChanged"));
-      if (currentUser) {
+      if (currentUser && hasLoadedRemoteSettings) {
         fetch(`${API_URL}/auth/user/${currentUser.id}/settings`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
@@ -331,7 +358,25 @@ const Settings = ({
     } catch (e) {
       /* ignore */
     }
-  }, [weatherCity, currentUser, isLoadingSettings]);
+  }, [weatherCity, currentUser, isLoadingSettings, hasLoadedRemoteSettings]);
+
+  React.useEffect(() => {
+    if (isLoadingSettings) return;
+    try {
+      const normalized = normalizeUIFontSize(fontSizeVal);
+      localStorage.setItem("settings:fontSize", String(normalized));
+      applyUIFontSize(normalized);
+      if (currentUser && hasLoadedRemoteSettings) {
+        fetch(`${API_URL}/auth/user/${currentUser.id}/settings`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ fontSize: normalized }),
+        }).catch((err) => console.error("Failed to sync font size:", err));
+      }
+    } catch (e) {
+      /* ignore */
+    }
+  }, [fontSizeVal, currentUser, isLoadingSettings, hasLoadedRemoteSettings]);
 
   const handleExportNotes = () => {
     try {
@@ -519,6 +564,26 @@ const Settings = ({
                 onChange={(v) => setFontVal(v)}
                 fontPreview={true}
                 fontMap={FONT_MAP}
+              />
+            </div>
+
+            <div className="settings-divider" />
+
+            {/* UI Font Size */}
+            <div className="settings-field settings-field--row">
+              <div className="settings-field-label-inline">
+                <div className="settings-field-icon">
+                  <IconFont />
+                </div>
+                <div>
+                  <div className="settings-field-name">Font Size</div>
+                  <div className="settings-field-hint">UI text scale</div>
+                </div>
+              </div>
+              <Dropdown
+                options={UI_FONT_SIZE_OPTIONS}
+                value={fontSizeVal}
+                onChange={(v) => setFontSizeVal(normalizeUIFontSize(v))}
               />
             </div>
 

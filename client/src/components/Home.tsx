@@ -95,6 +95,85 @@ const DEFAULT_WIDGET_CONFIG: WidgetConfig[] = [
 ];
 
 const WIDGET_CONFIG_KEY = "home:widget-config-v2";
+const COUNTDOWNS_KEY = "countdowns:items";
+const FOCUS_SESSIONS_KEY = "focusStats:sessions";
+
+const normalizeWidgetConfig = (input: unknown): WidgetConfig[] => {
+  if (!Array.isArray(input)) return DEFAULT_WIDGET_CONFIG;
+
+  const defaultById = new Map(DEFAULT_WIDGET_CONFIG.map((w) => [w.id, w]));
+  const seen = new Set<WidgetId>();
+  const normalized: WidgetConfig[] = [];
+
+  for (const raw of input) {
+    if (!raw || typeof raw !== "object") continue;
+    const maybeId = (raw as { id?: unknown }).id;
+    if (typeof maybeId !== "string") continue;
+    if (!defaultById.has(maybeId as WidgetId)) continue;
+    if (seen.has(maybeId as WidgetId)) continue;
+
+    const def = defaultById.get(maybeId as WidgetId)!;
+    normalized.push({
+      id: def.id,
+      label: def.label,
+      visible: (raw as { visible?: unknown }).visible !== false,
+      size: (raw as { size?: unknown }).size === "full" ? "full" : "half",
+    });
+    seen.add(def.id);
+  }
+
+  for (const def of DEFAULT_WIDGET_CONFIG) {
+    if (!seen.has(def.id)) normalized.push(def);
+  }
+
+  return normalized;
+};
+
+const normalizeCountdowns = (input: unknown): Countdown[] => {
+  if (!Array.isArray(input)) return [];
+  const validDate = /^\d{4}-\d{2}-\d{2}$/;
+  const out: Countdown[] = [];
+  for (const item of input) {
+    if (!item || typeof item !== "object") continue;
+    const raw = item as { id?: unknown; label?: unknown; targetDate?: unknown };
+    const label =
+      typeof raw.label === "string" ? raw.label.trim().slice(0, 80) : "";
+    const targetDate =
+      typeof raw.targetDate === "string" ? raw.targetDate.trim() : "";
+    if (!label || !validDate.test(targetDate)) continue;
+    const id =
+      typeof raw.id === "string" && raw.id.trim()
+        ? raw.id
+        : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    out.push({ id, label, targetDate });
+    if (out.length >= 100) break;
+  }
+  return out;
+};
+
+const normalizeFocusSessions = (input: unknown): SessionRecord[] => {
+  if (!Array.isArray(input)) return [];
+  const out: SessionRecord[] = [];
+  for (const item of input) {
+    if (!item || typeof item !== "object") continue;
+    const raw = item as {
+      startedAt?: unknown;
+      duration?: unknown;
+      type?: unknown;
+    };
+    const startedAt = Number(raw.startedAt);
+    const duration = Number(raw.duration);
+    const type = raw.type;
+    if (!Number.isFinite(startedAt) || startedAt <= 0) continue;
+    if (!Number.isFinite(duration) || duration <= 0 || duration > 43200) {
+      continue;
+    }
+    if (type !== "work" && type !== "break") continue;
+    out.push({ startedAt, duration, type });
+    if (out.length >= 5000) break;
+  }
+  return out;
+};
 
 // --- Date helpers ---
 const MONTHS = [
@@ -337,7 +416,9 @@ export default function Home({
 
   const [countdowns, setCountdowns] = useState<Countdown[]>(() => {
     try {
-      return JSON.parse(localStorage.getItem("countdowns:items") || "[]");
+      return normalizeCountdowns(
+        JSON.parse(localStorage.getItem(COUNTDOWNS_KEY) || "[]"),
+      );
     } catch {
       return [];
     }
@@ -357,21 +438,16 @@ export default function Home({
 
   const [widgetConfig, setWidgetConfig] = useState<WidgetConfig[]>(() => {
     try {
-      const saved: WidgetConfig[] | null = JSON.parse(
+      const saved = JSON.parse(
         localStorage.getItem(WIDGET_CONFIG_KEY) || "null",
       );
-      if (!Array.isArray(saved)) return DEFAULT_WIDGET_CONFIG;
-      const savedIds = new Set(saved.map((w) => w.id));
-      const merged = [...saved];
-      for (const def of DEFAULT_WIDGET_CONFIG) {
-        if (!savedIds.has(def.id)) merged.push(def);
-      }
-      return merged;
+      return normalizeWidgetConfig(saved);
     } catch {
       return DEFAULT_WIDGET_CONFIG;
     }
   });
   const [isEditingWidgets, setIsEditingWidgets] = useState(false);
+  const [homeSettingsReady, setHomeSettingsReady] = useState(!currentUser?.id);
 
   // --- Time ---
   const currentTime = now.toLocaleTimeString(undefined, {
@@ -544,7 +620,7 @@ export default function Home({
   const loadFocusStats = useCallback(() => {
     try {
       const sessions: SessionRecord[] = JSON.parse(
-        localStorage.getItem("focusStats:sessions") || "[]",
+        localStorage.getItem(FOCUS_SESSIONS_KEY) || "[]",
       );
       const d = new Date();
       const todayStart = new Date(
@@ -751,22 +827,93 @@ export default function Home({
   }, [getTasks]);
 
   useEffect(() => {
+    let active = true;
+    const loadHomeSettings = async () => {
+      if (!currentUser?.id) {
+        setHomeSettingsReady(true);
+        return;
+      }
+
+      setHomeSettingsReady(false);
+      try {
+        const res = await fetch(
+          `${API_URL}/auth/user/${currentUser.id}/settings`,
+        );
+        if (!res.ok) return;
+        const settings = await res.json();
+
+        if (Array.isArray(settings.countdowns) && active) {
+          setCountdowns(normalizeCountdowns(settings.countdowns));
+        }
+        if (Array.isArray(settings.widgetConfig) && active) {
+          setWidgetConfig(normalizeWidgetConfig(settings.widgetConfig));
+        }
+        if (Array.isArray(settings.focusSessions)) {
+          const normalized = normalizeFocusSessions(settings.focusSessions);
+          try {
+            localStorage.setItem(
+              FOCUS_SESSIONS_KEY,
+              JSON.stringify(normalized),
+            );
+          } catch {}
+          if (active) loadFocusStats();
+        }
+      } catch {}
+      if (active) setHomeSettingsReady(true);
+    };
+
+    loadHomeSettings();
+    return () => {
+      active = false;
+    };
+  }, [currentUser?.id, loadFocusStats]);
+
+  useEffect(() => {
     loadFocusStats();
-    const h = () => loadFocusStats();
+    const h = () => {
+      loadFocusStats();
+      if (!currentUser?.id || !homeSettingsReady) return;
+      try {
+        const sessions = normalizeFocusSessions(
+          JSON.parse(localStorage.getItem(FOCUS_SESSIONS_KEY) || "[]"),
+        );
+        fetch(`${API_URL}/auth/user/${currentUser.id}/settings`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ focusSessions: sessions }),
+        }).catch(() => {});
+      } catch {}
+    };
+    h();
     window.addEventListener("focusSessionComplete", h);
     return () => window.removeEventListener("focusSessionComplete", h);
-  }, [loadFocusStats]);
+  }, [loadFocusStats, currentUser?.id, homeSettingsReady]);
 
   useEffect(() => {
     try {
-      localStorage.setItem("countdowns:items", JSON.stringify(countdowns));
+      localStorage.setItem(COUNTDOWNS_KEY, JSON.stringify(countdowns));
     } catch {}
-  }, [countdowns]);
+    if (!currentUser?.id || !homeSettingsReady) return;
+    fetch(`${API_URL}/auth/user/${currentUser.id}/settings`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ countdowns: normalizeCountdowns(countdowns) }),
+    }).catch(() => {});
+  }, [countdowns, currentUser?.id, homeSettingsReady]);
+
   useEffect(() => {
     try {
       localStorage.setItem(WIDGET_CONFIG_KEY, JSON.stringify(widgetConfig));
     } catch {}
-  }, [widgetConfig]);
+    if (!currentUser?.id || !homeSettingsReady) return;
+    fetch(`${API_URL}/auth/user/${currentUser.id}/settings`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        widgetConfig: normalizeWidgetConfig(widgetConfig),
+      }),
+    }).catch(() => {});
+  }, [widgetConfig, currentUser?.id, homeSettingsReady]);
 
   // --- Widget JSX map ---
   const widgetMap: Record<WidgetId, ReactElement> = {
