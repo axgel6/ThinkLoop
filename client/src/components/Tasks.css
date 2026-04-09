@@ -276,7 +276,7 @@
 }
 
 .task-checkbox::after {
-  content: "✓";
+  content: "x";
   position: absolute;
   display: none;
   font-size: 12px;

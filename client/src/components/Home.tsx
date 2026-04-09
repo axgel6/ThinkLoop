@@ -828,7 +828,9 @@ export default function Home({
         {pinnedNotes.length === 0 ? (
           <div className="home-empty-state">
             <p className="home-empty-state-text">No pinned notes yet</p>
-            <p className="home-empty-state-hint">Pin a note to access it quickly</p>
+            <p className="home-empty-state-hint">
+              Pin a note to access it quickly
+            </p>
           </div>
         ) : (
           <div className="home-pinned-list">
@@ -858,7 +860,9 @@ export default function Home({
         {recentNotes.length === 0 ? (
           <div className="home-empty-state">
             <p className="home-empty-state-text">No notes yet</p>
-            <p className="home-empty-state-hint">Create your first note to get started</p>
+            <p className="home-empty-state-hint">
+              Create your first note to get started
+            </p>
           </div>
         ) : (
           <div className="home-recent-list">
@@ -877,12 +881,15 @@ export default function Home({
                 </div>
                 <div className="home-recent-time">
                   {note.lastModified
-                    ? new Date(note.lastModified).toLocaleDateString(undefined, {
-                        month: "short",
-                        day: "numeric",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })
+                    ? new Date(note.lastModified).toLocaleDateString(
+                        undefined,
+                        {
+                          month: "short",
+                          day: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        },
+                      )
                     : ""}
                 </div>
               </div>
@@ -1041,14 +1048,14 @@ export default function Home({
                     onClick={() => startEditCountdown(cd)}
                     aria-label="Edit countdown"
                   >
-                    ✎
+                    Edit
                   </button>
                   <button
                     className="countdown-remove"
                     onClick={() => removeCountdown(cd.id)}
                     aria-label="Remove countdown"
                   >
-                    ✕
+                    x
                   </button>
                 </div>
               );

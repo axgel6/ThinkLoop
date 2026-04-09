@@ -305,7 +305,7 @@ const Tasks: React.FC<TasksProps> = ({ currentUser }) => {
                 aria-label="Remove task"
                 title="Remove task"
               >
-                ✕
+                x
               </button>
             </li>
           ))}

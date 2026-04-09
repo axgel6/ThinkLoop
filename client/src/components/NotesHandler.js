@@ -815,9 +815,9 @@ const NotesHandler = ({ currentUser }) => {
 
           {selectedFolderName && (
             <div className="folder-breadcrumb">
-              <span>🗒 All Notes</span>
+              <span>All Notes</span>
               <span className="folder-breadcrumb-sep">›</span>
-              <span>📂 {selectedFolderName}</span>
+              <span>{selectedFolderName}</span>
             </div>
           )}
 
@@ -855,10 +855,7 @@ const NotesHandler = ({ currentUser }) => {
           className="ocr-modal-overlay"
           onClick={() => setShowOCRModal(false)}
         >
-          <div
-            className="ocr-modal-popup"
-            onClick={(e) => e.stopPropagation()}
-          >
+          <div className="ocr-modal-popup" onClick={(e) => e.stopPropagation()}>
             <div className="ocr-modal-header">
               <button
                 className="ocr-modal-close"

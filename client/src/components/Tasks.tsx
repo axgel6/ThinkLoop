@@ -58,7 +58,8 @@ const Tasks: React.FC<TasksProps> = ({ currentUser }) => {
                     completed: localTask.completed,
                     userId: currentUser.id,
                   };
-                  if (localTask.completedAt) taskToUpload.completedAt = localTask.completedAt;
+                  if (localTask.completedAt)
+                    taskToUpload.completedAt = localTask.completedAt;
                   await fetch(`${API_URL}/tasks`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
@@ -90,7 +91,6 @@ const Tasks: React.FC<TasksProps> = ({ currentUser }) => {
     fetchTasks();
   }, [currentUser]);
 
-
   React.useEffect(() => {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
@@ -100,11 +100,17 @@ const Tasks: React.FC<TasksProps> = ({ currentUser }) => {
   }, [items]);
 
   const active = React.useMemo(
-    () => items.filter((i) => !i.completed).sort((a, b) => b.createdAt - a.createdAt),
+    () =>
+      items
+        .filter((i) => !i.completed)
+        .sort((a, b) => b.createdAt - a.createdAt),
     [items],
   );
   const completed = React.useMemo(
-    () => items.filter((i) => i.completed).sort((a, b) => (a.completedAt ?? 0) - (b.completedAt ?? 0)),
+    () =>
+      items
+        .filter((i) => i.completed)
+        .sort((a, b) => (a.completedAt ?? 0) - (b.completedAt ?? 0)),
     [items],
   );
 
@@ -117,7 +123,13 @@ const Tasks: React.FC<TasksProps> = ({ currentUser }) => {
     if (!t) return;
     const now = Date.now();
     const id = `${now}-${Math.random().toString(36).slice(2)}`;
-    const newItem: Item = { id, _clientId: id, text: t, completed: false, createdAt: now };
+    const newItem: Item = {
+      id,
+      _clientId: id,
+      text: t,
+      completed: false,
+      createdAt: now,
+    };
     setItems((prev) => [newItem, ...prev]);
     setText("");
 
@@ -126,12 +138,18 @@ const Tasks: React.FC<TasksProps> = ({ currentUser }) => {
       const response = await fetch(`${API_URL}/tasks`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: t, completed: false, userId: currentUser.id }),
+        body: JSON.stringify({
+          text: t,
+          completed: false,
+          userId: currentUser.id,
+        }),
       });
       if (response.ok) {
         const created = await response.json();
         setItems((prev) =>
-          prev.map((item) => (item.id === id ? { ...item, id: created.id } : item)),
+          prev.map((item) =>
+            item.id === id ? { ...item, id: created.id } : item,
+          ),
         );
       }
     } catch (error) {
@@ -149,7 +167,8 @@ const Tasks: React.FC<TasksProps> = ({ currentUser }) => {
     setItems((prev) =>
       prev.map((i) => {
         if (i.id !== id) return i;
-        if (!i.completed) return { ...i, completed: true, completedAt: Date.now() };
+        if (!i.completed)
+          return { ...i, completed: true, completedAt: Date.now() };
         const { completedAt, ...rest } = i;
         return { ...rest, completed: false };
       }),
@@ -183,7 +202,12 @@ const Tasks: React.FC<TasksProps> = ({ currentUser }) => {
   };
 
   const dateLabel = useMemo(
-    () => new Date().toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" }),
+    () =>
+      new Date().toLocaleDateString(undefined, {
+        weekday: "long",
+        month: "long",
+        day: "numeric",
+      }),
     [],
   );
 
@@ -192,7 +216,6 @@ const Tasks: React.FC<TasksProps> = ({ currentUser }) => {
   return (
     <div className="tasks-page">
       <div className="tasks-inner">
-
         <div className="tasks-header">
           <h2 className="tasks-title">Tasks</h2>
           <span className="tasks-date">{dateLabel}</span>
@@ -201,9 +224,14 @@ const Tasks: React.FC<TasksProps> = ({ currentUser }) => {
         {total > 0 && (
           <div className="tasks-progress-row">
             <div className="tasks-progress-track">
-              <div className="tasks-progress-fill" style={{ width: `${progressPct}%` }} />
+              <div
+                className="tasks-progress-fill"
+                style={{ width: `${progressPct}%` }}
+              />
             </div>
-            <span className="tasks-progress-label">{doneCount}/{total}</span>
+            <span className="tasks-progress-label">
+              {doneCount}/{total}
+            </span>
           </div>
         )}
 
@@ -217,16 +245,41 @@ const Tasks: React.FC<TasksProps> = ({ currentUser }) => {
             aria-label="New task"
           />
           <button type="submit" className="tasks-add-btn" aria-label="Add task">
-            <svg width="14" height="14" viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg">
-              <line x1="25" y1="5" x2="25" y2="45" stroke="currentColor" strokeWidth="10" />
-              <line x1="5" y1="25" x2="45" y2="25" stroke="currentColor" strokeWidth="10" />
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 50 50"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <line
+                x1="25"
+                y1="5"
+                x2="25"
+                y2="45"
+                stroke="currentColor"
+                strokeWidth="10"
+              />
+              <line
+                x1="5"
+                y1="25"
+                x2="45"
+                y2="25"
+                stroke="currentColor"
+                strokeWidth="10"
+              />
             </svg>
           </button>
         </form>
 
-        <div className={`tasks-body${hasBothCols ? "" : " single-col"}`} role="region" aria-label="Tasks">
+        <div
+          className={`tasks-body${hasBothCols ? "" : " single-col"}`}
+          role="region"
+          aria-label="Tasks"
+        >
           <div className="tasks-col">
-            {hasBothCols && <p className="tasks-col-label">To do — {active.length}</p>}
+            {hasBothCols && (
+              <p className="tasks-col-label">To do — {active.length}</p>
+            )}
             <ul className="tasks-list">
               {active.length === 0 && completed.length === 0 && (
                 <li className="tasks-empty">No tasks yet — add one above</li>
@@ -235,24 +288,37 @@ const Tasks: React.FC<TasksProps> = ({ currentUser }) => {
                 <li className="tasks-empty">All done!</li>
               )}
               {active.map((item) => (
-                <TaskRow key={item._clientId ?? item.id} item={item} onToggle={toggleItem} onRemove={removeItem} />
+                <TaskRow
+                  key={item._clientId ?? item.id}
+                  item={item}
+                  onToggle={toggleItem}
+                  onRemove={removeItem}
+                />
               ))}
             </ul>
           </div>
 
           {completed.length > 0 && (
             <div className="tasks-col">
-              {hasBothCols && <p className="tasks-col-label">Completed — {completed.length}</p>}
+              {hasBothCols && (
+                <p className="tasks-col-label">
+                  Completed — {completed.length}
+                </p>
+              )}
               {!hasBothCols && <p className="tasks-col-label">Completed</p>}
               <ul className="tasks-list">
                 {completed.map((item) => (
-                  <TaskRow key={item._clientId ?? item.id} item={item} onToggle={toggleItem} onRemove={removeItem} />
+                  <TaskRow
+                    key={item._clientId ?? item.id}
+                    item={item}
+                    onToggle={toggleItem}
+                    onRemove={removeItem}
+                  />
                 ))}
               </ul>
             </div>
           )}
         </div>
-
       </div>
     </div>
   );
@@ -274,7 +340,9 @@ const TaskRow: React.FC<TaskRowProps> = ({ item, onToggle, onRemove }) => (
         aria-label={item.completed ? "Mark as not done" : "Mark as done"}
       />
       <span className="task-checkbox" />
-      <span className="task-text" title={item.text}>{item.text}</span>
+      <span className="task-text" title={item.text}>
+        {item.text}
+      </span>
     </label>
     <button
       className="task-remove-btn"
@@ -282,7 +350,7 @@ const TaskRow: React.FC<TaskRowProps> = ({ item, onToggle, onRemove }) => (
       aria-label="Remove task"
       title="Remove task"
     >
-      ✕
+      x
     </button>
   </li>
 );

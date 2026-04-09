@@ -173,7 +173,7 @@ export default function Weather({ city: propCity }: WeatherProps) {
   }
 
   if (error) {
-    return <p className="weather-text weather-error">⚠️ {error}</p>;
+    return <p className="weather-text weather-error">Warning: {error}</p>;
   }
 
   if (!weather) return null;
