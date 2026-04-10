@@ -339,7 +339,22 @@ const TaskRow: React.FC<TaskRowProps> = ({ item, onToggle, onRemove }) => (
         onChange={() => onToggle(item.id)}
         aria-label={item.completed ? "Mark as not done" : "Mark as done"}
       />
-      <span className="task-checkbox" />
+      <span className="task-checkbox" aria-hidden="true">
+        <svg
+          className="task-checkbox-check"
+          viewBox="0 0 16 16"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M3 8.2L6.3 11.2L13 4.8"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+      </span>
       <span className="task-text" title={item.text}>
         {item.text}
       </span>
@@ -350,7 +365,36 @@ const TaskRow: React.FC<TaskRowProps> = ({ item, onToggle, onRemove }) => (
       aria-label="Remove task"
       title="Remove task"
     >
-      x
+      <svg
+        width="14"
+        height="14"
+        viewBox="0 0 24 24"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        aria-hidden="true"
+      >
+        <path
+          d="M3 6H21"
+          stroke="currentColor"
+          strokeWidth="1.9"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        <path
+          d="M8 6V4.6C8 3.72 8.72 3 9.6 3H14.4C15.28 3 16 3.72 16 4.6V6"
+          stroke="currentColor"
+          strokeWidth="1.9"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        <path
+          d="M18.4 6L17.65 18.15C17.58 19.32 16.61 20.22 15.44 20.22H8.56C7.39 20.22 6.42 19.32 6.35 18.15L5.6 6"
+          stroke="currentColor"
+          strokeWidth="1.9"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
     </button>
   </li>
 );

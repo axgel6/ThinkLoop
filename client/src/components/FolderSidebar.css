@@ -16,7 +16,7 @@
   overflow-y: auto;
   scrollbar-width: none;
   /* leave clearance for the fixed bottom navbar */
-  height: calc(100vh - 110px);
+  height: calc(100vh - var(--notes-bottom-clearance, 110px));
   position: sticky;
   top: 16px;
   align-self: flex-start;
@@ -403,6 +403,8 @@
 
 /* Notes layout when sidebar is present */
 .notes-layout {
+  --notes-bottom-clearance: 110px;
+  --notes-main-bottom-padding: 60px;
   display: flex;
   gap: 18px;
   align-items: flex-start;
@@ -412,6 +414,7 @@
 .notes-main {
   flex: 1;
   min-width: 0;
+  padding-bottom: var(--notes-main-bottom-padding, 40px);
 }
 
 /* Move note dropdown */

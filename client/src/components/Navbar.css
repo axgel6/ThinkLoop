@@ -45,6 +45,11 @@
   animation: brandGlow 3s ease-in-out infinite;
 }
 
+body:has(.floating-editor-toolbar) .nav-brand,
+body:has(.floating-editor-toolbar) .nav-divider {
+  display: none;
+}
+
 @keyframes brandGlow {
   0%, 100% {
     text-shadow:

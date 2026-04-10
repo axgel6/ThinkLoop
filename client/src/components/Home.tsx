@@ -34,6 +34,8 @@ interface Note {
   content?: string;
   lastModified?: number;
   isPinned?: boolean;
+  noteType?: "text" | "code";
+  language?: string;
 }
 
 interface Task {
@@ -68,6 +70,7 @@ type WidgetId =
   | "today"
   | "pinned"
   | "recent"
+  | "recent-code"
   | "tasks"
   | "quick-note"
   | "quick-actions"
@@ -87,6 +90,7 @@ const DEFAULT_WIDGET_CONFIG: WidgetConfig[] = [
   { id: "quick-actions", label: "Quick Actions", visible: true, size: "full" },
   { id: "pinned", label: "Pinned Notes", visible: true, size: "half" },
   { id: "recent", label: "Recent Notes", visible: true, size: "half" },
+  { id: "recent-code", label: "Recent Code", visible: true, size: "half" },
   { id: "tasks", label: "Tasks", visible: true, size: "half" },
   { id: "quick-note", label: "Quick Note", visible: true, size: "half" },
   { id: "focus-stats", label: "Focus Stats", visible: true, size: "full" },
@@ -418,6 +422,7 @@ export default function Home({
   const [now, setNow] = useState<Date>(new Date());
   const [pinnedNotes, setPinnedNotes] = useState<Note[]>([]);
   const [recentNotes, setRecentNotes] = useState<Note[]>([]);
+  const [recentCodeNotes, setRecentCodeNotes] = useState<Note[]>([]);
   const [expandedNote, setExpandedNote] = useState<Note | null>(null);
   const [expandedToday, setExpandedToday] = useState(false);
 
@@ -545,6 +550,11 @@ export default function Home({
       .replace(/<[^>]+>/g, "")
       .replace(/\s+/g, " ")
       .trim();
+  const getCodePreview = (v: string) => {
+    const plain = (v || "").replace(/\r\n/g, "\n").trim();
+    if (!plain) return "// No code yet";
+    return plain.split("\n").slice(0, 5).join("\n");
+  };
   const formatTime = (s: number) =>
     `${Math.floor(s / 60)
       .toString()
@@ -565,27 +575,33 @@ export default function Home({
 
   // --- Recent notes ---
   const getRecentNotes = useCallback(async () => {
+    const splitRecent = (allNotes: Note[]) => {
+      const sorted = [...allNotes].sort(
+        (a, b) => (b.lastModified ?? 0) - (a.lastModified ?? 0),
+      );
+      return {
+        recentText: sorted.filter((n) => n.noteType !== "code").slice(0, 3),
+        recentCode: sorted.filter((n) => n.noteType === "code").slice(0, 3),
+      };
+    };
+
     if (!currentUser?.id) {
       try {
         const raw = localStorage.getItem("localNotes");
-        if (!raw) return [];
+        if (!raw) return { recentText: [], recentCode: [] };
         const local: Note[] = JSON.parse(raw);
-        return local
-          .sort((a, b) => (b.lastModified ?? 0) - (a.lastModified ?? 0))
-          .slice(0, 3);
+        return splitRecent(local);
       } catch {
-        return [];
+        return { recentText: [], recentCode: [] };
       }
     }
     try {
       const res = await fetch(`${API_URL}/notes?userId=${currentUser.id}`);
-      if (!res.ok) return [];
+      if (!res.ok) return { recentText: [], recentCode: [] };
       const notes: Note[] = await res.json();
-      return notes
-        .sort((a, b) => (b.lastModified ?? 0) - (a.lastModified ?? 0))
-        .slice(0, 3);
+      return splitRecent(notes);
     } catch {
-      return [];
+      return { recentText: [], recentCode: [] };
     }
   }, [currentUser]);
 
@@ -818,7 +834,10 @@ export default function Home({
     let active = true;
     const load = async () => {
       const n = await getRecentNotes();
-      if (active) setRecentNotes(n);
+      if (active) {
+        setRecentNotes(n.recentText);
+        setRecentCodeNotes(n.recentCode);
+      }
     };
     load();
     const id = setInterval(load, 15000);
@@ -1046,6 +1065,53 @@ export default function Home({
                   {stripHtml(note.content || "").slice(0, 150) ||
                     "(No content)"}
                 </div>
+                <div className="home-recent-time">
+                  {note.lastModified
+                    ? new Date(note.lastModified).toLocaleDateString(
+                        undefined,
+                        {
+                          month: "short",
+                          day: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        },
+                      )
+                    : ""}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    ),
+
+    "recent-code": (
+      <div key="recent-code" className="home-recent-code">
+        <h2>Recent Code</h2>
+        {recentCodeNotes.length === 0 ? (
+          <div className="home-empty-state">
+            <p className="home-empty-state-text">No code notes yet</p>
+            <p className="home-empty-state-hint">
+              Create a code note to see it here
+            </p>
+          </div>
+        ) : (
+          <div className="home-recent-list">
+            {recentCodeNotes.map((note) => (
+              <div
+                key={note.id}
+                className="home-recent-card home-recent-code-card"
+                onClick={() => setExpandedNote(note)}
+              >
+                <div className="home-recent-title home-recent-code-title-row">
+                  <span>{note.title?.trim() || "Untitled"}</span>
+                  <span className="home-recent-code-lang">
+                    {(note.language || "code").toUpperCase()}
+                  </span>
+                </div>
+                <pre className="home-recent-code-content">
+                  <code>{getCodePreview(note.content || "")}</code>
+                </pre>
                 <div className="home-recent-time">
                   {note.lastModified
                     ? new Date(note.lastModified).toLocaleDateString(
@@ -1465,12 +1531,23 @@ export default function Home({
               <div className="modal-note-title">
                 {expandedNote.title?.trim() || "Untitled"}
               </div>
-              <div
-                className="modal-note-content"
-                dangerouslySetInnerHTML={{
-                  __html: expandedNote.content || "(No content)",
-                }}
-              />
+              {expandedNote.noteType === "code" ? (
+                <div className="modal-note-code-wrap">
+                  <div className="modal-note-code-lang">
+                    {(expandedNote.language || "code").toUpperCase()}
+                  </div>
+                  <pre className="modal-note-content modal-note-content-code">
+                    <code>{expandedNote.content || "// No code content"}</code>
+                  </pre>
+                </div>
+              ) : (
+                <div
+                  className="modal-note-content"
+                  dangerouslySetInnerHTML={{
+                    __html: expandedNote.content || "(No content)",
+                  }}
+                />
+              )}
               {expandedNote.lastModified && (
                 <div className="modal-note-footer">
                   Last modified:{" "}

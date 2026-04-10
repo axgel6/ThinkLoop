@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
+import { createPortal } from "react-dom";
 import "./TextField.css";
 import Button from "./Button";
 import Dropdown from "./Dropdown";
@@ -30,19 +31,19 @@ const LANGUAGE_OPTIONS = [
   { id: "kotlin", label: "Kotlin" },
 ];
 
-const FONT_SIZE_OPTIONS = [
-  { id: 14, label: "14px" },
-  { id: 16, label: "16px" },
-  { id: 18, label: "18px" },
-  { id: 20, label: "20px" },
-  { id: 22, label: "22px" },
-  { id: 24, label: "24px" },
-  { id: 36, label: "36px" },
-  { id: 48, label: "48px" },
-  { id: 60, label: "60px" },
-  { id: 72, label: "72px" },
-  { id: 84, label: "84px" },
-  { id: 96, label: "96px" },
+const CODE_COLOR_THEME_OPTIONS = [
+  { id: "night-owl", label: "Night Owl" },
+  { id: "tokyo", label: "Tokyo Night" },
+  { id: "dracula", label: "Dracula" },
+  { id: "monokai", label: "Monokai" },
+  { id: "nord", label: "Nord" },
+  { id: "one-dark", label: "One Dark" },
+  { id: "solarized", label: "Solarized Dark" },
+  { id: "ayu", label: "Ayu Dark" },
+  { id: "github", label: "GitHub Dark" },
+  { id: "night-fox", label: "Night Fox" },
+  { id: "matrix", label: "Matrix" },
+  { id: "everforest", label: "Everforest" },
 ];
 
 const TextField = ({
@@ -62,12 +63,17 @@ const TextField = ({
   onFontSizeChange,
   isPinned = false,
   onTogglePin,
-  isFullScreen = false,
+  isFullScreen: isFullScreenProp = false,
   onFullScreenChange,
   noteId,
   noteType = "text",
   language: languageProp = "javascript",
+  codeColorTheme: codeColorThemeProp = "night-owl",
+  showLineNumbers: showLineNumbersProp = false,
   onLanguageChange,
+  onCodeColorThemeChange,
+  onShowLineNumbersChange,
+  onCommitEdit,
   // single-edit control
   isEditing,
   onRequestEdit,
@@ -122,11 +128,22 @@ const TextField = ({
   const [noteLanguage, setNoteLanguage] = useState(
     languageProp ?? "javascript",
   );
+  const [codeColorTheme, setCodeColorTheme] = useState(
+    codeColorThemeProp ?? "night-owl",
+  );
+  const [snippetLanguage, setSnippetLanguage] = useState(
+    languageProp ?? "javascript",
+  );
   // Show line numbers in code view
-  const [showLineNumbers, setShowLineNumbers] = useState(false);
+  const [showLineNumbers, setShowLineNumbers] = useState(
+    Boolean(showLineNumbersProp),
+  );
   // Edit mode: controlled by parent when isEditing prop is provided, otherwise local
   const [localEditMode, setLocalEditMode] = useState(false);
   const isEditMode = isEditing !== undefined ? isEditing : localEditMode;
+  const [localFullScreenMode, setLocalFullScreenMode] = useState(false);
+  const isFullScreen =
+    onFullScreenChange !== undefined ? isFullScreenProp : localFullScreenMode;
   const [showFolderPicker, setShowFolderPicker] = useState(false);
   const folderPickerRef = useRef(null);
 
@@ -139,13 +156,36 @@ const TextField = ({
     }
   };
 
+  const commitPendingEdits = useCallback(() => {
+    if (!hasPendingEditRef.current) return;
+    onCommitEdit?.();
+    hasPendingEditRef.current = false;
+  }, [onCommitEdit]);
+
   const stopEdit = useCallback(() => {
+    commitPendingEdits();
     if (isEditing !== undefined) {
       onExitEdit?.();
     } else {
       setLocalEditMode(false);
     }
-  }, [isEditing, onExitEdit]);
+  }, [commitPendingEdits, isEditing, onExitEdit]);
+
+  const openFullScreen = useCallback(() => {
+    if (onFullScreenChange !== undefined && noteId != null) {
+      onFullScreenChange(String(noteId));
+      return;
+    }
+    setLocalFullScreenMode(true);
+  }, [noteId, onFullScreenChange]);
+
+  const closeFullScreen = useCallback(() => {
+    if (onFullScreenChange !== undefined) {
+      onFullScreenChange(null);
+      return;
+    }
+    setLocalFullScreenMode(false);
+  }, [onFullScreenChange]);
 
   const currentFolder = folders?.find((f) => String(f.id) === String(folderId));
 
@@ -166,7 +206,20 @@ const TextField = ({
 
   const editorRef = useRef(null);
   const codeEditorRef = useRef(null);
+  const codeHighlightLayerRef = useRef(null);
   const codeHighlightRef = useRef(null);
+  const codeLineNumbersRef = useRef(null);
+  const codeViewRef = useRef(null);
+  const codeViewLineNumbersRef = useRef(null);
+  const textNoteRef = useRef(null);
+  const codeInlineNoteRef = useRef(null);
+  const floatingToolbarRef = useRef(null);
+  const codeUndoStackRef = useRef([]);
+  const codeRedoStackRef = useRef([]);
+  const codeLastSnapshotTimeRef = useRef(Date.now());
+  const codeLastSnapshotTextRef = useRef(
+    String(initialValue || "").replace(/<[^>]+>/g, ""),
+  );
   // Color picker refs
   const textColorRef = useRef(null);
   const highlightColorRef = useRef(null);
@@ -180,6 +233,13 @@ const TextField = ({
     underline: false,
     strikeThrough: false,
   });
+  const [showLinkPanel, setShowLinkPanel] = useState(false);
+  const [showTablePanel, setShowTablePanel] = useState(false);
+  const [toolbarPopoverAnchor, setToolbarPopoverAnchor] = useState(null);
+  const [linkDraftUrl, setLinkDraftUrl] = useState("https://");
+  const [linkDraftText, setLinkDraftText] = useState("");
+  const [tableDraftColumns, setTableDraftColumns] = useState("3");
+  const [tableDraftRows, setTableDraftRows] = useState("3");
   // Undo/redo stacks for editor content (HTML strings)
   const undoStackRef = useRef([]);
   const redoStackRef = useRef([]);
@@ -194,12 +254,15 @@ const TextField = ({
   const lastTitleSnapshotTimeRef = useRef(Date.now());
   const SNAPSHOT_INTERVAL = 1200; // ms
   const STACK_LIMIT = 50;
+  const CODE_SNAPSHOT_INTERVAL = 1200; // ms
+  const CODE_STACK_LIMIT = 50;
 
   // track last focused area ('title'|'editor'|'other')
   const lastFocusRef = useRef("other");
 
   const lastEditorRangeRef = useRef(null);
   const lastTitleSelRef = useRef({ start: null, end: null });
+  const hasPendingEditRef = useRef(false);
 
   // Stable refs for keyboard handler
   const undoRef = useRef(null);
@@ -310,7 +373,36 @@ const TextField = ({
       setNoteFontSize(fontSize);
     if (themeProp !== undefined && themeProp !== noteTheme)
       setNoteTheme(themeProp);
-  }, [fontProp, themeProp, fontSize, noteFont, noteTheme, noteFontSize]);
+    if (
+      codeColorThemeProp !== undefined &&
+      codeColorThemeProp !== codeColorTheme
+    ) {
+      setCodeColorTheme(codeColorThemeProp);
+    }
+    if (languageProp !== undefined && languageProp !== noteLanguage) {
+      setNoteLanguage(languageProp);
+      setSnippetLanguage(languageProp);
+    }
+    if (showLineNumbersProp !== undefined) {
+      const nextShowLineNumbers = Boolean(showLineNumbersProp);
+      if (nextShowLineNumbers !== showLineNumbers) {
+        setShowLineNumbers(nextShowLineNumbers);
+      }
+    }
+  }, [
+    fontProp,
+    themeProp,
+    fontSize,
+    codeColorThemeProp,
+    languageProp,
+    showLineNumbersProp,
+    noteFont,
+    noteTheme,
+    noteFontSize,
+    codeColorTheme,
+    noteLanguage,
+    showLineNumbers,
+  ]);
 
   // Reflect state to contenteditable div
   useEffect(() => {
@@ -359,6 +451,7 @@ const TextField = ({
     }
 
     setValue(newValue);
+    hasPendingEditRef.current = true;
     if (onChange) onChange(newValue);
   };
 
@@ -367,6 +460,229 @@ const TextField = ({
     document.execCommand(cmd, false, val);
     editorRef.current.focus();
     handleInput();
+  };
+
+  const handleInsertCodeSnippet = () => {
+    if (!editorRef.current) return;
+
+    editorRef.current.focus();
+    const savedRange = lastEditorRangeRef.current;
+    if (
+      savedRange &&
+      editorRef.current.contains(savedRange.commonAncestorContainer)
+    ) {
+      restoreEditorSelection(savedRange);
+    }
+
+    const sel = window.getSelection();
+    if (!sel || sel.rangeCount === 0) return;
+
+    const range = sel.getRangeAt(0);
+    if (!editorRef.current.contains(range.commonAncestorContainer)) return;
+
+    const pre = document.createElement("pre");
+    pre.className = "note-inline-snippet";
+    const snippetLangId = snippetLanguage || "snippet";
+    const snippetLangLabel =
+      LANGUAGE_OPTIONS.find((opt) => opt.id === snippetLangId)?.label ||
+      snippetLangId;
+    pre.setAttribute("data-language", snippetLangId);
+
+    const code = document.createElement("code");
+    code.setAttribute(
+      "data-placeholder",
+      `Start writing ${snippetLangLabel}...`,
+    );
+    code.textContent = "";
+    pre.appendChild(code);
+
+    range.deleteContents();
+    range.insertNode(pre);
+
+    const spacer = document.createElement("p");
+    spacer.innerHTML = "<br>";
+    pre.parentNode.insertBefore(spacer, pre.nextSibling);
+
+    const caret = document.createRange();
+    caret.selectNodeContents(code);
+    caret.collapse(false);
+    sel.removeAllRanges();
+    sel.addRange(caret);
+    lastEditorRangeRef.current = caret.cloneRange();
+
+    handleInput();
+  };
+
+  const getActiveSnippetBlock = () => {
+    const sel = window.getSelection();
+    if (!sel || sel.rangeCount === 0 || !editorRef.current) return null;
+
+    const range = sel.getRangeAt(0);
+    let node = range.startContainer;
+    if (!editorRef.current.contains(node)) return null;
+
+    if (node.nodeType === Node.TEXT_NODE) node = node.parentNode;
+    while (node && node !== editorRef.current) {
+      if (
+        node.nodeName === "PRE" &&
+        node.classList?.contains("note-inline-snippet")
+      ) {
+        return node;
+      }
+      node = node.parentNode;
+    }
+    return null;
+  };
+
+  const insertTextAtSelection = (text) => {
+    const sel = window.getSelection();
+    if (!sel || sel.rangeCount === 0) return;
+
+    const range = sel.getRangeAt(0);
+    range.deleteContents();
+    const textNode = document.createTextNode(text);
+    range.insertNode(textNode);
+    range.setStartAfter(textNode);
+    range.collapse(true);
+    sel.removeAllRanges();
+    sel.addRange(range);
+    lastEditorRangeRef.current = range.cloneRange();
+    handleInput();
+  };
+
+  const positionToolbarPopoverFromToggle = (event) => {
+    const toggleRect = event?.currentTarget?.getBoundingClientRect?.();
+    const toolbarRect = floatingToolbarRef.current?.getBoundingClientRect?.();
+    if (!toggleRect || !toolbarRect) {
+      setToolbarPopoverAnchor(null);
+      return;
+    }
+
+    const popoverWidth = 248;
+    const margin = 8;
+    const anchorCenterX =
+      toggleRect.left - toolbarRect.left + toggleRect.width / 2;
+    const minCenterX = popoverWidth / 2 + margin;
+    const maxCenterX = toolbarRect.width - popoverWidth / 2 - margin;
+    const clampedCenterX = Math.max(
+      minCenterX,
+      Math.min(anchorCenterX, maxCenterX),
+    );
+    setToolbarPopoverAnchor({
+      x: clampedCenterX,
+    });
+  };
+
+  const handleInsertLink = (event) => {
+    positionToolbarPopoverFromToggle(event);
+    const savedRange = saveEditorSelection();
+    if (savedRange) {
+      lastEditorRangeRef.current = savedRange;
+    }
+
+    const sel = window.getSelection();
+    const selectedText =
+      sel && sel.rangeCount > 0 ? sel.getRangeAt(0).toString().trim() : "";
+
+    setLinkDraftUrl("https://");
+    setLinkDraftText(selectedText || "");
+    setShowTablePanel(false);
+    setShowLinkPanel(true);
+  };
+
+  const applyLinkInsertion = () => {
+    let href = linkDraftUrl.trim();
+    if (!href) return;
+
+    if (
+      !/^https?:\/\//i.test(href) &&
+      !/^mailto:/i.test(href) &&
+      !/^tel:/i.test(href)
+    ) {
+      href = `https://${href}`;
+    }
+
+    const linkText =
+      linkDraftText.trim() || href.replace(/^https?:\/\//i, "") || href;
+
+    const escapedText = String(linkText)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;");
+    const escapedHref = href
+      .replace(/&/g, "&amp;")
+      .replace(/"/g, "&quot;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;");
+
+    if (
+      lastEditorRangeRef.current &&
+      editorRef.current?.contains(
+        lastEditorRangeRef.current.commonAncestorContainer,
+      )
+    ) {
+      editorRef.current.focus();
+      restoreEditorSelection(lastEditorRangeRef.current);
+    } else {
+      editorRef.current?.focus();
+    }
+
+    handleFormat(
+      "insertHTML",
+      `<a href="${escapedHref}" target="_blank" rel="noopener noreferrer">${escapedText}</a>`,
+    );
+    setShowLinkPanel(false);
+  };
+
+  const handleInsertTable = (event) => {
+    positionToolbarPopoverFromToggle(event);
+    const savedRange = saveEditorSelection();
+    if (savedRange) {
+      lastEditorRangeRef.current = savedRange;
+    }
+
+    setShowLinkPanel(false);
+    setShowTablePanel(true);
+  };
+
+  const applyTableInsertion = () => {
+    const columnCount = Math.min(
+      8,
+      Math.max(1, parseInt(tableDraftColumns, 10) || 3),
+    );
+    const rowCount = Math.min(
+      20,
+      Math.max(1, parseInt(tableDraftRows, 10) || 3),
+    );
+
+    const headerCells = Array.from(
+      { length: columnCount },
+      (_, idx) => `<th>Column ${idx + 1}</th>`,
+    ).join("");
+    const bodyRows = Array.from({ length: rowCount }, () => {
+      const cells = Array.from(
+        { length: columnCount },
+        () => "<td><br></td>",
+      ).join("");
+      return `<tr>${cells}</tr>`;
+    }).join("");
+
+    const tableHTML = `<table><thead><tr>${headerCells}</tr></thead><tbody>${bodyRows}</tbody></table><p><br></p>`;
+
+    if (
+      lastEditorRangeRef.current &&
+      editorRef.current?.contains(
+        lastEditorRangeRef.current.commonAncestorContainer,
+      )
+    ) {
+      editorRef.current.focus();
+      restoreEditorSelection(lastEditorRangeRef.current);
+    } else {
+      editorRef.current?.focus();
+    }
+
+    handleFormat("insertHTML", tableHTML);
+    setShowTablePanel(false);
   };
 
   // Restore last editor selection then apply a color command
@@ -402,6 +718,7 @@ const TextField = ({
     }
 
     setNoteTitle(t);
+    hasPendingEditRef.current = true;
     if (onTitleChange) onTitleChange(t);
   };
 
@@ -419,6 +736,7 @@ const TextField = ({
       // preserve focus and selection that we tracked earlier
       const lastSel = lastTitleSelRef.current;
       setNoteTitle(prev);
+      hasPendingEditRef.current = true;
       if (onTitleChange) onTitleChange(prev);
       setTimeout(() => {
         if (titleInput) {
@@ -442,6 +760,7 @@ const TextField = ({
     const savedRange = saveEditorSelection();
     setValue(prevHTML);
     if (editorRef.current) editorRef.current.innerHTML = prevHTML;
+    hasPendingEditRef.current = true;
     if (onChange) onChange(prevHTML);
     lastSnapshotTextRef.current =
       (editorRef.current && (editorRef.current.innerText || "")) || "";
@@ -464,6 +783,7 @@ const TextField = ({
       const titleInput = document.querySelector(".note-title-input");
       const lastSel = lastTitleSelRef.current;
       setNoteTitle(next);
+      hasPendingEditRef.current = true;
       if (onTitleChange) onTitleChange(next);
       setTimeout(() => {
         if (titleInput) {
@@ -486,6 +806,7 @@ const TextField = ({
     const savedRange = saveEditorSelection();
     setValue(nextHTML);
     if (editorRef.current) editorRef.current.innerHTML = nextHTML;
+    hasPendingEditRef.current = true;
     if (onChange) onChange(nextHTML);
     lastSnapshotTextRef.current =
       (editorRef.current && (editorRef.current.innerText || "")) || "";
@@ -592,6 +913,8 @@ const TextField = ({
   };
 
   const tryApplyMarkdownShortcut = () => {
+    if (getActiveSnippetBlock()) return false;
+
     const blockData = getBlockPrefixAtCaret();
     if (!blockData) return false;
 
@@ -642,6 +965,8 @@ const TextField = ({
   };
 
   const tryBreakOutOfStyledBlockOnEnter = () => {
+    if (getActiveSnippetBlock()) return false;
+
     const blockData = getBlockPrefixAtCaret();
     if (!blockData) return false;
 
@@ -664,9 +989,25 @@ const TextField = ({
   const handleEditorKeyDown = (e) => {
     if (!isEditMode) return;
 
+    const activeSnippet = getActiveSnippetBlock();
+    if (activeSnippet) {
+      if (e.key === "Tab") {
+        e.preventDefault();
+        insertTextAtSelection("  ");
+        return;
+      }
+
+      if (e.key === "Enter") {
+        e.preventDefault();
+        insertTextAtSelection("\n");
+        return;
+      }
+    }
+
     if (e.key === "Tab") {
       e.preventDefault();
       document.execCommand("insertText", false, "  ");
+      handleInput();
       return;
     }
 
@@ -711,6 +1052,663 @@ const TextField = ({
   // Prepare inline variables for the selected theme (or undefined for default)
   const themeVars = noteTheme === "default" ? undefined : THEME_VARS[noteTheme];
 
+  const updateCodeHighlight = useCallback(
+    (nextValue, forcedLanguage) => {
+      const highlight = codeHighlightRef.current;
+      if (!highlight) return;
+      const lang = forcedLanguage || noteLanguage;
+      try {
+        highlight.innerHTML = hljs.highlight(nextValue || "", {
+          language: lang,
+          ignoreIllegals: true,
+        }).value;
+      } catch {
+        highlight.innerHTML = hljs.highlightAuto(nextValue || "").value;
+      }
+    },
+    [noteLanguage],
+  );
+
+  const syncCodeEditorLayers = useCallback(() => {
+    const editor = codeEditorRef.current;
+    const highlightLayer = codeHighlightLayerRef.current;
+    if (!editor || !highlightLayer) return;
+
+    const highlightCode = codeHighlightRef.current;
+    if (highlightCode) {
+      const editorStyles = window.getComputedStyle(editor);
+      const editorPaddingTop = parseFloat(editorStyles.paddingTop) || 0;
+      const editorPaddingBottom = parseFloat(editorStyles.paddingBottom) || 0;
+      const desiredCodeHeight = Math.max(
+        0,
+        editor.scrollHeight - editorPaddingTop - editorPaddingBottom,
+      );
+      highlightCode.style.minHeight = `${desiredCodeHeight}px`;
+    }
+
+    const editorMaxY = Math.max(1, editor.scrollHeight - editor.clientHeight);
+    const editorMaxX = Math.max(1, editor.scrollWidth - editor.clientWidth);
+    const highlightMaxY = Math.max(
+      0,
+      highlightLayer.scrollHeight - highlightLayer.clientHeight,
+    );
+    const highlightMaxX = Math.max(
+      0,
+      highlightLayer.scrollWidth - highlightLayer.clientWidth,
+    );
+
+    const yRatio = editor.scrollTop / editorMaxY;
+    const xRatio = editor.scrollLeft / editorMaxX;
+
+    highlightLayer.scrollTop = highlightMaxY * yRatio;
+    highlightLayer.scrollLeft = highlightMaxX * xRatio;
+
+    if (codeLineNumbersRef.current) {
+      codeLineNumbersRef.current.scrollTop = editor.scrollTop;
+    }
+  }, []);
+
+  const revealCodeCaret = useCallback(
+    (selectionStart = null, sourceText = null) => {
+      const editor = codeEditorRef.current;
+      if (!editor) return;
+
+      const caretIndex =
+        typeof selectionStart === "number"
+          ? selectionStart
+          : (editor.selectionStart ?? 0);
+      const activeText =
+        typeof sourceText === "string" ? sourceText : editor.value || "";
+      const beforeCaret = activeText.slice(0, Math.max(0, caretIndex));
+      const lineIndex = beforeCaret.split("\n").length - 1;
+
+      const computed = window.getComputedStyle(editor);
+      const lineHeight = parseFloat(computed.lineHeight) || 23;
+      const paddingTop = parseFloat(computed.paddingTop) || 0;
+      const paddingBottom = parseFloat(computed.paddingBottom) || 0;
+
+      const caretY = paddingTop + lineIndex * lineHeight;
+      const visibleTop = editor.scrollTop;
+      const visibleBottom =
+        editor.scrollTop + editor.clientHeight - paddingBottom;
+      const bottomThreshold = visibleBottom - lineHeight * 1.1;
+
+      if (caretY >= bottomThreshold) {
+        editor.scrollTop = Math.max(
+          0,
+          caretY - (editor.clientHeight - paddingBottom - lineHeight * 1.2),
+        );
+      } else if (caretY < visibleTop + paddingTop) {
+        editor.scrollTop = Math.max(0, caretY - paddingTop);
+      }
+
+      syncCodeEditorLayers();
+    },
+    [syncCodeEditorLayers],
+  );
+
+  const runAfterCodeLayout = useCallback((cb) => {
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        cb?.();
+      });
+    });
+  }, []);
+
+  const pushCodeUndoSnapshot = useCallback((previousValue) => {
+    const stack = codeUndoStackRef.current;
+    if (stack.length > 0 && stack[stack.length - 1] === previousValue) {
+      return;
+    }
+    stack.push(previousValue);
+    if (stack.length > CODE_STACK_LIMIT) stack.shift();
+    codeRedoStackRef.current = [];
+  }, []);
+
+  const commitCodeValue = useCallback(
+    (
+      nextValue,
+      nextSelectionStart = null,
+      nextSelectionEnd = nextSelectionStart,
+      options = {},
+    ) => {
+      const { revealCaret = false } = options;
+      const previousValue = value;
+      const nextText = String(nextValue || "").replace(/<[^>]+>/g, "");
+      if (previousValue !== nextValue) {
+        const nowTs = Date.now();
+        const prevSnapshotText = codeLastSnapshotTextRef.current || "";
+        const lenDelta = nextText.length - prevSnapshotText.length;
+        const insertedSingleChar =
+          lenDelta === 1 && nextText.startsWith(prevSnapshotText);
+        const deletedSingleChar =
+          lenDelta === -1 && prevSnapshotText.startsWith(nextText);
+        const singleCharEdit = insertedSingleChar || deletedSingleChar;
+        const whitespaceBoundary = /\s$/.test(nextText);
+        const timeExceeded =
+          nowTs - codeLastSnapshotTimeRef.current > CODE_SNAPSHOT_INTERVAL;
+        const structuralEdit = Math.abs(lenDelta) > 1;
+        const needsSnapshot =
+          codeUndoStackRef.current.length === 0 ||
+          !singleCharEdit ||
+          structuralEdit ||
+          whitespaceBoundary ||
+          timeExceeded;
+
+        if (needsSnapshot) {
+          pushCodeUndoSnapshot(previousValue);
+          codeLastSnapshotTimeRef.current = nowTs;
+        }
+
+        codeLastSnapshotTextRef.current = nextText;
+        hasPendingEditRef.current = true;
+      }
+
+      setValue(nextValue);
+      updateCodeHighlight(nextValue);
+      if (onChange) onChange(nextValue);
+
+      if (nextSelectionStart != null && codeEditorRef.current) {
+        requestAnimationFrame(() => {
+          const editor = codeEditorRef.current;
+          if (!editor) return;
+          editor.selectionStart = nextSelectionStart;
+          editor.selectionEnd = nextSelectionEnd ?? nextSelectionStart;
+          runAfterCodeLayout(() => {
+            if (revealCaret) {
+              revealCodeCaret(nextSelectionStart, nextValue);
+            } else {
+              syncCodeEditorLayers();
+            }
+          });
+        });
+      } else {
+        runAfterCodeLayout(() => {
+          if (revealCaret) {
+            revealCodeCaret(null, nextValue);
+          } else {
+            syncCodeEditorLayers();
+          }
+        });
+      }
+    },
+    [
+      onChange,
+      pushCodeUndoSnapshot,
+      revealCodeCaret,
+      runAfterCodeLayout,
+      syncCodeEditorLayers,
+      updateCodeHighlight,
+      value,
+    ],
+  );
+
+  const undoCode = useCallback(() => {
+    const stack = codeUndoStackRef.current;
+    if (stack.length === 0) return;
+    const previousValue = stack.pop();
+    const redoStack = codeRedoStackRef.current;
+    redoStack.push(value);
+    if (redoStack.length > CODE_STACK_LIMIT) redoStack.shift();
+    setValue(previousValue);
+    updateCodeHighlight(previousValue);
+    if (onChange) onChange(previousValue);
+    codeLastSnapshotTimeRef.current = Date.now();
+    codeLastSnapshotTextRef.current = String(previousValue || "").replace(
+      /<[^>]+>/g,
+      "",
+    );
+  }, [onChange, updateCodeHighlight, value]);
+
+  const redoCode = useCallback(() => {
+    const stack = codeRedoStackRef.current;
+    if (stack.length === 0) return;
+    const nextValue = stack.pop();
+    const undoStack = codeUndoStackRef.current;
+    undoStack.push(value);
+    if (undoStack.length > CODE_STACK_LIMIT) undoStack.shift();
+    setValue(nextValue);
+    updateCodeHighlight(nextValue);
+    if (onChange) onChange(nextValue);
+    codeLastSnapshotTimeRef.current = Date.now();
+    codeLastSnapshotTextRef.current = String(nextValue || "").replace(
+      /<[^>]+>/g,
+      "",
+    );
+  }, [onChange, updateCodeHighlight, value]);
+
+  const handleCodeEditorKeyDown = (e) => {
+    const ta = e.target;
+    const start = ta.selectionStart;
+    const end = ta.selectionEnd;
+    const indentUnit = "  ";
+    const isMeta = e.metaKey || e.ctrlKey;
+
+    if (isMeta && !e.shiftKey && (e.key === "z" || e.key === "Z")) {
+      e.preventDefault();
+      e.stopPropagation();
+      undoCode();
+      return;
+    }
+
+    if (
+      (isMeta && e.shiftKey && (e.key === "z" || e.key === "Z")) ||
+      (isMeta && (e.key === "y" || e.key === "Y"))
+    ) {
+      e.preventDefault();
+      e.stopPropagation();
+      redoCode();
+      return;
+    }
+
+    if (isMeta && (e.key === "s" || e.key === "S" || e.key === "Enter")) {
+      e.preventDefault();
+      e.stopPropagation();
+      if (isFullScreen) closeFullScreen();
+      stopEdit();
+      return;
+    }
+
+    const setCodeValue = (
+      nextValue,
+      nextStart,
+      nextEnd = nextStart,
+      options = {},
+    ) => {
+      commitCodeValue(nextValue, nextStart, nextEnd, options);
+    };
+
+    const lineStartAt = (pos) => {
+      const idx = value.lastIndexOf("\n", Math.max(0, pos - 1));
+      return idx === -1 ? 0 : idx + 1;
+    };
+
+    const lineEndAt = (pos) => {
+      const idx = value.indexOf("\n", pos);
+      return idx === -1 ? value.length : idx;
+    };
+
+    if (isMeta && (e.key === "]" || e.key === "[")) {
+      e.preventDefault();
+      const outdent = e.key === "[";
+      const blockStart = lineStartAt(start);
+      const blockEnd = lineEndAt(end);
+      const block = value.slice(blockStart, blockEnd);
+      const lines = block.split("\n");
+
+      if (outdent) {
+        let removedTotal = 0;
+        const updated = lines.map((line) => {
+          if (line.startsWith(indentUnit)) {
+            removedTotal += indentUnit.length;
+            return line.slice(indentUnit.length);
+          }
+          if (line.startsWith("\t")) {
+            removedTotal += 1;
+            return line.slice(1);
+          }
+          return line;
+        });
+        const newBlock = updated.join("\n");
+        const newValue =
+          value.slice(0, blockStart) + newBlock + value.slice(blockEnd);
+        setCodeValue(
+          newValue,
+          Math.max(blockStart, start - indentUnit.length),
+          Math.max(blockStart, end - removedTotal),
+        );
+      } else {
+        const updated = lines.map((line) => `${indentUnit}${line}`);
+        const newBlock = updated.join("\n");
+        const newValue =
+          value.slice(0, blockStart) + newBlock + value.slice(blockEnd);
+        const addedTotal = lines.length * indentUnit.length;
+        setCodeValue(newValue, start + indentUnit.length, end + addedTotal);
+      }
+      return;
+    }
+
+    if (isMeta && (e.key === "d" || e.key === "D")) {
+      e.preventDefault();
+      if (start !== end) {
+        const selected = value.slice(start, end);
+        const newValue = value.slice(0, end) + selected + value.slice(end);
+        setCodeValue(newValue, end, end + selected.length);
+        return;
+      }
+
+      const lineStart = lineStartAt(start);
+      const lineEnd = lineEndAt(start);
+      const lineText = value.slice(lineStart, lineEnd);
+      const newline = lineEnd < value.length ? "\n" : "";
+      const insertText = `${lineText}${newline}`;
+      const newValue =
+        value.slice(0, lineEnd) + insertText + value.slice(lineEnd);
+      const nextCaret = lineEnd + insertText.length;
+      setCodeValue(newValue, nextCaret);
+      return;
+    }
+
+    if (e.altKey && (e.key === "ArrowUp" || e.key === "ArrowDown")) {
+      e.preventDefault();
+      const blockStart = lineStartAt(start);
+      const blockEnd = lineEndAt(end);
+      const block = value.slice(blockStart, blockEnd);
+
+      if (e.key === "ArrowUp") {
+        if (blockStart === 0) return;
+        const prevLineStart = lineStartAt(blockStart - 1);
+        const prevLine = value.slice(prevLineStart, blockStart - 1);
+        const before = value.slice(0, prevLineStart);
+        const after = value.slice(blockEnd);
+        const swapped = `${before}${block}\n${prevLine}${after}`;
+        const shift = prevLine.length + 1;
+        setCodeValue(
+          swapped,
+          Math.max(0, start - shift),
+          Math.max(0, end - shift),
+        );
+      } else {
+        if (blockEnd >= value.length) return;
+        const nextLineEnd = lineEndAt(blockEnd + 1);
+        const nextLine = value.slice(blockEnd + 1, nextLineEnd);
+        const before = value.slice(0, blockStart);
+        const after = value.slice(nextLineEnd);
+        const swapped = `${before}${nextLine}\n${block}${after}`;
+        const shift = nextLine.length + 1;
+        setCodeValue(swapped, start + shift, end + shift);
+      }
+      return;
+    }
+
+    if (
+      e.key === ">" &&
+      !e.metaKey &&
+      !e.ctrlKey &&
+      !e.altKey &&
+      start === end
+    ) {
+      const lang = String(noteLanguage || "").toLowerCase();
+      const isMarkupLang = ["html", "xml", "xhtml", "svg"].includes(lang);
+      if (isMarkupLang) {
+        const before = value.slice(0, start);
+        const after = value.slice(end);
+        const openerMatch = before.match(/<([A-Za-z][\w:-]*)(?:\s[^<>]*)?$/);
+        if (openerMatch && !before.endsWith("/")) {
+          const tagName = openerMatch[1];
+          const lowerTag = tagName.toLowerCase();
+          const voidTags = new Set([
+            "area",
+            "base",
+            "br",
+            "col",
+            "embed",
+            "hr",
+            "img",
+            "input",
+            "link",
+            "meta",
+            "param",
+            "source",
+            "track",
+            "wbr",
+          ]);
+          if (!voidTags.has(lowerTag)) {
+            e.preventDefault();
+            const insert = `></${tagName}>`;
+            const newValue = before + insert + after;
+            setCodeValue(newValue, start + 1);
+            return;
+          }
+        }
+      }
+    }
+
+    if (isMeta && e.key === "/") {
+      e.preventDefault();
+      const blockStart = lineStartAt(start);
+      const blockEnd = lineEndAt(end);
+      const block = value.slice(blockStart, blockEnd);
+      const lines = block.split("\n");
+      const commentPrefix = "// ";
+      const shouldUncomment = lines.every(
+        (line) => line.trim().length === 0 || /^\s*\/\//.test(line),
+      );
+
+      const updatedLines = lines.map((line) => {
+        if (line.trim().length === 0) return line;
+        if (shouldUncomment) {
+          return line.replace(/^(\s*)\/\/\s?/, "$1");
+        }
+        const leading = (line.match(/^\s*/) || [""])[0];
+        return `${leading}${commentPrefix}${line.slice(leading.length)}`;
+      });
+
+      const newBlock = updatedLines.join("\n");
+      const newValue =
+        value.slice(0, blockStart) + newBlock + value.slice(blockEnd);
+      setCodeValue(newValue, blockStart, blockStart + newBlock.length);
+      return;
+    }
+
+    const openToClose = {
+      "(": ")",
+      "[": "]",
+      "{": "}",
+      '"': '"',
+      "'": "'",
+      "`": "`",
+    };
+    const closingChars = new Set(Object.values(openToClose));
+
+    if (
+      !e.metaKey &&
+      !e.ctrlKey &&
+      !e.altKey &&
+      Object.prototype.hasOwnProperty.call(openToClose, e.key)
+    ) {
+      e.preventDefault();
+      const close = openToClose[e.key];
+      const selected = value.slice(start, end);
+      const wrapped = `${e.key}${selected}${close}`;
+      const newValue = value.slice(0, start) + wrapped + value.slice(end);
+      if (start !== end) {
+        setCodeValue(newValue, start + 1, start + 1 + selected.length);
+      } else {
+        setCodeValue(newValue, start + 1);
+      }
+      return;
+    }
+
+    if (
+      !e.metaKey &&
+      !e.ctrlKey &&
+      !e.altKey &&
+      start === end &&
+      closingChars.has(e.key) &&
+      value[start] === e.key
+    ) {
+      e.preventDefault();
+      setCodeValue(value, start + 1);
+      return;
+    }
+
+    if (e.key === "Tab") {
+      e.preventDefault();
+
+      if (start !== end && value.slice(start, end).includes("\n")) {
+        const blockStart = lineStartAt(start);
+        const blockEnd = lineEndAt(end);
+        const block = value.slice(blockStart, blockEnd);
+        const lines = block.split("\n");
+
+        if (e.shiftKey) {
+          let removedFromFirstLine = 0;
+          let removedTotal = 0;
+          const outdented = lines.map((line, idx) => {
+            if (line.startsWith(indentUnit)) {
+              if (idx === 0) removedFromFirstLine = indentUnit.length;
+              removedTotal += indentUnit.length;
+              return line.slice(indentUnit.length);
+            }
+            if (line.startsWith("\t")) {
+              if (idx === 0) removedFromFirstLine = 1;
+              removedTotal += 1;
+              return line.slice(1);
+            }
+            return line;
+          });
+          const newBlock = outdented.join("\n");
+          const newValue =
+            value.slice(0, blockStart) + newBlock + value.slice(blockEnd);
+          setCodeValue(
+            newValue,
+            Math.max(blockStart, start - removedFromFirstLine),
+            Math.max(blockStart, end - removedTotal),
+          );
+        } else {
+          const indented = lines.map((line) => `${indentUnit}${line}`);
+          const newBlock = indented.join("\n");
+          const newValue =
+            value.slice(0, blockStart) + newBlock + value.slice(blockEnd);
+          const addedTotal = lines.length * indentUnit.length;
+          setCodeValue(newValue, start + indentUnit.length, end + addedTotal);
+        }
+        return;
+      }
+
+      if (e.shiftKey) {
+        const lineStart = lineStartAt(start);
+        const beforeCaret = value.slice(lineStart, start);
+        if (beforeCaret.endsWith(indentUnit) || beforeCaret.endsWith("\t")) {
+          const removeLen = beforeCaret.endsWith(indentUnit)
+            ? indentUnit.length
+            : 1;
+          const newValue = value.slice(0, start - removeLen) + value.slice(end);
+          setCodeValue(newValue, start - removeLen);
+        }
+        return;
+      }
+
+      const newValue = value.slice(0, start) + indentUnit + value.slice(end);
+      setCodeValue(newValue, start + indentUnit.length);
+      return;
+    }
+
+    if (e.key === "Enter") {
+      e.preventDefault();
+      const lineStart = lineStartAt(start);
+      const currentLine = value.slice(lineStart, start);
+      const leadingWhitespace = (currentLine.match(/^[\t ]*/) || [""])[0];
+      const trimmedLine = currentLine.trimEnd();
+      const prevChar = start > 0 ? value[start - 1] : "";
+      const nextChar = start < value.length ? value[start] : "";
+
+      if (
+        start === end &&
+        ((prevChar === "{" && nextChar === "}") ||
+          (prevChar === "[" && nextChar === "]") ||
+          (prevChar === "(" && nextChar === ")"))
+      ) {
+        const insert = `\n${leadingWhitespace}${indentUnit}\n${leadingWhitespace}`;
+        const newValue = value.slice(0, start) + insert + value.slice(end);
+        setCodeValue(
+          newValue,
+          start + 1 + leadingWhitespace.length + indentUnit.length,
+          start + 1 + leadingWhitespace.length + indentUnit.length,
+          { revealCaret: true },
+        );
+        return;
+      }
+
+      const shouldIndentMore =
+        /[[{(]$/.test(trimmedLine) || /:\s*$/.test(trimmedLine);
+      const nextIndent = shouldIndentMore
+        ? `${leadingWhitespace}${indentUnit}`
+        : leadingWhitespace;
+
+      const insert = `\n${nextIndent}`;
+      const newValue = value.slice(0, start) + insert + value.slice(end);
+      setCodeValue(newValue, start + insert.length, start + insert.length, {
+        revealCaret: true,
+      });
+      return;
+    }
+
+    if (
+      e.key === "}" &&
+      !e.metaKey &&
+      !e.ctrlKey &&
+      !e.altKey &&
+      start === end
+    ) {
+      const lineStart = lineStartAt(start);
+      const beforeCaret = value.slice(lineStart, start);
+      if (/^[\t ]+$/.test(beforeCaret)) {
+        e.preventDefault();
+        let normalizedIndent = beforeCaret;
+        if (normalizedIndent.endsWith(indentUnit)) {
+          normalizedIndent = normalizedIndent.slice(0, -indentUnit.length);
+        } else if (normalizedIndent.endsWith("\t")) {
+          normalizedIndent = normalizedIndent.slice(0, -1);
+        }
+        const replacement = `${normalizedIndent}}`;
+        const newValue =
+          value.slice(0, lineStart) + replacement + value.slice(end);
+        setCodeValue(newValue, lineStart + replacement.length);
+      }
+    }
+  };
+
+  const handleCodeEditorPaste = (e) => {
+    const pasted = e.clipboardData?.getData("text/plain");
+    if (!pasted) return;
+    if (!pasted.includes("\n") && !pasted.includes("\t")) return;
+
+    e.preventDefault();
+    const ta = e.target;
+    const start = ta.selectionStart;
+    const end = ta.selectionEnd;
+    const normalized = pasted.replace(/\t/g, "  ");
+    const newValue = value.slice(0, start) + normalized + value.slice(end);
+    commitCodeValue(newValue, start + normalized.length);
+  };
+
+  const handleCodeAreaWheel = useCallback((e) => {
+    const target = e.currentTarget;
+    if (!target) return;
+
+    // Keep wheel gestures scoped to the code area to avoid page scroll chaining.
+    e.stopPropagation();
+
+    const canScrollY = target.scrollHeight > target.clientHeight;
+    const canScrollX = target.scrollWidth > target.clientWidth;
+
+    if (!canScrollY && !canScrollX) {
+      e.preventDefault();
+      return;
+    }
+
+    const atTop = target.scrollTop <= 0;
+    const atBottom =
+      target.scrollTop + target.clientHeight >= target.scrollHeight - 1;
+    const atLeft = target.scrollLeft <= 0;
+    const atRight =
+      target.scrollLeft + target.clientWidth >= target.scrollWidth - 1;
+
+    const hitsYBoundary = (e.deltaY < 0 && atTop) || (e.deltaY > 0 && atBottom);
+    const hitsXBoundary = (e.deltaX < 0 && atLeft) || (e.deltaX > 0 && atRight);
+
+    if (hitsYBoundary || hitsXBoundary) {
+      e.preventDefault();
+    }
+  }, []);
+
+  const handleCodeViewScroll = useCallback((e) => {
+    if (!codeViewLineNumbersRef.current) return;
+    codeViewLineNumbersRef.current.scrollTop = e.currentTarget.scrollTop;
+  }, []);
+
   // Handle Escape key to exit edit mode or close full-screen
   useEffect(() => {
     if (!isEditMode && !isFullScreen) return;
@@ -718,7 +1716,8 @@ const TextField = ({
     const handleEscape = (e) => {
       if (e.key === "Escape") {
         if (isFullScreen) {
-          onFullScreenChange?.(null);
+          closeFullScreen();
+          if (isEditMode) stopEdit();
         } else {
           stopEdit();
         }
@@ -727,39 +1726,458 @@ const TextField = ({
 
     window.addEventListener("keydown", handleEscape);
     return () => window.removeEventListener("keydown", handleEscape);
-  }, [isEditMode, isFullScreen, onFullScreenChange, stopEdit]);
+  }, [closeFullScreen, isEditMode, isFullScreen, stopEdit]);
+
+  useEffect(() => {
+    if (!isEditMode || isFullScreen) return;
+    if (noteType !== "text" && noteType !== "code") return;
+
+    const handleOutsidePointer = (e) => {
+      const container =
+        noteType === "code" ? codeInlineNoteRef.current : textNoteRef.current;
+      const toolbar = floatingToolbarRef.current;
+      if (!container) return;
+      if (container.contains(e.target)) return;
+      if (toolbar && toolbar.contains(e.target)) return;
+      stopEdit();
+    };
+
+    document.addEventListener("mousedown", handleOutsidePointer);
+    document.addEventListener("touchstart", handleOutsidePointer, {
+      passive: true,
+    });
+    return () => {
+      document.removeEventListener("mousedown", handleOutsidePointer);
+      document.removeEventListener("touchstart", handleOutsidePointer);
+    };
+  }, [isEditMode, isFullScreen, noteType, stopEdit]);
+
+  useEffect(() => {
+    if (!isEditMode && !isFullScreen) return;
+
+    const onSaveShortcut = (e) => {
+      const meta = e.metaKey || e.ctrlKey;
+      if (!meta) return;
+      if (e.key !== "s" && e.key !== "S" && e.key !== "Enter") return;
+      e.preventDefault();
+      if (isFullScreen) closeFullScreen();
+      stopEdit();
+    };
+
+    document.addEventListener("keydown", onSaveShortcut);
+    return () => document.removeEventListener("keydown", onSaveShortcut);
+  }, [closeFullScreen, isEditMode, isFullScreen, stopEdit]);
+
+  useEffect(() => {
+    const handleVisibility = () => {
+      if (document.hidden) commitPendingEdits();
+    };
+    const handleBeforeUnload = () => {
+      commitPendingEdits();
+    };
+
+    document.addEventListener("visibilitychange", handleVisibility);
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibility);
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, [commitPendingEdits]);
+
+  useEffect(() => {
+    return () => {
+      commitPendingEdits();
+    };
+  }, [commitPendingEdits]);
 
   // Sync scroll and highlight code in edit mode
   useEffect(() => {
-    if (noteType !== "code" || !isEditMode) return;
+    if (noteType !== "code" || !(isEditMode || isFullScreen)) return;
 
     const editor = codeEditorRef.current;
-    const highlight = codeHighlightRef.current;
-    if (!editor || !highlight) return;
+    const highlightLayer = codeHighlightLayerRef.current;
+    if (!editor || !highlightLayer || !codeHighlightRef.current) return;
 
     // Highlight the code
     try {
-      const highlighted = hljs.highlight(value || "", {
-        language: noteLanguage,
-        ignoreIllegals: true,
-      }).value;
-      highlight.innerHTML = highlighted;
+      updateCodeHighlight(value || "", noteLanguage);
     } catch {
-      const highlighted = hljs.highlightAuto(value || "").value;
-      highlight.innerHTML = highlighted;
+      updateCodeHighlight(value || "", noteLanguage);
     }
 
     // Sync scroll position
+    let rafId = null;
     const handleScroll = () => {
-      if (highlight) {
-        highlight.scrollTop = editor.scrollTop;
-        highlight.scrollLeft = editor.scrollLeft;
-      }
+      if (rafId) cancelAnimationFrame(rafId);
+      rafId = requestAnimationFrame(() => {
+        syncCodeEditorLayers();
+      });
     };
 
     editor.addEventListener("scroll", handleScroll);
-    return () => editor.removeEventListener("scroll", handleScroll);
-  }, [value, noteLanguage, isEditMode, noteType]);
+    handleScroll();
+    return () => {
+      if (rafId) cancelAnimationFrame(rafId);
+      editor.removeEventListener("scroll", handleScroll);
+    };
+  }, [
+    isEditMode,
+    isFullScreen,
+    noteLanguage,
+    noteType,
+    syncCodeEditorLayers,
+    updateCodeHighlight,
+    value,
+  ]);
+
+  const renderCodeEditorPanel = (isFullscreenLayout = false) => {
+    const panelClassName = isFullscreenLayout
+      ? `code-edit-modal code-note note-theme-${noteTheme} code-theme-${codeColorTheme}`
+      : `text-field code-edit-inline code-note note-theme-${noteTheme} code-theme-${codeColorTheme} edit-mode`;
+
+    const codeToolbar = (
+      <div
+        ref={floatingToolbarRef}
+        className={`toolbar${
+          isFullscreenLayout
+            ? " code-edit-modal-toolbar"
+            : " floating-editor-toolbar"
+        }`}
+        style={themeVars}
+      >
+        <div className="toolbar-scroll">
+          <div className="lang-picker">
+            <Dropdown
+              options={LANGUAGE_OPTIONS}
+              value={noteLanguage}
+              onChange={(v) => {
+                setNoteLanguage(v);
+                hasPendingEditRef.current = true;
+                if (onLanguageChange) onLanguageChange(v);
+              }}
+            />
+          </div>
+          <div className="toolbar-divider" />
+          <div className="code-theme-picker">
+            <Dropdown
+              options={CODE_COLOR_THEME_OPTIONS}
+              value={codeColorTheme}
+              onChange={(v) => {
+                setCodeColorTheme(v);
+                hasPendingEditRef.current = true;
+                if (onCodeColorThemeChange) onCodeColorThemeChange(v);
+              }}
+              placeholder="Code theme"
+            />
+          </div>
+          <div className="toolbar-divider" />
+          <button
+            className={`format-btn${showLineNumbers ? " is-active" : ""}`}
+            onClick={() => {
+              const nextShowLineNumbers = !showLineNumbers;
+              setShowLineNumbers(nextShowLineNumbers);
+              hasPendingEditRef.current = true;
+              onShowLineNumbersChange?.(nextShowLineNumbers);
+            }}
+            title="Toggle line numbers"
+          >
+            <svg
+              width="15"
+              height="15"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <polyline points="21 6 21 22 3 22 3 6" />
+              <path d="M7 6V4a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v2" />
+              <line x1="7" y1="12" x2="17" y2="12" />
+              <line x1="7" y1="18" x2="17" y2="18" />
+            </svg>
+            <span className="format-btn-label">Lines</span>
+          </button>
+          <div className="toolbar-divider" />
+          <div className="theme-picker">
+            <Dropdown
+              options={NOTE_THEME_OPTIONS}
+              value={noteTheme}
+              onChange={(v) => {
+                setNoteTheme(v);
+                hasPendingEditRef.current = true;
+                if (onThemeChange) onThemeChange(v);
+              }}
+            />
+          </div>
+        </div>
+        <div className="toolbar-actions">
+          <Button
+            className="undo-btn"
+            onClick={undoCode}
+            aria-label="Undo"
+            title="Undo (Cmd/Ctrl+Z)"
+          >
+            <svg
+              width="13"
+              height="13"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M3 7v6h6" />
+              <path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13" />
+            </svg>
+          </Button>
+          <Button
+            className="redo-btn"
+            onClick={redoCode}
+            aria-label="Redo"
+            title="Redo (Cmd/Ctrl+Shift+Z)"
+          >
+            <svg
+              width="13"
+              height="13"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M21 7v6h-6" />
+              <path d="M3 17a9 9 0 0 1 9-9 9 9 0 0 1 6 2.3L21 13" />
+            </svg>
+          </Button>
+          <Button
+            className="done-btn"
+            onClick={() => {
+              if (isFullscreenLayout) {
+                closeFullScreen();
+              }
+              stopEdit();
+            }}
+            aria-label="Done editing"
+          >
+            <svg
+              width="15"
+              height="15"
+              viewBox="0 0 50 50"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <line
+                x1="10"
+                y1="25"
+                x2="25"
+                y2="40"
+                strokeWidth="5"
+                strokeLinecap="round"
+              />
+              <line
+                x1="25"
+                y1="40"
+                x2="40"
+                y2="10"
+                strokeWidth="5"
+                strokeLinecap="round"
+              />
+            </svg>{" "}
+            Done
+          </Button>
+          <Button
+            className="format-btn fullscreen-btn"
+            onClick={isFullscreenLayout ? closeFullScreen : openFullScreen}
+            aria-label={
+              isFullscreenLayout
+                ? "Exit fullscreen editor"
+                : "Open fullscreen editor"
+            }
+            title={
+              isFullscreenLayout
+                ? "Exit fullscreen editor"
+                : "Open fullscreen editor"
+            }
+          >
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              {isFullscreenLayout ? (
+                <>
+                  <path d="M8 3H5a2 2 0 0 0-2 2v3" />
+                  <path d="M3 16v3a2 2 0 0 0 2 2h3" />
+                  <path d="M16 21h3a2 2 0 0 0 2-2v-3" />
+                  <path d="M21 8V5a2 2 0 0 0-2-2h-3" />
+                </>
+              ) : (
+                <>
+                  <path d="M8 3H5a2 2 0 0 0-2 2v3" />
+                  <path d="M21 8V5a2 2 0 0 0-2-2h-3" />
+                  <path d="M16 21h3a2 2 0 0 0 2-2v-3" />
+                  <path d="M3 16v3a2 2 0 0 0 2 2h3" />
+                </>
+              )}
+            </svg>
+          </Button>
+        </div>
+      </div>
+    );
+
+    const panel = (
+      <div
+        ref={isFullscreenLayout ? undefined : codeInlineNoteRef}
+        className={panelClassName}
+        style={themeVars}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {isFullscreenLayout && codeToolbar}
+
+        <div className="note-footer">
+          <input
+            className="note-title-input"
+            value={noteTitle}
+            onChange={handleTitleChange}
+            placeholder="Type here to rename note"
+            aria-label="Note title"
+          />
+          <div
+            className="note-last-modified"
+            role="status"
+            aria-live="polite"
+            aria-atomic="true"
+          >
+            {lastModified ? (
+              <span>Last modified: {formatRelative(lastModified)}</span>
+            ) : null}
+          </div>
+          <div className="note-footer-actions">
+            {onTogglePin && (
+              <Button
+                className={`pin-btn${isPinned ? " active" : ""}`}
+                onClick={onTogglePin}
+                aria-label={isPinned ? "Unpin note" : "Pin note"}
+                title={isPinned ? "Unpin note" : "Pin note"}
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="M12 17v5" />
+                  <path d="M9 7V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v3" />
+                  <path d="M5 9h14" />
+                  <path d="M7 9l-2 7h14l-2-7" />
+                </svg>
+              </Button>
+            )}
+            {onRemove && (
+              <Button
+                className="remove-btn"
+                onClick={onRemove}
+                aria-label="Remove note"
+                title="Remove note"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="M3 6h18" />
+                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                  <line x1="10" y1="11" x2="10" y2="17" />
+                  <line x1="14" y1="11" x2="14" y2="17" />
+                </svg>
+              </Button>
+            )}
+          </div>
+        </div>
+
+        <div
+          className={`code-editor-wrapper${showLineNumbers ? " with-line-numbers" : ""}`}
+        >
+          {showLineNumbers && (
+            <div className="code-editor-line-numbers" ref={codeLineNumbersRef}>
+              {value.split("\n").map((_, idx) => (
+                <div key={idx} className="editor-line-number">
+                  {idx + 1}
+                </div>
+              ))}
+            </div>
+          )}
+          <div className="code-editor-highlight-container">
+            <pre className="code-editor-highlight" ref={codeHighlightLayerRef}>
+              <code ref={codeHighlightRef} className="hljs" />
+            </pre>
+            <textarea
+              ref={codeEditorRef}
+              className="code-editor"
+              value={value}
+              onChange={(e) => {
+                commitCodeValue(
+                  e.target.value,
+                  e.target.selectionStart,
+                  e.target.selectionEnd,
+                );
+              }}
+              onKeyDown={handleCodeEditorKeyDown}
+              onPaste={handleCodeEditorPaste}
+              onWheel={handleCodeAreaWheel}
+              spellCheck={false}
+              autoComplete="off"
+              autoCorrect="off"
+              autoCapitalize="off"
+              placeholder="Write your code here..."
+            />
+          </div>
+        </div>
+      </div>
+    );
+
+    if (isFullscreenLayout) {
+      return (
+        <div
+          className="code-edit-modal-overlay"
+          onClick={() => closeFullScreen()}
+          role="presentation"
+        >
+          {panel}
+        </div>
+      );
+    }
+
+    return (
+      <>
+        {typeof document !== "undefined"
+          ? createPortal(codeToolbar, document.body)
+          : null}
+        {panel}
+      </>
+    );
+  };
 
   // --- Code note rendering ---
   if (noteType === "code") {
@@ -775,323 +2193,128 @@ const TextField = ({
     })();
 
     return (
-      <div
-        className={`text-field code-note note-theme-${noteTheme} ${isEditMode ? "edit-mode" : "view-mode"}`}
-        style={themeVars}
-        onClick={() => !isEditMode && startEdit()}
-      >
-        {!isEditMode && (
-          <div className="note-header">
-            <div className="note-header-content">
-              <div className="note-title-display-row">
-                {isPinned && <span className="note-pin-indicator">Pinned</span>}
-                <div className="note-title-display">
-                  {noteTitle || "New code note"}
-                </div>
-                <span className="code-note-lang-badge">{noteLanguage}</span>
-                {folders.length > 0 && (
-                  <div
-                    className="note-folder-badge-wrapper"
-                    ref={folderPickerRef}
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <button
-                      className={`note-folder-badge${currentFolder ? " has-folder" : ""}`}
-                      onClick={() => setShowFolderPicker((v) => !v)}
-                      title={
-                        currentFolder
-                          ? `Folder: ${currentFolder.name}`
-                          : "Move to folder"
-                      }
+      <>
+        {!isEditMode && !isFullScreen && (
+          <div
+            className={`text-field code-note note-theme-${noteTheme} code-theme-${codeColorTheme} view-mode`}
+            style={themeVars}
+            onClick={() => !isEditMode && startEdit()}
+          >
+            <div className="note-header">
+              <div className="note-header-content">
+                <div className="note-title-display-row">
+                  {isPinned && (
+                    <span className="note-pin-indicator">Pinned</span>
+                  )}
+                  <div className="note-title-display">
+                    {noteTitle || "New code note"}
+                  </div>
+                  <span className="code-note-lang-badge">{noteLanguage}</span>
+                  {folders.length > 0 && (
+                    <div
+                      className="note-folder-badge-wrapper"
+                      ref={folderPickerRef}
+                      onClick={(e) => e.stopPropagation()}
                     >
-                      <svg
-                        width="11"
-                        height="11"
-                        viewBox="0 0 15 15"
-                        fill="none"
-                        aria-hidden="true"
+                      <button
+                        className={`note-folder-badge${currentFolder ? " has-folder" : ""}`}
+                        onClick={() => setShowFolderPicker((v) => !v)}
+                        title={
+                          currentFolder
+                            ? `Folder: ${currentFolder.name}`
+                            : "Move to folder"
+                        }
                       >
-                        <path
-                          d="M1.5 4.5C1.5 3.95 1.95 3.5 2.5 3.5H5.5L7 5H12.5C13.05 5 13.5 5.45 13.5 6V11C13.5 11.55 13.05 12 12.5 12H2.5C1.95 12 1.5 11.55 1.5 11V4.5Z"
-                          stroke="currentColor"
-                          strokeWidth="1.2"
-                          strokeLinejoin="round"
-                        />
-                      </svg>
-                      <span>
-                        {currentFolder ? currentFolder.name : "folder"}
-                      </span>
-                    </button>
-                    {showFolderPicker && (
-                      <div className="note-folder-picker">
-                        <button
-                          className={`note-folder-picker-item${!folderId ? " active" : ""}`}
-                          onClick={() => {
-                            onMoveNote?.(null);
-                            setShowFolderPicker(false);
-                          }}
+                        <svg
+                          width="11"
+                          height="11"
+                          viewBox="0 0 15 15"
+                          fill="none"
+                          aria-hidden="true"
                         >
-                          No folder
-                        </button>
-                        {folders.map((f) => (
+                          <path
+                            d="M1.5 4.5C1.5 3.95 1.95 3.5 2.5 3.5H5.5L7 5H12.5C13.05 5 13.5 5.45 13.5 6V11C13.5 11.55 13.05 12 12.5 12H2.5C1.95 12 1.5 11.55 1.5 11V4.5Z"
+                            stroke="currentColor"
+                            strokeWidth="1.2"
+                            strokeLinejoin="round"
+                          />
+                        </svg>
+                        <span>
+                          {currentFolder ? currentFolder.name : "folder"}
+                        </span>
+                      </button>
+                      {showFolderPicker && (
+                        <div className="note-folder-picker">
                           <button
-                            key={f.id}
-                            className={`note-folder-picker-item${String(folderId) === String(f.id) ? " active" : ""}`}
+                            className={`note-folder-picker-item${!folderId ? " active" : ""}`}
                             onClick={() => {
-                              onMoveNote?.(f.id);
+                              onMoveNote?.(null);
                               setShowFolderPicker(false);
                             }}
                           >
-                            {f.name}
+                            No folder
                           </button>
-                        ))}
-                      </div>
-                    )}
+                          {folders.map((f) => (
+                            <button
+                              key={f.id}
+                              className={`note-folder-picker-item${String(folderId) === String(f.id) ? " active" : ""}`}
+                              onClick={() => {
+                                onMoveNote?.(f.id);
+                                setShowFolderPicker(false);
+                              }}
+                            >
+                              {f.name}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+                {lastModified && (
+                  <div className="note-last-modified-header">
+                    Last modified: {formatRelative(lastModified)}
                   </div>
                 )}
               </div>
-              {lastModified && (
-                <div className="note-last-modified-header">
-                  Last modified: {formatRelative(lastModified)}
+            </div>
+
+            <div
+              className={`code-view-wrapper${showLineNumbers ? " with-line-numbers" : ""}`}
+            >
+              {showLineNumbers && (
+                <div className="code-line-numbers" ref={codeViewLineNumbersRef}>
+                  {value.split("\n").map((_, idx) => (
+                    <div key={idx} className="line-number">
+                      {idx + 1}
+                    </div>
+                  ))}
                 </div>
               )}
-            </div>
-          </div>
-        )}
-
-        {isEditMode && (
-          <div className="toolbar">
-            <div className="toolbar-scroll">
-              <div className="lang-picker">
-                <Dropdown
-                  options={LANGUAGE_OPTIONS}
-                  value={noteLanguage}
-                  onChange={(v) => {
-                    setNoteLanguage(v);
-                    if (onLanguageChange) onLanguageChange(v);
-                  }}
-                />
-              </div>
-              <div className="toolbar-divider" />
-              <button
-                className={`format-btn${showLineNumbers ? " is-active" : ""}`}
-                onClick={() => setShowLineNumbers(!showLineNumbers)}
-                title="Toggle line numbers"
+              <pre
+                className="code-view"
+                ref={codeViewRef}
+                onWheel={handleCodeAreaWheel}
+                onScroll={handleCodeViewScroll}
               >
-                <svg
-                  width="15"
-                  height="15"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <polyline points="21 6 21 22 3 22 3 6" />
-                  <path d="M7 6V4a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v2" />
-                  <line x1="7" y1="12" x2="17" y2="12" />
-                  <line x1="7" y1="18" x2="17" y2="18" />
-                </svg>
-                <span className="format-btn-label">Lines</span>
-              </button>
-              <div className="toolbar-divider" />
-              <div className="theme-picker">
-                <Dropdown
-                  options={NOTE_THEME_OPTIONS}
-                  value={noteTheme}
-                  onChange={(v) => {
-                    setNoteTheme(v);
-                    if (onThemeChange) onThemeChange(v);
-                  }}
+                <code
+                  className="hljs"
+                  dangerouslySetInnerHTML={{ __html: highlighted }}
                 />
-              </div>
-            </div>
-            <div className="toolbar-actions">
-              <Button
-                className="done-btn"
-                onClick={() => stopEdit()}
-                aria-label="Done editing"
-              >
-                <svg
-                  width="15"
-                  height="15"
-                  viewBox="0 0 50 50"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <line
-                    x1="10"
-                    y1="25"
-                    x2="25"
-                    y2="40"
-                    strokeWidth="5"
-                    strokeLinecap="round"
-                  />
-                  <line
-                    x1="25"
-                    y1="40"
-                    x2="40"
-                    y2="10"
-                    strokeWidth="5"
-                    strokeLinecap="round"
-                  />
-                </svg>{" "}
-                Done
-              </Button>
-            </div>
-          </div>
-        )}
-
-        {isEditMode ? (
-          <div
-            className={`code-editor-wrapper${showLineNumbers ? " with-line-numbers" : ""}`}
-          >
-            {showLineNumbers && (
-              <div className="code-editor-line-numbers">
-                {value.split("\n").map((_, idx) => (
-                  <div key={idx} className="editor-line-number">
-                    {idx + 1}
-                  </div>
-                ))}
-              </div>
-            )}
-            <div className="code-editor-highlight-container">
-              <pre className="code-editor-highlight">
-                <code ref={codeHighlightRef} />
               </pre>
-              <textarea
-                ref={codeEditorRef}
-                className="code-editor"
-                value={value}
-                onChange={(e) => {
-                  setValue(e.target.value);
-                  if (onChange) onChange(e.target.value);
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === "Tab") {
-                    e.preventDefault();
-                    const ta = e.target;
-                    const start = ta.selectionStart;
-                    const end = ta.selectionEnd;
-                    const spaces = "  ";
-                    const newVal =
-                      value.substring(0, start) + spaces + value.substring(end);
-                    setValue(newVal);
-                    if (onChange) onChange(newVal);
-                    requestAnimationFrame(() => {
-                      ta.selectionStart = ta.selectionEnd =
-                        start + spaces.length;
-                    });
-                  }
-                }}
-                spellCheck={false}
-                autoComplete="off"
-                autoCorrect="off"
-                autoCapitalize="off"
-                placeholder="Write your code here..."
-              />
             </div>
-          </div>
-        ) : (
-          <div
-            className={`code-view-wrapper${showLineNumbers ? " with-line-numbers" : ""}`}
-          >
-            {showLineNumbers && (
-              <div className="code-line-numbers">
-                {value.split("\n").map((_, idx) => (
-                  <div key={idx} className="line-number">
-                    {idx + 1}
-                  </div>
-                ))}
-              </div>
-            )}
-            <pre className="code-view">
-              <code dangerouslySetInnerHTML={{ __html: highlighted }} />
-            </pre>
           </div>
         )}
 
-        {isEditMode && (
-          <div className="note-footer">
-            <input
-              className="note-title-input"
-              value={noteTitle}
-              onChange={handleTitleChange}
-              placeholder="Type here to rename note"
-              aria-label="Note title"
-            />
-            <div
-              className="note-last-modified"
-              role="status"
-              aria-live="polite"
-              aria-atomic="true"
-            >
-              {lastModified ? (
-                <span>Last modified: {formatRelative(lastModified)}</span>
-              ) : null}
-            </div>
-            <div className="note-footer-actions">
-              {onTogglePin && (
-                <Button
-                  className={`pin-btn${isPinned ? " active" : ""}`}
-                  onClick={onTogglePin}
-                  aria-label={isPinned ? "Unpin note" : "Pin note"}
-                  title={isPinned ? "Unpin note" : "Pin note"}
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="20"
-                    height="20"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    aria-hidden="true"
-                  >
-                    <path d="M12 17v5" />
-                    <path d="M9 7V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v3" />
-                    <path d="M5 9h14" />
-                    <path d="M7 9l-2 7h14l-2-7" />
-                  </svg>
-                </Button>
-              )}
-              {onRemove && (
-                <Button
-                  className="remove-btn"
-                  onClick={onRemove}
-                  aria-label="Remove note"
-                  title="Remove note"
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="24"
-                    height="24"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    aria-hidden="true"
-                  >
-                    <path d="M3 6h18" />
-                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-                    <line x1="10" y1="11" x2="10" y2="17" />
-                    <line x1="14" y1="11" x2="14" y2="17" />
-                  </svg>
-                </Button>
-              )}
-            </div>
-          </div>
-        )}
-      </div>
+        {isEditMode && !isFullScreen && renderCodeEditorPanel(false)}
+        {isFullScreen && renderCodeEditorPanel(true)}
+      </>
     );
   }
 
   return (
     <div
+      ref={textNoteRef}
       className={`text-field note-theme-${noteTheme} ${isEditMode ? "edit-mode" : "view-mode"}`}
       style={themeVars}
     >
@@ -1173,271 +2396,499 @@ const TextField = ({
       )}
 
       {/* Toolbar - only shown in edit mode */}
-      {isEditMode && (
-        <div className="toolbar">
-          <div className="toolbar-scroll">
-            {/* ── Text formatting ── */}
-            <div className="toolbar-group">
-              <button
-                className={`format-btn${formatState.bold ? " is-active" : ""}`}
-                onClick={() => handleFormat("bold")}
-                title="Bold (⌘B)"
-              >
-                <b>B</b>
-              </button>
-              <button
-                className={`format-btn${formatState.italic ? " is-active" : ""}`}
-                onClick={() => handleFormat("italic")}
-                title="Italic (⌘I)"
-              >
-                <i>I</i>
-              </button>
-              <button
-                className={`format-btn${formatState.underline ? " is-active" : ""}`}
-                onClick={() => handleFormat("underline")}
-                title="Underline (⌘U)"
-              >
-                <u>U</u>
-              </button>
-              <button
-                className={`format-btn${formatState.strikeThrough ? " is-active" : ""}`}
-                onClick={() => handleFormat("strikeThrough")}
-                title="Strikethrough"
-              >
-                <s>S</s>
-              </button>
-            </div>
-
-            <div className="toolbar-divider" />
-
-            {/* ── Headings ── */}
-            <div className="toolbar-group">
-              <button
-                className="format-btn format-btn--label"
-                onClick={() => handleFormat("formatBlock", "H1")}
-                title="Heading 1"
-              >
-                H1
-              </button>
-              <button
-                className="format-btn format-btn--label"
-                onClick={() => handleFormat("formatBlock", "H2")}
-                title="Heading 2"
-              >
-                H2
-              </button>
-              <button
-                className="format-btn format-btn--label"
-                onClick={() => handleFormat("formatBlock", "H3")}
-                title="Heading 3"
-              >
-                H3
-              </button>
-            </div>
-
-            <div className="toolbar-divider" />
-
-            {/* ── Lists ── */}
-            <div className="toolbar-group">
-              <button
-                className="format-btn"
-                onClick={() => handleFormat("insertUnorderedList")}
-                title="Bullet List"
-              >
-                <svg
-                  width="15"
-                  height="15"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <circle
-                    cx="4"
-                    cy="6"
-                    r="1.5"
-                    fill="currentColor"
-                    stroke="none"
-                  />
-                  <circle
-                    cx="4"
-                    cy="12"
-                    r="1.5"
-                    fill="currentColor"
-                    stroke="none"
-                  />
-                  <circle
-                    cx="4"
-                    cy="18"
-                    r="1.5"
-                    fill="currentColor"
-                    stroke="none"
-                  />
-                  <line x1="9" y1="6" x2="21" y2="6" />
-                  <line x1="9" y1="12" x2="21" y2="12" />
-                  <line x1="9" y1="18" x2="21" y2="18" />
-                </svg>
-              </button>
-              <button
-                className="format-btn"
-                onClick={() => handleFormat("insertOrderedList")}
-                title="Numbered List"
-              >
-                <svg
-                  width="15"
-                  height="15"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <line x1="10" y1="6" x2="21" y2="6" />
-                  <line x1="10" y1="12" x2="21" y2="12" />
-                  <line x1="10" y1="18" x2="21" y2="18" />
-                  <text
-                    x="2"
-                    y="8"
-                    fontSize="6.5"
-                    fill="currentColor"
-                    stroke="none"
-                    fontFamily="monospace"
-                  >
-                    1.
-                  </text>
-                  <text
-                    x="2"
-                    y="14"
-                    fontSize="6.5"
-                    fill="currentColor"
-                    stroke="none"
-                    fontFamily="monospace"
-                  >
-                    2.
-                  </text>
-                  <text
-                    x="2"
-                    y="20"
-                    fontSize="6.5"
-                    fill="currentColor"
-                    stroke="none"
-                    fontFamily="monospace"
-                  >
-                    3.
-                  </text>
-                </svg>
-              </button>
-            </div>
-
-            <div className="toolbar-divider" />
-
-            {/* ── Font & Size ── */}
-            <div className="font-picker">
-              <Dropdown
-                options={FONT_OPTIONS}
-                value={noteFont}
-                onChange={(v) => {
-                  setNoteFont(v);
-                  if (onFontChange) onFontChange(v);
-                }}
-                fontPreview={true}
-                fontMap={FONT_MAP}
-              />
-            </div>
-            <div className="font-size-picker">
-              <Dropdown
-                options={FONT_SIZE_OPTIONS}
-                value={noteFontSize}
-                onChange={(v) => {
-                  const size = Number(v);
-                  setNoteFontSize(size);
-                  if (onFontSizeChange) onFontSizeChange(size);
-                }}
-              />
-            </div>
-
-            <div className="toolbar-divider" />
-
-            {/* ── Colors ── */}
-            <div className="toolbar-group">
-              <div className="color-btn-wrapper">
+      {isEditMode &&
+        typeof document !== "undefined" &&
+        createPortal(
+          <div
+            ref={floatingToolbarRef}
+            className="toolbar floating-editor-toolbar"
+          >
+            <div className="toolbar-scroll">
+              {/* ── Text formatting ── */}
+              <div className="toolbar-group">
                 <button
-                  className="format-btn color-btn"
-                  title="Text Color"
-                  onClick={() => textColorRef.current?.click()}
+                  className={`format-btn${formatState.bold ? " is-active" : ""}`}
+                  onClick={() => handleFormat("bold")}
+                  title="Bold (⌘B)"
                 >
-                  <span className="color-btn-label">A</span>
-                  <span
-                    className="color-indicator"
-                    style={{ background: textColor }}
-                  />
+                  <b>B</b>
                 </button>
-                <input
-                  ref={textColorRef}
-                  type="color"
-                  value={textColor}
-                  onChange={(e) => {
-                    setTextColor(e.target.value);
-                    applyColorFormat("foreColor", e.target.value);
-                  }}
-                  className="hidden-color-input"
-                />
-              </div>
-              <div className="color-btn-wrapper">
                 <button
-                  className="format-btn color-btn"
-                  title="Highlight Color"
-                  onClick={() => highlightColorRef.current?.click()}
+                  className={`format-btn${formatState.italic ? " is-active" : ""}`}
+                  onClick={() => handleFormat("italic")}
+                  title="Italic (⌘I)"
                 >
-                  <span
-                    className="color-btn-label"
-                    style={{
-                      background: highlightColor,
-                      color: "#111",
-                      borderRadius: "2px",
-                      padding: "0 2px",
+                  <i>I</i>
+                </button>
+                <button
+                  className={`format-btn${formatState.underline ? " is-active" : ""}`}
+                  onClick={() => handleFormat("underline")}
+                  title="Underline (⌘U)"
+                >
+                  <u>U</u>
+                </button>
+                <button
+                  className={`format-btn${formatState.strikeThrough ? " is-active" : ""}`}
+                  onClick={() => handleFormat("strikeThrough")}
+                  title="Strikethrough"
+                >
+                  <s>S</s>
+                </button>
+                <button
+                  className={`format-btn format-btn--link${showLinkPanel ? " is-active" : ""}`}
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={(e) => handleInsertLink(e)}
+                  title="Insert smart link"
+                >
+                  <svg
+                    width="15"
+                    height="15"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M14.5 9.5a3.5 3.5 0 0 1 5 0l.5.5a3.5 3.5 0 0 1-5 5l-1.25-1.25" />
+                    <path d="M9.5 14.5a3.5 3.5 0 0 1-5 0l-.5-.5a3.5 3.5 0 0 1 5-5L10.25 10.25" />
+                    <line x1="8" y1="16" x2="16" y2="8" />
+                  </svg>
+                </button>
+              </div>
+
+              <div className="toolbar-divider" />
+
+              {/* ── Headings ── */}
+              <div className="toolbar-group">
+                <button
+                  className="format-btn format-btn--label"
+                  onClick={() => handleFormat("formatBlock", "H1")}
+                  title="Heading 1"
+                >
+                  H1
+                </button>
+                <button
+                  className="format-btn format-btn--label"
+                  onClick={() => handleFormat("formatBlock", "H2")}
+                  title="Heading 2"
+                >
+                  H2
+                </button>
+                <button
+                  className="format-btn format-btn--label"
+                  onClick={() => handleFormat("formatBlock", "H3")}
+                  title="Heading 3"
+                >
+                  H3
+                </button>
+              </div>
+
+              <div className="toolbar-divider" />
+
+              {/* ── Lists ── */}
+              <div className="toolbar-group">
+                <button
+                  className="format-btn"
+                  onClick={() => handleFormat("insertUnorderedList")}
+                  title="Bullet List"
+                >
+                  <svg
+                    width="15"
+                    height="15"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <circle
+                      cx="4"
+                      cy="6"
+                      r="1.5"
+                      fill="currentColor"
+                      stroke="none"
+                    />
+                    <circle
+                      cx="4"
+                      cy="12"
+                      r="1.5"
+                      fill="currentColor"
+                      stroke="none"
+                    />
+                    <circle
+                      cx="4"
+                      cy="18"
+                      r="1.5"
+                      fill="currentColor"
+                      stroke="none"
+                    />
+                    <line x1="9" y1="6" x2="21" y2="6" />
+                    <line x1="9" y1="12" x2="21" y2="12" />
+                    <line x1="9" y1="18" x2="21" y2="18" />
+                  </svg>
+                </button>
+                <button
+                  className="format-btn"
+                  onClick={() => handleFormat("insertOrderedList")}
+                  title="Numbered List"
+                >
+                  <svg
+                    width="15"
+                    height="15"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <line x1="10" y1="6" x2="21" y2="6" />
+                    <line x1="10" y1="12" x2="21" y2="12" />
+                    <line x1="10" y1="18" x2="21" y2="18" />
+                    <text
+                      x="2"
+                      y="8"
+                      fontSize="6.5"
+                      fill="currentColor"
+                      stroke="none"
+                      fontFamily="monospace"
+                    >
+                      1.
+                    </text>
+                    <text
+                      x="2"
+                      y="14"
+                      fontSize="6.5"
+                      fill="currentColor"
+                      stroke="none"
+                      fontFamily="monospace"
+                    >
+                      2.
+                    </text>
+                    <text
+                      x="2"
+                      y="20"
+                      fontSize="6.5"
+                      fill="currentColor"
+                      stroke="none"
+                      fontFamily="monospace"
+                    >
+                      3.
+                    </text>
+                  </svg>
+                </button>
+                <button
+                  className="format-btn"
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={(e) => handleInsertTable(e)}
+                  title="Insert table"
+                >
+                  <svg
+                    width="15"
+                    height="15"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <rect x="3" y="4" width="18" height="16" rx="1.5" />
+                    <line x1="3" y1="10" x2="21" y2="10" />
+                    <line x1="9" y1="4" x2="9" y2="20" />
+                    <line x1="15" y1="4" x2="15" y2="20" />
+                  </svg>
+                </button>
+              </div>
+
+              <div className="toolbar-divider" />
+
+              {/* ── Snippet ── */}
+              <div className="toolbar-group snippet-toolbar-group">
+                <button
+                  className="format-btn snippet-insert-btn"
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={handleInsertCodeSnippet}
+                  title={`Insert ${snippetLanguage} snippet`}
+                >
+                  <svg
+                    width="15"
+                    height="15"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <polyline points="16 18 22 12 16 6" />
+                    <polyline points="8 6 2 12 8 18" />
+                    <line x1="10" y1="20" x2="14" y2="4" />
+                  </svg>
+                  <span className="format-btn-label">Snippet</span>
+                </button>
+                <div
+                  className="snippet-language-picker"
+                  title="Snippet language"
+                >
+                  <span className="snippet-language-label">Lang</span>
+                  <Dropdown
+                    options={LANGUAGE_OPTIONS}
+                    value={snippetLanguage}
+                    onChange={(nextLanguage) => {
+                      setSnippetLanguage(nextLanguage);
+                      setNoteLanguage(nextLanguage);
+                      hasPendingEditRef.current = true;
+                      if (onLanguageChange) onLanguageChange(nextLanguage);
                     }}
-                  >
-                    A
-                  </span>
-                  <span
-                    className="color-indicator"
-                    style={{ background: highlightColor }}
+                    placeholder="Language"
                   />
-                </button>
-                <input
-                  ref={highlightColorRef}
-                  type="color"
-                  value={highlightColor}
-                  onChange={(e) => {
-                    setHighlightColor(e.target.value);
-                    applyColorFormat("hiliteColor", e.target.value);
+                </div>
+              </div>
+
+              <div className="toolbar-divider" />
+
+              {/* ── Font & Size ── */}
+              <div className="font-picker">
+                <Dropdown
+                  options={FONT_OPTIONS}
+                  value={noteFont}
+                  onChange={(v) => {
+                    setNoteFont(v);
+                    hasPendingEditRef.current = true;
+                    if (onFontChange) onFontChange(v);
                   }}
-                  className="hidden-color-input"
+                  fontPreview={true}
+                  fontMap={FONT_MAP}
+                />
+              </div>
+
+              <div className="toolbar-divider" />
+
+              {/* ── Colors ── */}
+              <div className="toolbar-group">
+                <div className="color-btn-wrapper">
+                  <button
+                    className="format-btn color-btn"
+                    title="Text Color"
+                    onClick={() => textColorRef.current?.click()}
+                  >
+                    <span className="color-btn-label">A</span>
+                    <span
+                      className="color-indicator"
+                      style={{ background: textColor }}
+                    />
+                  </button>
+                  <input
+                    ref={textColorRef}
+                    type="color"
+                    value={textColor}
+                    onChange={(e) => {
+                      setTextColor(e.target.value);
+                      applyColorFormat("foreColor", e.target.value);
+                    }}
+                    className="hidden-color-input"
+                  />
+                </div>
+                <div className="color-btn-wrapper">
+                  <button
+                    className="format-btn color-btn"
+                    title="Highlight Color"
+                    onClick={() => highlightColorRef.current?.click()}
+                  >
+                    <span
+                      className="color-btn-label"
+                      style={{
+                        background: highlightColor,
+                        color: "#111",
+                        borderRadius: "2px",
+                        padding: "0 2px",
+                      }}
+                    >
+                      A
+                    </span>
+                    <span
+                      className="color-indicator"
+                      style={{ background: highlightColor }}
+                    />
+                  </button>
+                  <input
+                    ref={highlightColorRef}
+                    type="color"
+                    value={highlightColor}
+                    onChange={(e) => {
+                      setHighlightColor(e.target.value);
+                      applyColorFormat("hiliteColor", e.target.value);
+                    }}
+                    className="hidden-color-input"
+                  />
+                </div>
+              </div>
+
+              <div className="toolbar-divider" />
+
+              {/* ── Note color / theme ── */}
+              <div className="theme-picker">
+                <Dropdown
+                  options={NOTE_THEME_OPTIONS}
+                  value={noteTheme}
+                  onChange={(v) => {
+                    setNoteTheme(v);
+                    hasPendingEditRef.current = true;
+                    if (onThemeChange) onThemeChange(v);
+                  }}
                 />
               </div>
             </div>
 
-            <div className="toolbar-divider" />
+            {(showLinkPanel || showTablePanel) && (
+              <div
+                className="toolbar-popover"
+                onMouseDown={(e) => e.stopPropagation()}
+                style={
+                  toolbarPopoverAnchor == null
+                    ? undefined
+                    : {
+                        position: "absolute",
+                        left: `${toolbarPopoverAnchor.x}px`,
+                        top: "auto",
+                        right: "auto",
+                        bottom: "calc(100% + 10px)",
+                        transform: "translateX(-50%)",
+                      }
+                }
+              >
+                {showLinkPanel && (
+                  <div className="toolbar-popover-form">
+                    <label className="toolbar-popover-label">Link URL</label>
+                    <input
+                      className="toolbar-popover-input"
+                      value={linkDraftUrl}
+                      onChange={(e) => setLinkDraftUrl(e.target.value)}
+                      placeholder="https://example.com"
+                    />
+                    <label className="toolbar-popover-label">Link text</label>
+                    <input
+                      className="toolbar-popover-input"
+                      value={linkDraftText}
+                      onChange={(e) => setLinkDraftText(e.target.value)}
+                      placeholder="Optional"
+                    />
+                    <div className="toolbar-popover-actions">
+                      <button
+                        className="toolbar-popover-btn ghost"
+                        onClick={() => setShowLinkPanel(false)}
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        className="toolbar-popover-btn"
+                        onClick={applyLinkInsertion}
+                      >
+                        Insert Link
+                      </button>
+                    </div>
+                  </div>
+                )}
 
-            {/* ── Note color / theme ── */}
-            <div className="theme-picker">
-              <Dropdown
-                options={NOTE_THEME_OPTIONS}
-                value={noteTheme}
-                onChange={(v) => {
-                  setNoteTheme(v);
-                  if (onThemeChange) onThemeChange(v);
-                }}
-              />
+                {showTablePanel && (
+                  <div className="toolbar-popover-form">
+                    <label className="toolbar-popover-label">
+                      Columns (1-8)
+                    </label>
+                    <input
+                      className="toolbar-popover-input"
+                      type="number"
+                      min="1"
+                      max="8"
+                      value={tableDraftColumns}
+                      onChange={(e) => setTableDraftColumns(e.target.value)}
+                    />
+                    <label className="toolbar-popover-label">Rows (1-20)</label>
+                    <input
+                      className="toolbar-popover-input"
+                      type="number"
+                      min="1"
+                      max="20"
+                      value={tableDraftRows}
+                      onChange={(e) => setTableDraftRows(e.target.value)}
+                    />
+                    <div className="toolbar-popover-actions">
+                      <button
+                        className="toolbar-popover-btn ghost"
+                        onClick={() => setShowTablePanel(false)}
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        className="toolbar-popover-btn"
+                        onClick={applyTableInsertion}
+                      >
+                        Insert Table
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* ── Pinned right-side actions ── */}
+            <div className="toolbar-actions">
+              <Button
+                className="done-btn"
+                onClick={() => stopEdit()}
+                aria-label="Done editing"
+              >
+                <svg
+                  width="12"
+                  height="12"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>{" "}
+                Done
+              </Button>
             </div>
+          </div>,
+          document.body,
+        )}
+
+      {isEditMode && (
+        <div className="note-footer">
+          <input
+            className="note-title-input"
+            value={noteTitle}
+            onChange={handleTitleChange}
+            placeholder="Type here to rename note"
+            aria-label="Note title"
+          />
+
+          {/* Center: Last modified label + character count */}
+          <div className="note-footer-meta">
+            <div
+              className="note-last-modified"
+              role="status"
+              aria-live="polite"
+              aria-atomic="true"
+            >
+              {lastModified && (
+                <span>Last modified: {formatRelative(lastModified)}</span>
+              )}
+            </div>
+            <span id="editor-char-count" className="char-count">
+              {value.replace(/<[^>]+>/g, "").length} characters
+            </span>
           </div>
 
-          {/* ── Pinned right-side actions ── */}
-          <div className="toolbar-actions">
+          <div className="note-footer-actions">
             <Button
               className="undo-btn"
               onClick={() => {
@@ -1486,79 +2937,6 @@ const TextField = ({
                 <path d="M3 17a9 9 0 0 1 9-9 9 9 0 0 1 6 2.3L21 13" />
               </svg>
             </Button>
-            <Button
-              className="done-btn"
-              onClick={() => stopEdit()}
-              aria-label="Done editing"
-            >
-              <svg
-                width="12"
-                height="12"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <polyline points="20 6 9 17 4 12" />
-              </svg>{" "}
-              Done
-            </Button>
-          </div>
-        </div>
-      )}
-
-      <div
-        ref={editorRef}
-        className="editor"
-        contentEditable={isEditMode}
-        onInput={handleInput}
-        onKeyDown={handleEditorKeyDown}
-        onClick={() => !isEditMode && startEdit()}
-        suppressContentEditableWarning
-        role="textbox"
-        aria-multiline="true"
-        aria-label="Note editor"
-        aria-describedby="editor-char-count"
-        placeholder="Tap to edit"
-        style={{
-          fontFamily: FONT_MAP[noteFont] ?? undefined,
-          fontSize: noteFontSize ? `${noteFontSize}px` : undefined,
-          cursor: isEditMode ? "text" : "pointer",
-        }}
-      />
-
-      {/* Bottom mini-bar with editable title, last-modified label, and remove button */}
-      {isEditMode && (
-        <div className="note-footer">
-          <input
-            className="note-title-input"
-            value={noteTitle}
-            onChange={handleTitleChange}
-            placeholder="Type here to rename note"
-            aria-label="Note title"
-          />
-
-          {/* Center: Last modified label + character count */}
-          <div className="note-footer-meta">
-            <div
-              className="note-last-modified"
-              role="status"
-              aria-live="polite"
-              aria-atomic="true"
-            >
-              {lastModified && (
-                <span>Last modified: {formatRelative(lastModified)}</span>
-              )}
-            </div>
-            <span id="editor-char-count" className="char-count">
-              {value.replace(/<[^>]+>/g, "").length} characters
-            </span>
-          </div>
-
-          <div className="note-footer-actions">
             {onTogglePin && (
               <Button
                 className={`pin-btn${isPinned ? " active" : ""}`}
@@ -1639,6 +3017,31 @@ const TextField = ({
           </div>
         </div>
       )}
+
+      <div
+        ref={editorRef}
+        className="editor"
+        contentEditable={isEditMode}
+        onInput={handleInput}
+        onKeyDown={handleEditorKeyDown}
+        onClick={(e) => {
+          if (isEditMode) return;
+          const linkEl = e.target?.closest?.("a[href]");
+          if (linkEl) return;
+          startEdit();
+        }}
+        suppressContentEditableWarning
+        role="textbox"
+        aria-multiline="true"
+        aria-label="Note editor"
+        aria-describedby="editor-char-count"
+        placeholder="Tap to edit"
+        style={{
+          fontFamily: FONT_MAP[noteFont] ?? undefined,
+          fontSize: noteFontSize ? `${noteFontSize}px` : undefined,
+          cursor: isEditMode ? "text" : "pointer",
+        }}
+      />
 
       {/* Full-screen modal */}
       {isFullScreen && (

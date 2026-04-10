@@ -9,6 +9,39 @@
   overflow: visible;
 }
 
+.note-item--editing .text-field {
+  border-color: color-mix(
+    in srgb,
+    var(--accent, #79c4ff) 55%,
+    var(--panel-border, rgba(255, 255, 255, 0.12))
+  );
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--accent, #79c4ff) 45%, transparent),
+    0 10px 24px rgba(0, 0, 0, 0.22);
+}
+
+.note-item--editing::after {
+  content: "Editing";
+  position: absolute;
+  top: -8px;
+  right: 14px;
+  z-index: 3;
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #d9ecff;
+  background: color-mix(
+    in srgb,
+    var(--accent, #4aa7ff) 35%,
+    rgba(10, 15, 24, 0.92)
+  );
+  border: 1px solid
+    color-mix(in srgb, var(--accent, #79c4ff) 42%, rgba(255, 255, 255, 0.18));
+  border-radius: 999px;
+  padding: 3px 8px;
+  pointer-events: none;
+}
+
 /* Top toolbar (search + actions) */
 .notes-toolbar {
   display: flex;
@@ -34,6 +67,30 @@
   align-items: center;
   gap: 6px;
   flex-wrap: wrap;
+}
+
+.notes-sort-picker {
+  display: inline-flex;
+  align-items: center;
+}
+
+.notes-type-picker {
+  display: inline-flex;
+  align-items: center;
+}
+
+.notes-sort-picker .custom-select-button {
+  height: 30px;
+  border-radius: 8px;
+  font-size: 12px;
+  padding: 4px 10px;
+}
+
+.notes-type-picker .custom-select-button {
+  height: 30px;
+  border-radius: 8px;
+  font-size: 12px;
+  padding: 4px 10px;
 }
 
 /* Search input */
@@ -80,9 +137,9 @@
   align-items: center;
   gap: 8px;
   padding: 7px 12px;
-  border-top: 1px solid var(--panel-border, rgba(255, 255, 255, 0.05));
+  border-bottom: 1px solid var(--panel-border, rgba(255, 255, 255, 0.05));
   background: rgba(255, 255, 255, 0.012);
-  border-radius: 0 0 20px 20px;
+  border-radius: 20px 20px 0 0;
 }
 
 /* Title display (view mode) */
@@ -148,6 +205,38 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
+}
+
+.note-footer-actions .undo-btn,
+.note-footer-actions .redo-btn {
+  min-width: 30px;
+  min-height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--fg, #c8c8c8);
+  padding: 5px 8px;
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.note-footer-actions .undo-btn:hover,
+.note-footer-actions .redo-btn:hover {
+  background: rgba(255, 255, 255, 0.09);
+  border-color: rgba(255, 255, 255, 0.2);
+  color: var(--fg, #ececec);
+}
+
+.note-footer-actions .undo-btn svg,
+.note-footer-actions .redo-btn svg {
+  width: 14px;
+  height: 14px;
 }
 
 .note-footer-actions .remove-btn svg,

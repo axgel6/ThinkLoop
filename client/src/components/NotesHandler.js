@@ -4,8 +4,24 @@ import TextField from "./TextField";
 import "./NotesHandler.css";
 import "./ocr-styles.css";
 import Button from "./Button";
+import Dropdown from "./Dropdown";
 import FolderSidebar from "./FolderSidebar";
 import "./FolderSidebar.css";
+
+const SORT_OPTIONS = [
+  { id: "updated-desc", label: "Last updated (newest)" },
+  { id: "updated-asc", label: "Last updated (oldest)" },
+  { id: "created-desc", label: "Created (newest)" },
+  { id: "created-asc", label: "Created (oldest)" },
+  { id: "title-asc", label: "Title (A-Z)" },
+  { id: "title-desc", label: "Title (Z-A)" },
+];
+
+const NOTE_TYPE_OPTIONS = [
+  { id: "all", label: "All types" },
+  { id: "text", label: "Notes" },
+  { id: "code", label: "Code" },
+];
 
 // Stable NoteItem component defined outside the parent to avoid remounts on each render.
 // Defining a memoized component inside a parent recreates its type every render,
@@ -13,6 +29,7 @@ import "./FolderSidebar.css";
 const NoteItem = React.memo(function NoteItem({
   note,
   updateNote,
+  commitNoteEdits,
   handleRemove,
   isPinned,
   onTogglePin,
@@ -23,11 +40,11 @@ const NoteItem = React.memo(function NoteItem({
   onExitEdit,
 }) {
   const onChange = useCallback(
-    (val) => updateNote(note.id, { content: val }),
+    (val) => updateNote(note.id, { content: val }, { commit: false }),
     [note.id, updateNote],
   );
   const onTitleChange = useCallback(
-    (t) => updateNote(note.id, { title: t }),
+    (t) => updateNote(note.id, { title: t }, { commit: false }),
     [note.id, updateNote],
   );
   const onFontChange = useCallback(
@@ -46,6 +63,14 @@ const NoteItem = React.memo(function NoteItem({
     (lang) => updateNote(note.id, { language: lang }),
     [note.id, updateNote],
   );
+  const onCodeColorThemeChange = useCallback(
+    (codeColorTheme) => updateNote(note.id, { codeColorTheme }),
+    [note.id, updateNote],
+  );
+  const onShowLineNumbersChange = useCallback(
+    (showLineNumbers) => updateNote(note.id, { showLineNumbers }),
+    [note.id, updateNote],
+  );
   const onRemove = useCallback(
     () => handleRemove(note.id),
     [note.id, handleRemove],
@@ -57,7 +82,7 @@ const NoteItem = React.memo(function NoteItem({
   );
 
   return (
-    <div className="note-item">
+    <div className={`note-item${isEditing ? " note-item--editing" : ""}`}>
       <TextField
         value={note.content}
         title={note.title}
@@ -66,14 +91,20 @@ const NoteItem = React.memo(function NoteItem({
         theme={note.theme}
         noteType={note.noteType || "text"}
         language={note.language || "javascript"}
+        codeColorTheme={note.codeColorTheme || "night-owl"}
+        showLineNumbers={Boolean(note.showLineNumbers)}
         createdAt={note.createdAt}
         lastModified={note.lastModified}
+        noteId={note.id}
         onChange={onChange}
         onTitleChange={onTitleChange}
+        onCommitEdit={() => commitNoteEdits(note.id)}
         onFontChange={onFontChange}
         onFontSizeChange={onFontSizeChange}
         onThemeChange={onThemeChange}
         onLanguageChange={onLanguageChange}
+        onCodeColorThemeChange={onCodeColorThemeChange}
+        onShowLineNumbersChange={onShowLineNumbersChange}
         onRemove={onRemove}
         isPinned={isPinned}
         onTogglePin={() => onTogglePin(note.id)}
@@ -97,6 +128,8 @@ const NotesHandler = ({ currentUser }) => {
   const [editingNoteId, setEditingNoteId] = useState(null);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [sortBy, setSortBy] = useState("updated-desc");
+  const [noteTypeFilter, setNoteTypeFilter] = useState("all");
   const [showOCRModal, setShowOCRModal] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [ocrImage, setOcrImage] = useState(null);
@@ -375,6 +408,8 @@ const NotesHandler = ({ currentUser }) => {
         theme: "default",
         noteType,
         language: "python",
+        codeColorTheme: noteType === "code" ? "night-owl" : undefined,
+        showLineNumbers: noteType === "code" ? false : undefined,
         userId: currentUser ? currentUser.id : null,
         folderId: selectedFolderId,
       };
@@ -585,24 +620,47 @@ const NotesHandler = ({ currentUser }) => {
   );
 
   const updateNote = useCallback(
-    async (id, patch) => {
+    async (id, patch, options = {}) => {
+      const commit = options.commit === true;
+      const committedAt = Date.now();
       setNotes((prev) =>
         prev.map((n) =>
-          n.id === id ? { ...n, ...patch, lastModified: Date.now() } : n,
+          n.id === id
+            ? {
+                ...n,
+                ...patch,
+                ...(commit ? { lastModified: committedAt } : {}),
+              }
+            : n,
         ),
       );
+
       if (!currentUser) return;
+
+      const payload = {
+        ...patch,
+        ...(commit ? { lastModified: committedAt } : {}),
+      };
+      if (Object.keys(payload).length === 0) return;
+
       try {
         await fetch(`${API_URL}/notes/${id}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(patch),
+          body: JSON.stringify(payload),
         });
       } catch (error) {
         console.error("Failed to update note:", error);
       }
     },
     [currentUser],
+  );
+
+  const commitNoteEdits = useCallback(
+    async (id) => {
+      await updateNote(id, {}, { commit: true });
+    },
+    [updateNote],
   );
 
   // Persist to localStorage as backup
@@ -624,21 +682,58 @@ const NotesHandler = ({ currentUser }) => {
       ? notes.filter((note) => note.folderId === selectedFolderId)
       : notes;
 
+  const typeFilteredNotes =
+    noteTypeFilter === "all"
+      ? folderFilteredNotes
+      : folderFilteredNotes.filter((note) => {
+          if (noteTypeFilter === "code") return note.noteType === "code";
+          return (note.noteType || "text") !== "code";
+        });
+
   const visibleNotes = normalizedQuery
-    ? folderFilteredNotes.filter((note) => {
+    ? typeFilteredNotes.filter((note) => {
         const title = (note.title || "").toLowerCase();
         const content = (note.content || "").toLowerCase();
         return (
           title.includes(normalizedQuery) || content.includes(normalizedQuery)
         );
       })
-    : folderFilteredNotes;
+    : typeFilteredNotes;
 
-  // Sort to show pinned notes at the top
+  const toTimestamp = (val) => {
+    if (typeof val === "number") return val;
+    if (!val) return 0;
+    const ts = new Date(val).getTime();
+    return Number.isNaN(ts) ? 0 : ts;
+  };
+
+  // Sort to show pinned notes at the top, then apply selected ordering
   const sortedNotes = [...visibleNotes].sort((a, b) => {
     const aIsPinned = pinnedIds.includes(String(a.id)) ? 1 : 0;
     const bIsPinned = pinnedIds.includes(String(b.id)) ? 1 : 0;
-    return bIsPinned - aIsPinned;
+    if (bIsPinned !== aIsPinned) return bIsPinned - aIsPinned;
+
+    if (sortBy === "updated-desc") {
+      return toTimestamp(b.lastModified) - toTimestamp(a.lastModified);
+    }
+    if (sortBy === "updated-asc") {
+      return toTimestamp(a.lastModified) - toTimestamp(b.lastModified);
+    }
+    if (sortBy === "created-desc") {
+      return toTimestamp(b.createdAt) - toTimestamp(a.createdAt);
+    }
+    if (sortBy === "created-asc") {
+      return toTimestamp(a.createdAt) - toTimestamp(b.createdAt);
+    }
+    if (sortBy === "title-desc") {
+      return (b.title || "").localeCompare(a.title || "", undefined, {
+        sensitivity: "base",
+      });
+    }
+
+    return (a.title || "").localeCompare(b.title || "", undefined, {
+      sensitivity: "base",
+    });
   });
 
   const hasSearch = normalizedQuery.length > 0;
@@ -722,6 +817,22 @@ const NotesHandler = ({ currentUser }) => {
               />
             </div>
             <div className="notes-toolbar-right">
+              <div className="notes-type-picker">
+                <Dropdown
+                  options={NOTE_TYPE_OPTIONS}
+                  value={noteTypeFilter}
+                  onChange={setNoteTypeFilter}
+                  placeholder="Type"
+                />
+              </div>
+              <div className="notes-sort-picker">
+                <Dropdown
+                  options={SORT_OPTIONS}
+                  value={sortBy}
+                  onChange={setSortBy}
+                  placeholder="Sort"
+                />
+              </div>
               <Button
                 onClick={() => setShowOCRModal(true)}
                 className="icon-button"
@@ -836,6 +947,7 @@ const NotesHandler = ({ currentUser }) => {
                 key={n.id}
                 note={n}
                 updateNote={updateNote}
+                commitNoteEdits={commitNoteEdits}
                 handleRemove={handleRemove}
                 isPinned={pinnedIds.includes(String(n.id))}
                 onTogglePin={handleTogglePin}

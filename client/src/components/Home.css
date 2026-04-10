@@ -290,6 +290,71 @@
   animation: widgetFadeIn 0.25s cubic-bezier(0.4, 0, 0.2, 1) 0.06s both;
 }
 
+.home-recent-code {
+  --title-accent: var(--accent-focus, #7ac4ff);
+  padding: 12px 14px 16px;
+  border-radius: 18px;
+  border: 1px solid var(--panel-border, rgba(255, 255, 255, 0.08));
+  background: var(--panel-bg, rgba(25, 25, 25, 0.4));
+  -webkit-backdrop-filter: blur(8px) saturate(160%);
+  backdrop-filter: blur(8px) saturate(160%);
+  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.1);
+  animation: widgetFadeIn 0.25s cubic-bezier(0.4, 0, 0.2, 1) 0.08s both;
+}
+
+.home-recent-code h2 {
+  margin: 4px 0 12px;
+}
+
+.home-recent-code-card {
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--panel-bg-solid, #17191d) 94%, #0f1320 6%),
+    color-mix(in srgb, var(--panel-bg-solid, #17191d) 90%, #090b12 10%)
+  );
+}
+
+.home-recent-code-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.home-recent-code-lang {
+  font-family:
+    "JetBrains Mono", "Fira Code", Menlo, Monaco, Consolas, monospace;
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  color: #7ac4ff;
+  background: rgba(122, 196, 255, 0.12);
+  border: 1px solid rgba(122, 196, 255, 0.35);
+  border-radius: 999px;
+  padding: 3px 8px;
+  flex-shrink: 0;
+}
+
+.home-recent-code-content {
+  margin: 2px 0 0;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: rgba(5, 8, 14, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  color: #bfd8ff;
+  font-family:
+    "JetBrains Mono", "Fira Code", Menlo, Monaco, Consolas, monospace;
+  font-size: 11px;
+  line-height: 1.45;
+  white-space: pre;
+  overflow: hidden;
+}
+
+.home-recent-code-content code {
+  display: block;
+  font: inherit;
+  color: inherit;
+}
+
 .home-recent h2 {
   margin: 4px 0 12px;
 }
@@ -530,6 +595,49 @@
   line-height: 1.6;
   word-wrap: break-word;
   margin-bottom: 12px;
+}
+
+.modal-note-code-wrap {
+  margin-bottom: 12px;
+}
+
+.modal-note-code-lang {
+  display: inline-flex;
+  align-items: center;
+  margin-bottom: 8px;
+  font-family:
+    "JetBrains Mono", "Fira Code", Menlo, Monaco, Consolas, monospace;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  color: #7ac4ff;
+  border: 1px solid rgba(122, 196, 255, 0.35);
+  background: rgba(122, 196, 255, 0.12);
+  border-radius: 999px;
+  padding: 3px 9px;
+}
+
+.modal-note-content-code {
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(5, 8, 14, 0.58);
+  color: #bfd8ff;
+  font-family:
+    "JetBrains Mono", "Fira Code", Menlo, Monaco, Consolas, monospace;
+  font-size: 12px;
+  line-height: 1.55;
+  white-space: pre;
+  overflow: auto;
+  max-height: 52vh;
+}
+
+.modal-note-content-code code {
+  display: block;
+  font: inherit;
+  color: inherit;
+  background: none;
+  padding: 0;
 }
 
 /* Style HTML content inside the modal */
@@ -1320,6 +1428,7 @@
 .home-info h2,
 .home-pinned h2,
 .home-recent h2,
+.home-recent-code h2,
 .home-pomodoro h2,
 .home-tasks h2,
 .home-quick-note h2,
@@ -1670,7 +1779,8 @@
   padding: 10px 16px;
   border-radius: 12px;
   background: transparent;
-  border: 1px dashed color-mix(in srgb, var(--accent-countdown) 35%, var(--panel-border));
+  border: 1px dashed
+    color-mix(in srgb, var(--accent-countdown) 35%, var(--panel-border));
   color: var(--muted, #9a9a9a);
   font-size: 1rem;
   font-weight: 600;
@@ -1959,6 +2069,7 @@
 
   .home-pinned h2,
   .home-recent h2,
+  .home-recent-code h2,
   .home-pomodoro h2,
   .home-tasks h2,
   .home-quick-note h2,
@@ -1991,6 +2102,7 @@
 
   .home-pomodoro,
   .home-recent,
+  .home-recent-code,
   .home-tasks,
   .home-quick-note,
   .home-quick-actions,
@@ -2195,6 +2307,7 @@
 
   .home-pinned,
   .home-recent,
+  .home-recent-code,
   .home-pomodoro,
   .home-tasks,
   .home-quick-note,

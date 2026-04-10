@@ -92,6 +92,7 @@ app.get("/notes", async (req, res) => {
       theme: note.theme || "default",
       noteType: note.noteType || "text",
       language: note.language || "python",
+      showLineNumbers: Boolean(note.showLineNumbers),
       createdAt: note.createdAt || Date.now(),
       lastModified: note.lastModified || note.createdAt || Date.now(),
       userId: note.userId || null,
@@ -133,6 +134,7 @@ app.post("/notes", async (req, res) => {
       isPinned,
       noteType,
       language,
+      showLineNumbers,
       folderId,
     } = req.body;
 
@@ -176,6 +178,7 @@ app.post("/notes", async (req, res) => {
       theme: theme || "default",
       noteType: noteType || "text",
       language: language || "python",
+      showLineNumbers: Boolean(showLineNumbers),
       userId: userId || null,
       isPinned: isPinned || false,
       folderId: folderId || null,
@@ -203,6 +206,7 @@ app.put("/notes/:id", async (req, res) => {
       theme,
       isPinned,
       language,
+      showLineNumbers,
       folderId,
     } = req.body;
     const updateFields: any = {
@@ -235,6 +239,8 @@ app.put("/notes/:id", async (req, res) => {
     if (theme !== undefined) updateFields.theme = theme;
     if (isPinned !== undefined) updateFields.isPinned = isPinned;
     if (language !== undefined) updateFields.language = language;
+    if (showLineNumbers !== undefined)
+      updateFields.showLineNumbers = Boolean(showLineNumbers);
     if (folderId !== undefined) updateFields.folderId = folderId;
 
     const result = await notesCollection.updateOne(
