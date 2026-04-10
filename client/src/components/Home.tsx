@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, ReactElement } from "react";
+import { useState, useEffect, useCallback, useRef, ReactElement } from "react";
 import confetti from "canvas-confetti";
 import Weather from "./Weather";
 import "./Home.css";
@@ -473,6 +473,17 @@ export default function Home({
   });
   const [isEditingWidgets, setIsEditingWidgets] = useState(false);
   const [homeSettingsReady, setHomeSettingsReady] = useState(!currentUser?.id);
+
+  const prevUserIdRef = useRef<string | number | undefined>(currentUser?.id);
+
+  // Reset widget/countdown state when user logs out
+  useEffect(() => {
+    if (prevUserIdRef.current && !currentUser?.id) {
+      setWidgetConfig(DEFAULT_WIDGET_CONFIG);
+      setCountdowns([]);
+    }
+    prevUserIdRef.current = currentUser?.id;
+  }, [currentUser?.id]);
 
   // --- Time ---
   const currentTime = now.toLocaleTimeString(undefined, {

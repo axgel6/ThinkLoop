@@ -37,7 +37,10 @@ const Tasks: React.FC<TasksProps> = ({ currentUser }) => {
   React.useEffect(() => {
     const fetchTasks = async () => {
       try {
-        if (!currentUser) return;
+        if (!currentUser) {
+          setItems([]);
+          return;
+        }
 
         const mergeKey = `tasksmerged:${currentUser.id}`;
         const alreadyMerged = localStorage.getItem(mergeKey) === "true";

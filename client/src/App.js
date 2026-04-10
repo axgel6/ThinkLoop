@@ -73,18 +73,39 @@ function App() {
   };
 
   const handleLogout = () => {
+    // Clear session
     try {
       localStorage.removeItem("currentUser");
     } catch {}
-    setCurrentUser(null);
+
+    // Clear all user data from localStorage
+    const keysToClear = [
+      "countdowns:items",
+      "home:widget-config-v2",
+      "localNotes",
+      "checklist:items",
+      "focusStats:sessions",
+      "sidebar:collapsed",
+    ];
+    keysToClear.forEach((key) => {
+      try {
+        localStorage.removeItem(key);
+      } catch {}
+    });
+
+    // Reset settings to defaults
     localStorage.setItem("settings:selected", "zero");
     localStorage.setItem("settings:font", "zero");
     localStorage.setItem("settings:fontSize", "16");
     localStorage.setItem("settings:weatherCity", "Atlanta");
+    localStorage.setItem("activeTab", "home");
+
     applyTheme("zero");
     applyFont("zero");
     applyUIFontSize(16);
     setWeatherCity("Atlanta");
+    setActiveTab("home");
+    setCurrentUser(null);
   };
 
   const handleChangeTab = (tab) => {

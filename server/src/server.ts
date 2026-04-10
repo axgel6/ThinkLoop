@@ -976,6 +976,7 @@ app.put("/auth/user/:userId/settings", async (req, res) => {
         "today",
         "pinned",
         "recent",
+        "recent-code",
         "tasks",
         "quick-note",
         "quick-actions",
