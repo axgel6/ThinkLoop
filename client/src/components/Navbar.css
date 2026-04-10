@@ -95,6 +95,66 @@ body:has(.floating-editor-toolbar) .nav-divider {
     border-color 0.15s ease,
     color 0.15s ease;
   outline: none;
+  position: relative;
+}
+
+/* Hover label tooltip */
+.nav-tooltip {
+  position: absolute;
+  bottom: calc(100% + 10px);
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 5px 10px;
+  background: color-mix(
+    in srgb,
+    var(--panel-bg-solid, rgba(24, 24, 24, 0.97)) 86%,
+    var(--panel-bg, rgba(24, 24, 24, 0.52))
+  );
+  border: 1px solid color-mix(
+    in srgb,
+    var(--panel-border, rgba(255, 255, 255, 0.1)) 80%,
+    var(--fg, #dcdcdc) 20%
+  );
+  border-radius: 9px;
+  box-shadow:
+    0 6px 24px rgba(0, 0, 0, 0.4),
+    0 1px 4px rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(12px) saturate(150%);
+  -webkit-backdrop-filter: blur(12px) saturate(150%);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--fg, #dcdcdc);
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 0.12s ease,
+    visibility 0.12s ease;
+}
+
+.nav-links li button:hover .nav-tooltip {
+  opacity: 1;
+  visibility: visible;
+  animation: navTooltipIn 0.16s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes navTooltipIn {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(4px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0) scale(1);
+  }
+}
+
+@media (hover: none) {
+  .nav-tooltip {
+    display: none;
+  }
 }
 
 .nav-links li button:hover {

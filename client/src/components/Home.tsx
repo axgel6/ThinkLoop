@@ -2,8 +2,12 @@ import { useState, useEffect, useCallback, useRef, ReactElement } from "react";
 import confetti from "canvas-confetti";
 import Weather from "./Weather";
 import "./Home.css";
+import { COLOR_OPTIONS, applyTheme } from "../utils/themes";
+import { FONT_OPTIONS, applyFont } from "../utils/fonts";
 
 const API_URL = process.env.REACT_APP_API_URL || "http://localhost:3001";
+
+type TabKey = "home" | "notes" | "tasks" | "settings";
 
 // --- Types ---
 interface HomeProps {
@@ -26,6 +30,7 @@ interface HomeProps {
   handlePomodoroToggle?: () => void;
   handlePomodoroReset?: () => void;
   handlePomodoroSkip?: () => void;
+  onNavigate?: (tab: TabKey) => void;
 }
 
 interface Note {
@@ -95,7 +100,7 @@ const DEFAULT_WIDGET_CONFIG: WidgetConfig[] = [
   { id: "recent-code", label: "Recent Code", visible: true, size: "half" },
   // Row 3: tasks(1) + quick-note(1) + countdowns(1) = 3
   { id: "tasks", label: "Tasks", visible: true, size: "half" },
-  { id: "quick-note", label: "Quick Note", visible: true, size: "half" },
+  { id: "quick-note", label: "Capture Note", visible: true, size: "half" },
   { id: "countdowns", label: "Countdowns", visible: true, size: "half" },
   // Row 4: focus-stats(2) + pomodoro(1) = 3
   { id: "focus-stats", label: "Focus Stats", visible: true, size: "full" },
@@ -398,6 +403,72 @@ const CloudIcon = () => (
   </svg>
 );
 
+const IconHomeNav = () => (
+  <svg
+    width="15"
+    height="15"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <path d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9.5z" />
+    <polyline points="9 21 9 12 15 12 15 21" />
+  </svg>
+);
+
+const IconNotesNav = () => (
+  <svg
+    width="15"
+    height="15"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+    <polyline points="14 2 14 8 20 8" />
+    <line x1="8" y1="13" x2="16" y2="13" />
+    <line x1="8" y1="17" x2="13" y2="17" />
+  </svg>
+);
+
+const IconTasksNav = () => (
+  <svg
+    width="15"
+    height="15"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <polyline points="9 11 12 14 22 4" />
+    <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
+  </svg>
+);
+
+const IconSettingsNav = () => (
+  <svg
+    width="15"
+    height="15"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <circle cx="12" cy="12" r="3" />
+    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+  </svg>
+);
+
 // --- Main Component ---
 export default function Home({
   weatherCity,
@@ -415,6 +486,7 @@ export default function Home({
   handlePomodoroToggle = () => {},
   handlePomodoroReset = () => {},
   handlePomodoroSkip = () => {},
+  onNavigate = () => {},
 }: HomeProps) {
   const getGreeting = () => {
     const h = new Date().getHours();
@@ -435,6 +507,9 @@ export default function Home({
   const [quickNoteText, setQuickNoteText] = useState("");
   const [quickNoteSaving, setQuickNoteSaving] = useState(false);
   const [quickNoteSuccess, setQuickNoteSuccess] = useState(false);
+  const [showCaptureModal, setShowCaptureModal] = useState(false);
+  const [captureModalText, setCaptureModalText] = useState("");
+  const [quickActionStatus, setQuickActionStatus] = useState("");
 
   const [focusStats, setFocusStats] = useState<FocusStats>({
     todaySessions: 0,
@@ -757,9 +832,9 @@ export default function Home({
     );
 
   // --- Quick note ---
-  const createQuickNote = async () => {
-    const text = quickNoteText.trim();
-    if (!text) return;
+  const createQuickNote = async (textOverride?: string) => {
+    const text = (textOverride ?? quickNoteText).trim();
+    if (!text) return false;
     setQuickNoteSaving(true);
     const ts = Date.now();
     const payload = {
@@ -797,6 +872,86 @@ export default function Home({
     setQuickNoteSaving(false);
     setQuickNoteSuccess(true);
     setTimeout(() => setQuickNoteSuccess(false), 2000);
+    return true;
+  };
+
+  const updateQuickActionStatus = (message: string) => {
+    setQuickActionStatus(message);
+    window.setTimeout(() => setQuickActionStatus(""), 2200);
+  };
+
+  const navigateTo = (tab: TabKey) => {
+    onNavigate(tab);
+    updateQuickActionStatus(`Opened ${tab}`);
+  };
+
+  const setRandomTheme = async () => {
+    const currentTheme = localStorage.getItem("settings:selected") || "zero";
+    const available = COLOR_OPTIONS.map((option) => option.id).filter(
+      (id) => id !== currentTheme,
+    );
+    const pool = available.length > 0 ? available : [currentTheme];
+    const themeId = pool[Math.floor(Math.random() * pool.length)] || "zero";
+    localStorage.setItem("settings:selected", themeId);
+    applyTheme(themeId);
+
+    if (currentUser?.id) {
+      try {
+        await fetch(`${API_URL}/auth/user/${currentUser.id}/settings`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ colorTheme: themeId }),
+        });
+      } catch {}
+    }
+
+    return COLOR_OPTIONS.find((option) => option.id === themeId)?.label;
+  };
+
+  const setRandomFont = async () => {
+    const currentFont = localStorage.getItem("settings:font") || "mono";
+    const available = FONT_OPTIONS.map((option) => option.id).filter(
+      (id) => id !== currentFont,
+    );
+    const pool = available.length > 0 ? available : [currentFont];
+    const fontId = pool[Math.floor(Math.random() * pool.length)] || "mono";
+    localStorage.setItem("settings:font", fontId);
+    applyFont(fontId);
+
+    if (currentUser?.id) {
+      try {
+        await fetch(`${API_URL}/auth/user/${currentUser.id}/settings`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ fontTheme: fontId }),
+        });
+      } catch {}
+    }
+
+    return FONT_OPTIONS.find((option) => option.id === fontId)?.label;
+  };
+
+  const shuffleThemeAndFont = async () => {
+    const [themeLabel, fontLabel] = await Promise.all([
+      setRandomTheme(),
+      setRandomFont(),
+    ]);
+    updateQuickActionStatus(
+      `Shuffled ${themeLabel || "theme"} + ${fontLabel || "font"}`,
+    );
+  };
+
+  const openCaptureModal = () => {
+    setCaptureModalText(quickNoteText);
+    setShowCaptureModal(true);
+  };
+
+  const submitCaptureModal = async () => {
+    const saved = await createQuickNote(captureModalText);
+    if (!saved) return;
+    setShowCaptureModal(false);
+    setCaptureModalText("");
+    updateQuickActionStatus("Capture saved");
   };
 
   // --- Widget config helpers ---
@@ -997,28 +1152,65 @@ export default function Home({
         <div className="quick-actions-buttons">
           <button
             className="quick-action-btn"
-            onClick={() => console.log("New note - navigate to editor")}
-            title="Create a new note"
+            onClick={shuffleThemeAndFont}
+            title="Shuffle both theme and font"
           >
-            <span className="action-icon">+</span>
-            New Note
+            <span className="action-icon">
+              <IconHomeNav />
+            </span>
+            Shuffle Theme + Font
+          </button>
+          <button
+            className="quick-action-btn"
+            onClick={openCaptureModal}
+            title="Capture a quick note instantly"
+          >
+            <span className="action-icon">
+              <IconNotesNav />
+            </span>
+            Capture Note
           </button>
           <button
             className="quick-action-btn"
             onClick={handlePomodoroToggle}
-            title="Start Pomodoro timer"
+            title="Start or pause Pomodoro timer"
           >
             <span className="action-icon play">▶</span>
-            Start Timer
+            {isRunning ? "Pause Timer" : "Start Timer"}
           </button>
           <button
             className="quick-action-btn"
-            onClick={() => console.log("Navigate to notes")}
-            title="View all notes"
+            onClick={() => navigateTo("notes")}
+            title="Open notes"
           >
-            <span className="action-icon notes">≡</span>
-            All Notes
+            <span className="action-icon notes">
+              <IconNotesNav />
+            </span>
+            Open Notes
           </button>
+          <button
+            className="quick-action-btn"
+            onClick={() => navigateTo("tasks")}
+            title="Open tasks"
+          >
+            <span className="action-icon">
+              <IconTasksNav />
+            </span>
+            Open Tasks
+          </button>
+          <button
+            className="quick-action-btn"
+            onClick={() => navigateTo("settings")}
+            title="Open settings"
+          >
+            <span className="action-icon">
+              <IconSettingsNav />
+            </span>
+            Open Settings
+          </button>
+        </div>
+        <div className="quick-actions-status" aria-live="polite">
+          {quickActionStatus || " "}
         </div>
       </div>
     ),
@@ -1177,7 +1369,7 @@ export default function Home({
 
     "quick-note": (
       <div key="quick-note" className="home-quick-note">
-        <h2>Quick Note</h2>
+        <h2>Capture Note</h2>
         <form
           onSubmit={(e) => {
             e.preventDefault();
@@ -1186,7 +1378,7 @@ export default function Home({
         >
           <textarea
             className="quick-note-input"
-            placeholder="Write something down..."
+            placeholder="Capture something quickly..."
             value={quickNoteText}
             onChange={(e) => setQuickNoteText(e.target.value)}
           />
@@ -1199,7 +1391,7 @@ export default function Home({
               ? "Saving..."
               : quickNoteSuccess
                 ? "Saved!"
-                : "Save Note"}
+                : "Save Capture"}
           </button>
         </form>
       </div>
@@ -1522,6 +1714,57 @@ export default function Home({
               >
                 Done
               </button>
+            </div>
+          </div>
+        )}
+
+        {/* --- Expanded Note Modal --- */}
+        {showCaptureModal && (
+          <div
+            className="note-modal-overlay"
+            onClick={() => setShowCaptureModal(false)}
+          >
+            <div
+              className="capture-modal-popup"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                className="modal-close-btn capture-modal-close-btn"
+                onClick={() => setShowCaptureModal(false)}
+                aria-label="Close capture modal"
+              >
+                ←
+              </button>
+              <div className="capture-modal-header">
+                <h2>Capture Note</h2>
+                <p className="capture-modal-subtitle">
+                  Will be saved to notes.
+                </p>
+              </div>
+              <textarea
+                className="capture-modal-input"
+                placeholder="Type your note..."
+                value={captureModalText}
+                onChange={(e) => setCaptureModalText(e.target.value)}
+                autoFocus
+              />
+              <div className="capture-modal-actions">
+                <button
+                  className="capture-modal-save-btn"
+                  onClick={submitCaptureModal}
+                  disabled={quickNoteSaving || !captureModalText.trim()}
+                  type="button"
+                >
+                  {quickNoteSaving ? "Saving..." : "Save Capture"}
+                </button>
+                <button
+                  className="capture-modal-cancel-btn"
+                  onClick={() => setShowCaptureModal(false)}
+                  type="button"
+                >
+                  Cancel
+                </button>
+              </div>
             </div>
           </div>
         )}

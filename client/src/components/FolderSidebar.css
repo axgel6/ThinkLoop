@@ -751,4 +751,15 @@
   .notes-layout .folder-sidebar:not(.folder-sidebar--open) {
     pointer-events: none;
   }
+
+  /* Main layout: less top padding, sidebar is a drawer so no gap needed */
+  .notes-layout {
+    padding-top: 10px;
+    gap: 0;
+  }
+
+  /* More bottom clearance for full-width floating toolbar */
+  .notes-main {
+    --notes-main-bottom-padding: 80px;
+  }
 }

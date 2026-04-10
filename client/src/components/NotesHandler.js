@@ -144,6 +144,7 @@ const NotesHandler = ({ currentUser }) => {
   const [ocrText, setOcrText] = useState("");
   const [ocrLoading, setOcrLoading] = useState(false);
   const [ocrError, setOcrError] = useState("");
+  const isFetchingNotesRef = useRef(false);
   const pinnedStorageKey = currentUser
     ? `pinnedNotes:${currentUser.id}`
     : "pinnedNotes:guest";
@@ -173,84 +174,104 @@ const NotesHandler = ({ currentUser }) => {
     }
   }, [pinnedIds, pinnedStorageKey]);
 
-  const fetchNotes = useCallback(async () => {
-    setLoading(true);
-    try {
-      // If logged out, load local notes from localStorage
-      if (!currentUser) {
-        try {
-          const localNotes = localStorage.getItem("localNotes");
-          if (localNotes) {
-            setNotes(JSON.parse(localNotes));
-          } else {
+  const fetchNotes = useCallback(
+    async ({ silent = false } = {}) => {
+      if (isFetchingNotesRef.current) return;
+      isFetchingNotesRef.current = true;
+      if (!silent) setLoading(true);
+      try {
+        // If logged out, load local notes from localStorage
+        if (!currentUser) {
+          try {
+            const localNotes = localStorage.getItem("localNotes");
+            if (localNotes) {
+              setNotes(JSON.parse(localNotes));
+            } else {
+              setNotes([]);
+            }
+          } catch (e) {
             setNotes([]);
           }
-        } catch (e) {
-          setNotes([]);
+          return;
         }
-        return;
-      }
 
-      // If logged in, fetch from server
-      const url = `${API_URL}/notes?userId=${currentUser.id}`;
-      const response = await fetch(url);
-      if (response.ok) {
-        const serverNotes = await response.json();
+        // If logged in, fetch from server
+        const url = `${API_URL}/notes?userId=${currentUser.id}`;
+        const response = await fetch(url);
+        if (response.ok) {
+          const serverNotes = await response.json();
 
-        // Check if there are local notes to merge
-        const localNotes = localStorage.getItem("localNotes");
-        if (localNotes) {
-          const parsedLocalNotes = JSON.parse(localNotes);
+          // Check if there are local notes to merge
+          const localNotes = localStorage.getItem("localNotes");
+          if (localNotes) {
+            const parsedLocalNotes = JSON.parse(localNotes);
 
-          // Upload each local note to the server
-          for (const localNote of parsedLocalNotes) {
-            try {
-              const noteToUpload = {
-                ...localNote,
-                userId: currentUser.id,
-              };
-              delete noteToUpload.id; // Remove local ID
+            // Upload each local note to the server
+            for (const localNote of parsedLocalNotes) {
+              try {
+                const noteToUpload = {
+                  ...localNote,
+                  userId: currentUser.id,
+                };
+                delete noteToUpload.id; // Remove local ID
 
-              await fetch(`${API_URL}/notes`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(noteToUpload),
-              });
-            } catch (error) {
-              console.error("Failed to upload local note:", error);
+                await fetch(`${API_URL}/notes`, {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify(noteToUpload),
+                });
+              } catch (error) {
+                console.error("Failed to upload local note:", error);
+              }
             }
-          }
 
-          // Clear local notes after uploading
-          localStorage.removeItem("localNotes");
+            // Clear local notes after uploading
+            localStorage.removeItem("localNotes");
 
-          // Re-fetch to get all notes including newly uploaded ones
-          const refreshResponse = await fetch(url);
-          if (refreshResponse.ok) {
-            const allNotes = await refreshResponse.json();
-            setNotes(allNotes);
+            // Re-fetch to get all notes including newly uploaded ones
+            const refreshResponse = await fetch(url);
+            if (refreshResponse.ok) {
+              const allNotes = await refreshResponse.json();
+              setNotes(allNotes);
+            } else {
+              setNotes(serverNotes);
+            }
           } else {
             setNotes(serverNotes);
           }
-        } else {
-          setNotes(serverNotes);
         }
+      } catch (error) {
+        console.error("Failed to fetch notes:", error);
+        setNotes([]);
+      } finally {
+        isFetchingNotesRef.current = false;
+        if (!silent) setLoading(false);
       }
-    } catch (error) {
-      console.error("Failed to fetch notes:", error);
-      setNotes([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [currentUser]);
+    },
+    [currentUser],
+  );
 
   // Fetch notes from server on mount
   useEffect(() => {
     fetchNotes();
   }, [fetchNotes]);
 
-  const handleRefresh = useCallback(() => {
-    fetchNotes();
+  // Auto refresh notes efficiently: on focus/visibility regain and periodic silent sync.
+  useEffect(() => {
+    const refreshIfVisible = () => {
+      if (document.visibilityState !== "visible") return;
+      fetchNotes({ silent: true });
+    };
+
+    const intervalId = window.setInterval(refreshIfVisible, 45000);
+    window.addEventListener("focus", refreshIfVisible);
+    document.addEventListener("visibilitychange", refreshIfVisible);
+
+    return () => {
+      window.clearInterval(intervalId);
+      window.removeEventListener("focus", refreshIfVisible);
+      document.removeEventListener("visibilitychange", refreshIfVisible);
+    };
   }, [fetchNotes]);
 
   // Fetch folders when logged in
@@ -943,9 +964,6 @@ const NotesHandler = ({ currentUser }) => {
                     ? "Switch to cards view"
                     : "Switch to title list view"
                 }
-                title={
-                  notesViewMode === "list" ? "Cards view" : "Title list view"
-                }
               >
                 <svg
                   width="16"
@@ -966,12 +984,16 @@ const NotesHandler = ({ currentUser }) => {
                   <circle cx="4" cy="12" r="1" />
                   <circle cx="4" cy="18" r="1" />
                 </svg>
+                <span className="notes-toolbar-tooltip">
+                  {notesViewMode === "list"
+                    ? "Switch to cards view"
+                    : "Switch to title list view"}
+                </span>
               </Button>
               <Button
                 onClick={() => setShowOCRModal(true)}
                 className="icon-button"
                 aria-label="Scan image"
-                title="Scan image"
               >
                 <svg
                   width="16"
@@ -988,12 +1010,12 @@ const NotesHandler = ({ currentUser }) => {
                   <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
                   <circle cx="12" cy="13" r="4" />
                 </svg>
+                <span className="notes-toolbar-tooltip">Scan image (OCR)</span>
               </Button>
               <Button
                 onClick={() => handleNewNote("code")}
                 className="icon-button"
                 aria-label="New code note"
-                title="New code note"
               >
                 <svg
                   width="16"
@@ -1010,12 +1032,12 @@ const NotesHandler = ({ currentUser }) => {
                   <polyline points="16 18 22 12 16 6" />
                   <polyline points="8 6 2 12 8 18" />
                 </svg>
+                <span className="notes-toolbar-tooltip">New code note</span>
               </Button>
               <Button
                 onClick={() => handleNewNote("text")}
                 className="icon-button"
                 aria-label="New note"
-                title="New note"
               >
                 <svg
                   width="16"
@@ -1032,28 +1054,7 @@ const NotesHandler = ({ currentUser }) => {
                   <line x1="12" y1="5" x2="12" y2="19" />
                   <line x1="5" y1="12" x2="19" y2="12" />
                 </svg>
-              </Button>
-              <Button
-                onClick={handleRefresh}
-                className="icon-button"
-                aria-label="Refresh notes"
-                title="Refresh notes"
-              >
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  aria-hidden="true"
-                >
-                  <path d="M21 12a9 9 0 1 1-2.64-6.36" />
-                  <polyline points="21 3 21 9 15 9" />
-                </svg>
+                <span className="notes-toolbar-tooltip">New note</span>
               </Button>
             </div>
           </div>

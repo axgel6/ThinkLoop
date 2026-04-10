@@ -1182,14 +1182,15 @@
     padding: 4px 6px;
   }
   .toolbar-scroll {
-    padding-right: 95px;
+    padding-right: 48px;
   }
   .toolbar-scroll::after {
-    width: 95px;
+    width: 48px;
   }
   .format-btn {
-    width: 26px;
-    height: 26px;
+    width: 28px;
+    height: 28px;
+    min-width: 28px;
   }
 
   .text-field.code-edit-inline .code-history-group .undo-btn,
@@ -1197,6 +1198,27 @@
     width: 28px !important;
     height: 28px !important;
     padding: 4px !important;
+  }
+
+  /* Note card: no max-height cap on mobile so content isn't truncated */
+  .text-field {
+    max-height: none;
+  }
+
+  /* Note header: tighter on small screens */
+  .note-header {
+    padding: 10px 14px;
+    gap: 8px;
+  }
+
+  /* Folder badge always visible on touch (no hover) */
+  .note-folder-badge-wrapper {
+    opacity: 1;
+  }
+
+  /* Popover: prevent running off bottom of viewport */
+  .toolbar-popover {
+    bottom: calc(100% + 6px);
   }
 }
 

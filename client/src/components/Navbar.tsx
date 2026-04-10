@@ -75,15 +75,15 @@ const Navbar: React.FC<NavbarProps> = ({
               className={activeTab === key ? "active" : ""}
               onClick={() => onChangeTab(key)}
               aria-label={label}
-              title={label}
             >
               {key === "home" && isRunning ? (
                 <span className={`nav-timer-pill${isWorkSession ? " nav-timer-pill--work" : " nav-timer-pill--break"}`}>
-<span className="nav-timer-time">{formatTime(pomodoroTime)}</span>
+                  <span className="nav-timer-time">{formatTime(pomodoroTime)}</span>
                 </span>
               ) : (
                 icon
               )}
+              <span className="nav-tooltip">{label}</span>
             </button>
           </li>
         ))}

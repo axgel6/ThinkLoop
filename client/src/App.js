@@ -325,6 +325,7 @@ function App() {
           handlePomodoroToggle={handlePomodoroToggle}
           handlePomodoroReset={handlePomodoroReset}
           handlePomodoroSkip={handlePomodoroSkip}
+          onNavigate={handleChangeTab}
         />
       )}
       {activeTab === "notes" && <NotesHandler currentUser={currentUser} />}

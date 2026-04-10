@@ -44,6 +44,9 @@
 
 /* Top toolbar (search + actions) */
 .notes-toolbar {
+  position: relative;
+  z-index: 40;
+  overflow: visible;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -142,6 +145,8 @@
 
 /* Icon buttons in toolbar */
 .icon-button {
+  position: relative;
+  overflow: visible;
   padding: 6px 8px;
   min-width: 30px;
   min-height: 30px;
@@ -165,6 +170,54 @@
 
 .icon-button--active:hover {
   background: color-mix(in srgb, var(--fg, #e0e0e0) 20%, transparent);
+}
+
+.notes-toolbar-tooltip {
+  position: absolute;
+  left: 50%;
+  top: calc(100% + 8px);
+  transform: translateX(-50%);
+  isolation: isolate;
+  padding: 6px 10px;
+  border-radius: 9px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(18, 22, 28, 0.12);
+  color: var(--fg, #e0e0e0);
+  font-size: 12.5px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  z-index: 1200;
+  box-shadow:
+    0 6px 24px rgba(0, 0, 0, 0.4),
+    0 1px 4px rgba(0, 0, 0, 0.2);
+  transition: none;
+}
+
+.notes-toolbar-tooltip::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: rgba(18, 22, 28, 0.12);
+  backdrop-filter: blur(26px) saturate(190%);
+  -webkit-backdrop-filter: blur(26px) saturate(190%);
+  z-index: -1;
+}
+
+.icon-button:hover .notes-toolbar-tooltip,
+.icon-button:focus-visible .notes-toolbar-tooltip {
+  opacity: 1;
+  visibility: visible;
+}
+
+@media (hover: none) {
+  .notes-toolbar-tooltip {
+    display: none;
+  }
 }
 
 .note-focus-filter {
@@ -542,4 +595,40 @@
 
 .note-folder-label {
   font-size: 13px;
+}
+
+/* ── Mobile ── */
+@media (max-width: 640px) {
+  .notes-toolbar {
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 7px 10px;
+    margin-bottom: 10px;
+  }
+
+  .notes-toolbar-left {
+    min-width: 0;
+    width: 100%;
+    flex: none;
+  }
+
+  .notes-search {
+    max-width: none;
+    width: 100%;
+  }
+
+  .notes-toolbar-right {
+    width: 100%;
+    justify-content: flex-end;
+    gap: 5px;
+  }
+
+  /* Folder badge: no hover on touch, always show when assigned */
+  .note-folder-badge-wrapper {
+    opacity: 1;
+  }
+
+  .empty-state {
+    padding: 36px 16px;
+  }
 }

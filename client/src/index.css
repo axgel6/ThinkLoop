@@ -43,6 +43,15 @@ body {
   }
 }
 
+/* Form elements don't inherit font-family by default in browsers.
+   This reset ensures buttons, inputs, and textareas pick up the active theme font. */
+button,
+input,
+textarea,
+select {
+  font-family: inherit;
+}
+
 .connection-banner {
   background: #fe8019;
   color: #282828;
