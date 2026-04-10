@@ -638,6 +638,7 @@ const FolderSidebar = ({
   onDeleteFolder,
   onMoveFolder,
   onColorFolder,
+  onCollapsedChange,
   isOpen,
   onClose,
   noteCountByFolder,
@@ -661,6 +662,7 @@ const FolderSidebar = ({
       try {
         localStorage.setItem("sidebar:collapsed", String(next));
       } catch {}
+      onCollapsedChange?.(next);
       return next;
     });
   };

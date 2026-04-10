@@ -842,6 +842,14 @@ const NotesHandler = ({ currentUser }) => {
             onDeleteFolder={handleDeleteFolder}
             onMoveFolder={handleMoveFolder}
             onColorFolder={handleColorFolder}
+            onCollapsedChange={(collapsed) => {
+              if (!currentUser) return;
+              fetch(`${API_URL}/auth/user/${currentUser.id}/settings`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ sidebarCollapsed: collapsed }),
+              }).catch(() => {});
+            }}
             isOpen={sidebarOpen}
             onClose={() => setSidebarOpen(false)}
             noteCountByFolder={noteCountByFolder}

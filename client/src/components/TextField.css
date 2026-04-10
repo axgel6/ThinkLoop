@@ -86,9 +86,9 @@
   gap: 5px;
   padding: 3px 9px 3px 7px;
   border-radius: 20px;
-  border: 1px solid var(--panel-border, rgba(255, 255, 255, 0.1));
-  background: rgba(255, 255, 255, 0.04);
-  color: var(--muted, #888);
+  border: 1px solid var(--panel-border);
+  background: color-mix(in srgb, var(--fg) 5%, transparent);
+  color: var(--muted);
   font-size: 11px;
   font-weight: 500;
   letter-spacing: 0.02em;
@@ -102,22 +102,22 @@
 }
 
 .note-folder-badge:hover {
-  background: rgba(255, 255, 255, 0.09);
-  border-color: rgba(255, 255, 255, 0.2);
-  color: var(--fg, #dcdcdc);
+  background: color-mix(in srgb, var(--fg) 10%, transparent);
+  border-color: color-mix(in srgb, var(--fg) 25%, transparent);
+  color: var(--fg);
 }
 
 /* Assigned-folder variant — slightly more visible accent */
 .note-folder-badge.has-folder {
-  border-color: rgba(167, 139, 250, 0.35);
-  background: rgba(139, 92, 246, 0.1);
-  color: rgba(196, 181, 253, 0.9);
+  border-color: color-mix(in srgb, var(--muted) 50%, transparent);
+  background: color-mix(in srgb, var(--muted) 12%, transparent);
+  color: var(--muted);
 }
 
 .note-folder-badge.has-folder:hover {
-  background: rgba(139, 92, 246, 0.18);
-  border-color: rgba(167, 139, 250, 0.55);
-  color: #c4b5fd;
+  background: color-mix(in srgb, var(--muted) 20%, transparent);
+  border-color: color-mix(in srgb, var(--muted) 70%, transparent);
+  color: var(--fg);
 }
 
 /* Folder picker dropdown */
@@ -127,13 +127,13 @@
   left: 0;
   z-index: 500;
   min-width: 160px;
-  background: rgba(18, 18, 22, 0.72);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--panel-bg-solid);
+  border: 1px solid var(--panel-border);
   border-radius: 12px;
   padding: 4px;
   box-shadow:
-    0 12px 36px rgba(0, 0, 0, 0.55),
-    0 2px 8px rgba(0, 0, 0, 0.3);
+    0 12px 36px rgba(0, 0, 0, 0.25),
+    0 2px 8px rgba(0, 0, 0, 0.15);
   backdrop-filter: blur(20px) saturate(160%);
   -webkit-backdrop-filter: blur(20px) saturate(160%);
   animation: menuFadeInDown 0.13s cubic-bezier(0.4, 0, 0.2, 1);
@@ -157,7 +157,7 @@
   background: none;
   border: none;
   border-radius: 8px;
-  color: var(--fg, #dcdcdc);
+  color: var(--fg);
   font-size: 12.5px;
   text-align: left;
   cursor: pointer;
@@ -166,12 +166,13 @@
 }
 
 .note-folder-picker-item:hover {
-  background: rgba(255, 255, 255, 0.08);
+  background: color-mix(in srgb, var(--fg) 8%, transparent);
 }
 
 .note-folder-picker-item.active {
-  color: #c4b5fd;
-  background: rgba(139, 92, 246, 0.12);
+  color: var(--fg);
+  font-weight: 600;
+  background: color-mix(in srgb, var(--muted) 15%, transparent);
 }
 
 .note-pin-indicator {
@@ -741,12 +742,12 @@
 .toolbar-actions .undo-btn,
 .toolbar-actions .redo-btn {
   background: transparent !important;
-  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border: 1px solid var(--panel-border) !important;
   border-radius: 6px !important;
   padding: 5px !important;
   width: 28px !important;
   height: 28px !important;
-  color: var(--fg, #c0c0c0) !important;
+  color: var(--fg) !important;
   opacity: 0.65 !important;
   display: inline-flex !important;
   align-items: center !important;
@@ -761,20 +762,20 @@
 
 .toolbar-actions .undo-btn:hover,
 .toolbar-actions .redo-btn:hover {
-  background: rgba(255, 255, 255, 0.08) !important;
-  border-color: rgba(255, 255, 255, 0.15) !important;
+  background: color-mix(in srgb, var(--fg) 8%, transparent) !important;
+  border-color: var(--panel-border) !important;
   opacity: 1 !important;
 }
 
 .toolbar-actions .done-btn {
-  background: rgba(255, 255, 255, 0.08) !important;
-  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  background: color-mix(in srgb, var(--fg) 8%, transparent) !important;
+  border: 1px solid color-mix(in srgb, var(--fg) 15%, transparent) !important;
   border-radius: 15px !important;
   padding: 5px 12px !important;
   font-size: 12px !important;
   font-weight: 600 !important;
   letter-spacing: 0.02em !important;
-  color: rgba(225, 225, 225, 0.95) !important;
+  color: var(--fg) !important;
   opacity: 1 !important;
   display: inline-flex !important;
   align-items: center !important;
@@ -787,9 +788,9 @@
 }
 
 .toolbar-actions .done-btn:hover {
-  background: rgba(255, 255, 255, 0.15) !important;
-  border-color: rgba(255, 255, 255, 0.3) !important;
-  color: #e5e5e5 !important;
+  background: color-mix(in srgb, var(--fg) 15%, transparent) !important;
+  border-color: color-mix(in srgb, var(--fg) 30%, transparent) !important;
+  color: var(--fg) !important;
 }
 
 .toolbar-actions svg {
@@ -797,25 +798,6 @@
   fill: none;
   stroke-linejoin: round;
   stroke-linecap: round;
-}
-
-/* Light theme variants for done button */
-.theme-cream .toolbar-actions .done-btn,
-.theme-windowsxp .toolbar-actions .done-btn,
-.theme-brightred .toolbar-actions .done-btn,
-.theme-purple .toolbar-actions .done-btn {
-  background: rgba(0, 0, 0, 0.06) !important;
-  border: 1px solid rgba(0, 0, 0, 0.15) !important;
-  color: rgba(61, 46, 31, 0.9) !important;
-}
-
-.theme-cream .toolbar-actions .done-btn:hover,
-.theme-windowsxp .toolbar-actions .done-btn:hover,
-.theme-brightred .toolbar-actions .done-btn:hover,
-.theme-purple .toolbar-actions .done-btn:hover {
-  background: rgba(0, 0, 0, 0.12) !important;
-  border-color: rgba(0, 0, 0, 0.25) !important;
-  color: rgba(50, 35, 20, 0.95) !important;
 }
 
 /* Font / theme / size pickers */

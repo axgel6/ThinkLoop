@@ -308,6 +308,7 @@ app.get("/folders", async (req, res) => {
         parentId: f.parentId || null,
         userId: f.userId,
         createdAt: f.createdAt,
+        color: f.color || null,
       })),
     );
   } catch (error) {
@@ -332,12 +333,14 @@ app.post("/folders", async (req, res) => {
         .json({ error: "Folder name is too long (max 500 bytes)" });
     }
     const now = Date.now();
-    const newFolder = {
+    const newFolder: any = {
       name: name.trim(),
       parentId: parentId || null,
       userId,
       createdAt: now,
     };
+    const { color } = req.body;
+    if (color !== undefined) newFolder.color = typeof color === "string" ? color : null;
     const result = await foldersCollection.insertOne(newFolder);
     res.status(201).json({
       id: result.insertedId.toString(),
@@ -351,7 +354,7 @@ app.post("/folders", async (req, res) => {
 // Rename or move a folder (update name and/or parentId)
 app.put("/folders/:id", async (req, res) => {
   try {
-    const { name, parentId } = req.body;
+    const { name, parentId, color } = req.body;
     const updateFields: any = {};
     if (name !== undefined) {
       if (!name.trim()) {
@@ -376,6 +379,9 @@ app.put("/folders/:id", async (req, res) => {
         }
       }
       updateFields.parentId = parentId;
+    }
+    if (color !== undefined) {
+      updateFields.color = typeof color === "string" ? color : null;
     }
     if (Object.keys(updateFields).length === 0) {
       return res.status(400).json({ error: "Nothing to update" });
@@ -903,6 +909,7 @@ app.get("/auth/user/:userId/settings", async (req, res) => {
       fontTheme: user.fontTheme || "zero",
       fontSize: user.fontSize || 16,
       weatherCity: user.weatherCity || "Atlanta",
+      sidebarCollapsed: user.sidebarCollapsed ?? false,
       countdowns: Array.isArray(user.countdowns) ? user.countdowns : [],
       widgetConfig: Array.isArray(user.widgetConfig) ? user.widgetConfig : [],
       focusSessions: Array.isArray(user.focusSessions)
@@ -922,6 +929,7 @@ app.put("/auth/user/:userId/settings", async (req, res) => {
       fontTheme,
       fontSize,
       weatherCity,
+      sidebarCollapsed,
       countdowns,
       widgetConfig,
       focusSessions,
@@ -930,6 +938,7 @@ app.put("/auth/user/:userId/settings", async (req, res) => {
     const updateFields: any = {};
     if (colorTheme !== undefined) updateFields.colorTheme = colorTheme;
     if (fontTheme !== undefined) updateFields.fontTheme = fontTheme;
+    if (sidebarCollapsed !== undefined) updateFields.sidebarCollapsed = Boolean(sidebarCollapsed);
     if (fontSize !== undefined) {
       const parsedFontSize = Number(fontSize);
       const allowedFontSizes = [14, 16, 18, 20];

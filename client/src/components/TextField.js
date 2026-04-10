@@ -46,6 +46,113 @@ const CODE_COLOR_THEME_OPTIONS = [
   { id: "everforest", label: "Everforest" },
 ];
 
+const MIN_TEXT_CONTRAST_RATIO = 3.5;
+
+const clampChannel = (value) => Math.max(0, Math.min(255, Math.round(value)));
+
+const parseHexColor = (value) => {
+  const hex = String(value || "").trim().replace("#", "");
+  if (![3, 4, 6, 8].includes(hex.length)) return null;
+
+  if (hex.length === 3 || hex.length === 4) {
+    const r = parseInt(hex[0] + hex[0], 16);
+    const g = parseInt(hex[1] + hex[1], 16);
+    const b = parseInt(hex[2] + hex[2], 16);
+    return { r, g, b };
+  }
+
+  const r = parseInt(hex.slice(0, 2), 16);
+  const g = parseInt(hex.slice(2, 4), 16);
+  const b = parseInt(hex.slice(4, 6), 16);
+  return { r, g, b };
+};
+
+const parseRgbColor = (value) => {
+  const match = String(value || "")
+    .trim()
+    .match(/^rgba?\(([^)]+)\)$/i);
+  if (!match) return null;
+
+  const parts = match[1]
+    .split(",")
+    .map((part) => part.trim())
+    .map(Number);
+  if (parts.length < 3 || parts.some((n, idx) => idx < 3 && Number.isNaN(n))) {
+    return null;
+  }
+
+  return {
+    r: clampChannel(parts[0]),
+    g: clampChannel(parts[1]),
+    b: clampChannel(parts[2]),
+  };
+};
+
+const parseColorToRgb = (value) => {
+  if (!value) return null;
+  const normalized = String(value).trim().toLowerCase();
+  if (!normalized || normalized === "transparent" || normalized === "inherit") {
+    return null;
+  }
+  if (normalized.startsWith("#")) return parseHexColor(normalized);
+  if (normalized.startsWith("rgb")) return parseRgbColor(normalized);
+  return null;
+};
+
+const rgbToCss = ({ r, g, b }) =>
+  `rgb(${clampChannel(r)}, ${clampChannel(g)}, ${clampChannel(b)})`;
+
+const toLinearSrgb = (channel) => {
+  const c = channel / 255;
+  return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+};
+
+const relativeLuminance = ({ r, g, b }) =>
+  0.2126 * toLinearSrgb(r) + 0.7152 * toLinearSrgb(g) + 0.0722 * toLinearSrgb(b);
+
+const contrastRatio = (a, b) => {
+  const l1 = relativeLuminance(a);
+  const l2 = relativeLuminance(b);
+  const lighter = Math.max(l1, l2);
+  const darker = Math.min(l1, l2);
+  return (lighter + 0.05) / (darker + 0.05);
+};
+
+const blendRgb = (from, to, amount) => ({
+  r: from.r + (to.r - from.r) * amount,
+  g: from.g + (to.g - from.g) * amount,
+  b: from.b + (to.b - from.b) * amount,
+});
+
+const normalizeTextColorForBackground = (
+  rawColor,
+  backgroundRgb,
+  preferredFgRgb,
+  minContrast = MIN_TEXT_CONTRAST_RATIO,
+) => {
+  const candidate = parseColorToRgb(rawColor);
+  if (!candidate || !backgroundRgb) return null;
+
+  if (contrastRatio(candidate, backgroundRgb) >= minContrast) {
+    return rgbToCss(candidate);
+  }
+
+  const bgIsLight = relativeLuminance(backgroundRgb) > 0.55;
+  const fallbackTarget = preferredFgRgb || (bgIsLight ? { r: 24, g: 24, b: 24 } : { r: 236, g: 236, b: 236 });
+
+  if (contrastRatio(fallbackTarget, backgroundRgb) >= minContrast) {
+    for (let step = 1; step <= 10; step += 1) {
+      const mixed = blendRgb(candidate, fallbackTarget, step / 10);
+      if (contrastRatio(mixed, backgroundRgb) >= minContrast) {
+        return rgbToCss(mixed);
+      }
+    }
+    return rgbToCss(fallbackTarget);
+  }
+
+  return rgbToCss(bgIsLight ? { r: 20, g: 20, b: 20 } : { r: 240, g: 240, b: 240 });
+};
+
 const TextField = ({
   value: initialValue = "",
   onChange,
@@ -252,6 +359,7 @@ const TextField = ({
   const titleUndoStackRef = useRef([]);
   const titleRedoStackRef = useRef([]);
   const lastTitleSnapshotTimeRef = useRef(Date.now());
+  const isApplyingAutoColorRef = useRef(false);
   const SNAPSHOT_INTERVAL = 1200; // ms
   const STACK_LIMIT = 50;
   const CODE_SNAPSHOT_INTERVAL = 1200; // ms
@@ -352,6 +460,106 @@ const TextField = ({
     }
   };
 
+  const getEffectiveThemePalette = useCallback(() => {
+    const root = document.documentElement;
+    const activeThemeId =
+      noteTheme !== "default"
+        ? noteTheme
+        : Object.keys(THEME_VARS).find((id) => root.classList.contains(`theme-${id}`)) ||
+          "default";
+
+    const palette = THEME_VARS[activeThemeId] || THEME_VARS.default;
+    const bgFromVars =
+      parseColorToRgb(palette?.["--panel-bg-solid"]) ||
+      parseColorToRgb(palette?.["--panel-bg"]) ||
+      parseColorToRgb(palette?.["--bg"]);
+    const fgFromVars = parseColorToRgb(palette?.["--fg"]);
+
+    if (bgFromVars && fgFromVars) {
+      return { bg: bgFromVars, fg: fgFromVars };
+    }
+
+    const refNode = textNoteRef.current || editorRef.current;
+    if (refNode) {
+      let walker = refNode;
+      while (walker) {
+        const styles = window.getComputedStyle(walker);
+        const bg = parseColorToRgb(styles.backgroundColor);
+        if (bg) {
+          return {
+            bg,
+            fg: parseColorToRgb(styles.color) || fgFromVars || { r: 224, g: 224, b: 224 },
+          };
+        }
+        walker = walker.parentElement;
+      }
+    }
+
+    return {
+      bg: bgFromVars || { r: 16, g: 16, b: 16 },
+      fg: fgFromVars || { r: 224, g: 224, b: 224 },
+    };
+  }, [noteTheme]);
+
+  const runAutoTextColorCorrection = useCallback(() => {
+    const editor = editorRef.current;
+    if (!editor || isApplyingAutoColorRef.current) return;
+
+    const { bg, fg } = getEffectiveThemePalette();
+    if (!bg) return;
+
+    const nodes = editor.querySelectorAll('[style*="color"], font[color]');
+    let changed = false;
+
+    nodes.forEach((node) => {
+      if (node.closest("pre, code")) return;
+
+      const rawColor =
+        node.tagName === "FONT"
+          ? node.getAttribute("color") || node.style?.color
+          : node.style?.color;
+
+      if (!rawColor) return;
+
+      const corrected = normalizeTextColorForBackground(rawColor, bg, fg);
+      if (!corrected) return;
+
+      const before = parseColorToRgb(rawColor);
+      const after = parseColorToRgb(corrected);
+      if (
+        before &&
+        after &&
+        before.r === after.r &&
+        before.g === after.g &&
+        before.b === after.b
+      ) {
+        return;
+      }
+
+      if (node.tagName === "FONT") node.removeAttribute("color");
+      node.style.color = corrected;
+      changed = true;
+    });
+
+    const correctedPickerColor = normalizeTextColorForBackground(textColor, bg, fg);
+    if (correctedPickerColor && correctedPickerColor !== textColor) {
+      setTextColor(correctedPickerColor);
+    }
+
+    if (!changed) return;
+
+    const correctedHtml = editor.innerHTML;
+    if (correctedHtml === value) return;
+
+    isApplyingAutoColorRef.current = true;
+    setValue(correctedHtml);
+    hasPendingEditRef.current = true;
+    if (onChange) onChange(correctedHtml);
+    setTimeout(() => {
+      isApplyingAutoColorRef.current = false;
+    }, 0);
+  }, [getEffectiveThemePalette, onChange, textColor, value]);
+
   // THEME_OPTIONS and THEME_VARS now imported from themes.js
 
   // Use shared FONT_MAP from ./fonts
@@ -425,6 +633,27 @@ const TextField = ({
     sel.removeAllRanges();
     sel.addRange(range);
   }, [isEditMode]);
+
+  useEffect(() => {
+    if (!editorRef.current) return;
+    const rafId = requestAnimationFrame(() => {
+      runAutoTextColorCorrection();
+    });
+    return () => cancelAnimationFrame(rafId);
+  }, [noteTheme, runAutoTextColorCorrection]);
+
+  useEffect(() => {
+    if (noteTheme !== "default") return undefined;
+    const root = document.documentElement;
+    const observer = new MutationObserver(() => {
+      runAutoTextColorCorrection();
+    });
+    observer.observe(root, {
+      attributes: true,
+      attributeFilter: ["class", "style"],
+    });
+    return () => observer.disconnect();
+  }, [noteTheme, runAutoTextColorCorrection]);
 
   // Handle content changes
   const handleInput = () => {
@@ -698,6 +927,15 @@ const TextField = ({
     } else {
       editorRef.current?.focus();
     }
+    if (cmd === "foreColor") {
+      const { bg, fg } = getEffectiveThemePalette();
+      const correctedColor =
+        normalizeTextColorForBackground(color, bg, fg) || color;
+      setTextColor(correctedColor);
+      handleFormat(cmd, correctedColor);
+      return;
+    }
+
     handleFormat(cmd, color);
   };
 

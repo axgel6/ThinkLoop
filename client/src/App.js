@@ -211,6 +211,7 @@ function App() {
           const newFont = settings.fontTheme || "zero";
           const newFontSize = normalizeUIFontSize(settings.fontSize);
           const newCity = settings.weatherCity || "Atlanta";
+          const newSidebarCollapsed = settings.sidebarCollapsed ?? false;
 
           const currentTheme = localStorage.getItem("settings:selected");
           const currentFont = localStorage.getItem("settings:font");
@@ -236,6 +237,7 @@ function App() {
             setWeatherCity(newCity);
             window.dispatchEvent(new Event("weatherCityChanged"));
           }
+          localStorage.setItem("sidebar:collapsed", String(newSidebarCollapsed));
         }
       } catch (error) {
         console.error("Failed to fetch settings:", error);
