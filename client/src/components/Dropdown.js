@@ -100,7 +100,10 @@ const Dropdown = ({
   const menuTop = rect
     ? openUpward
       ? Math.max(8, rect.top - estimatedMenuHeight - 6)
-      : Math.max(8, Math.min(rect.bottom + 6, viewportHeight - estimatedMenuHeight - 8))
+      : Math.max(
+          8,
+          Math.min(rect.bottom + 6, viewportHeight - estimatedMenuHeight - 8),
+        )
     : 8;
 
   const handleMenuWheel = (e) => {

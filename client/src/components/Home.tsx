@@ -86,16 +86,20 @@ interface WidgetConfig {
 }
 
 const DEFAULT_WIDGET_CONFIG: WidgetConfig[] = [
+  // Row 1: today(1) + quick-actions(2) = 3
   { id: "today", label: "Today", visible: true, size: "half" },
   { id: "quick-actions", label: "Quick Actions", visible: true, size: "full" },
+  // Row 2: pinned(1) + recent(1) + recent-code(1) = 3
   { id: "pinned", label: "Pinned Notes", visible: true, size: "half" },
   { id: "recent", label: "Recent Notes", visible: true, size: "half" },
   { id: "recent-code", label: "Recent Code", visible: true, size: "half" },
+  // Row 3: tasks(1) + quick-note(1) + countdowns(1) = 3
   { id: "tasks", label: "Tasks", visible: true, size: "half" },
   { id: "quick-note", label: "Quick Note", visible: true, size: "half" },
-  { id: "focus-stats", label: "Focus Stats", visible: true, size: "full" },
   { id: "countdowns", label: "Countdowns", visible: true, size: "half" },
-  { id: "pomodoro", label: "Pomodoro Timer", visible: true, size: "full" },
+  // Row 4: focus-stats(2) + pomodoro(1) = 3
+  { id: "focus-stats", label: "Focus Stats", visible: true, size: "full" },
+  { id: "pomodoro", label: "Pomodoro Timer", visible: true, size: "half" },
 ];
 
 const WIDGET_CONFIG_KEY = "home:widget-config-v2";

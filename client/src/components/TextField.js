@@ -51,7 +51,9 @@ const MIN_TEXT_CONTRAST_RATIO = 3.5;
 const clampChannel = (value) => Math.max(0, Math.min(255, Math.round(value)));
 
 const parseHexColor = (value) => {
-  const hex = String(value || "").trim().replace("#", "");
+  const hex = String(value || "")
+    .trim()
+    .replace("#", "");
   if (![3, 4, 6, 8].includes(hex.length)) return null;
 
   if (hex.length === 3 || hex.length === 4) {
@@ -108,7 +110,9 @@ const toLinearSrgb = (channel) => {
 };
 
 const relativeLuminance = ({ r, g, b }) =>
-  0.2126 * toLinearSrgb(r) + 0.7152 * toLinearSrgb(g) + 0.0722 * toLinearSrgb(b);
+  0.2126 * toLinearSrgb(r) +
+  0.7152 * toLinearSrgb(g) +
+  0.0722 * toLinearSrgb(b);
 
 const contrastRatio = (a, b) => {
   const l1 = relativeLuminance(a);
@@ -138,7 +142,9 @@ const normalizeTextColorForBackground = (
   }
 
   const bgIsLight = relativeLuminance(backgroundRgb) > 0.55;
-  const fallbackTarget = preferredFgRgb || (bgIsLight ? { r: 24, g: 24, b: 24 } : { r: 236, g: 236, b: 236 });
+  const fallbackTarget =
+    preferredFgRgb ||
+    (bgIsLight ? { r: 24, g: 24, b: 24 } : { r: 236, g: 236, b: 236 });
 
   if (contrastRatio(fallbackTarget, backgroundRgb) >= minContrast) {
     for (let step = 1; step <= 10; step += 1) {
@@ -150,7 +156,9 @@ const normalizeTextColorForBackground = (
     return rgbToCss(fallbackTarget);
   }
 
-  return rgbToCss(bgIsLight ? { r: 20, g: 20, b: 20 } : { r: 240, g: 240, b: 240 });
+  return rgbToCss(
+    bgIsLight ? { r: 20, g: 20, b: 20 } : { r: 240, g: 240, b: 240 },
+  );
 };
 
 const TextField = ({
@@ -465,8 +473,9 @@ const TextField = ({
     const activeThemeId =
       noteTheme !== "default"
         ? noteTheme
-        : Object.keys(THEME_VARS).find((id) => root.classList.contains(`theme-${id}`)) ||
-          "default";
+        : Object.keys(THEME_VARS).find((id) =>
+            root.classList.contains(`theme-${id}`),
+          ) || "default";
 
     const palette = THEME_VARS[activeThemeId] || THEME_VARS.default;
     const bgFromVars =
@@ -488,7 +497,8 @@ const TextField = ({
         if (bg) {
           return {
             bg,
-            fg: parseColorToRgb(styles.color) || fgFromVars || { r: 224, g: 224, b: 224 },
+            fg: parseColorToRgb(styles.color) ||
+              fgFromVars || { r: 224, g: 224, b: 224 },
           };
         }
         walker = walker.parentElement;
@@ -541,7 +551,11 @@ const TextField = ({
       changed = true;
     });
 
-    const correctedPickerColor = normalizeTextColorForBackground(textColor, bg, fg);
+    const correctedPickerColor = normalizeTextColorForBackground(
+      textColor,
+      bg,
+      fg,
+    );
     if (correctedPickerColor && correctedPickerColor !== textColor) {
       setTextColor(correctedPickerColor);
     }
