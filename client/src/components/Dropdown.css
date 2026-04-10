@@ -4,9 +4,18 @@
 }
 
 .custom-select-button {
-  background: rgba(255, 255, 255, 0.05);
+  background: color-mix(
+    in srgb,
+    var(--panel-bg-solid, rgba(18, 18, 18, 0.92)) 70%,
+    transparent
+  );
   color: var(--fg, #e0e0e0);
-  border: 1px solid var(--panel-border, rgba(255, 255, 255, 0.1));
+  border: 1px solid
+    color-mix(
+      in srgb,
+      var(--panel-border, rgba(255, 255, 255, 0.14)) 80%,
+      var(--fg, #e0e0e0) 20%
+    );
   padding: 7px 13px;
   border-radius: 8px;
   font-size: 0.78rem;
@@ -23,8 +32,12 @@
 }
 
 .custom-select-button:hover {
-  background: rgba(255, 255, 255, 0.09);
-  border-color: rgba(255, 255, 255, 0.18);
+  background: color-mix(in srgb, var(--fg, #e0e0e0) 11%, transparent);
+  border-color: color-mix(
+    in srgb,
+    var(--panel-border, rgba(255, 255, 255, 0.18)) 72%,
+    var(--fg, #e0e0e0) 28%
+  );
 }
 
 .custom-select-button .chev {
@@ -40,8 +53,17 @@
 .custom-select-list {
   position: fixed;
   z-index: 13050;
-  background: rgba(14, 18, 26, 0.6);
-  border: 1px solid var(--panel-border, rgba(255, 255, 255, 0.1));
+  background: color-mix(
+    in srgb,
+    var(--panel-bg-solid, rgba(14, 18, 26, 0.95)) 86%,
+    var(--panel-bg, rgba(14, 18, 26, 0.6))
+  );
+  border: 1px solid
+    color-mix(
+      in srgb,
+      var(--panel-border, rgba(255, 255, 255, 0.12)) 78%,
+      var(--fg, #e0e0e0) 22%
+    );
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
   border-radius: 10px;
   margin: 0;
@@ -101,7 +123,7 @@
 
 .custom-select-option.highlight,
 .custom-select-option:hover {
-  background: rgba(255, 255, 255, 0.08);
+  background: color-mix(in srgb, var(--fg, #e0e0e0) 10%, transparent);
 }
 
 .custom-select-list::-webkit-scrollbar {
@@ -126,9 +148,18 @@
 .custom-select-search {
   width: 100%;
   box-sizing: border-box;
-  border: 1px solid var(--panel-border, rgba(255, 255, 255, 0.14));
+  border: 1px solid
+    color-mix(
+      in srgb,
+      var(--panel-border, rgba(255, 255, 255, 0.14)) 80%,
+      var(--fg, #e0e0e0) 20%
+    );
   border-radius: 7px;
-  background: rgba(255, 255, 255, 0.06);
+  background: color-mix(
+    in srgb,
+    var(--panel-bg-solid, rgba(18, 18, 18, 0.95)) 74%,
+    transparent
+  );
   color: var(--fg, #e0e0e0);
   font-size: 12px;
   padding: 6px 8px;
@@ -136,12 +167,24 @@
 }
 
 .custom-select-search:focus {
-  border-color: rgba(120, 180, 255, 0.6);
+  border-color: color-mix(
+    in srgb,
+    var(--fg, #e0e0e0) 38%,
+    var(--panel-border, rgba(120, 180, 255, 0.6))
+  );
 }
 
 body:has(.floating-editor-toolbar) .custom-select-list {
-  background: rgba(14, 18, 26, 0.56);
-  border-color: color-mix(in srgb, var(--panel-border, rgba(255, 255, 255, 0.14)) 78%, rgba(255, 255, 255, 0.24));
+  background: color-mix(
+    in srgb,
+    var(--panel-bg-solid, rgba(18, 18, 18, 0.95)) 86%,
+    var(--panel-bg, rgba(20, 20, 20, 0.65))
+  );
+  border-color: color-mix(
+    in srgb,
+    var(--panel-border, rgba(255, 255, 255, 0.14)) 76%,
+    var(--fg, #e0e0e0) 24%
+  );
   box-shadow:
     0 16px 42px rgba(0, 0, 0, 0.52),
     inset 0 1px 0 rgba(255, 255, 255, 0.1);
@@ -150,5 +193,9 @@ body:has(.floating-editor-toolbar) .custom-select-list {
 }
 
 body:has(.floating-editor-toolbar) .custom-select-search-wrap {
-  background: color-mix(in srgb, var(--panel-bg, rgba(20, 20, 20, 0.9)) 82%, rgba(8, 12, 18, 0.84));
+  background: color-mix(
+    in srgb,
+    var(--panel-bg-solid, rgba(18, 18, 18, 0.95)) 74%,
+    var(--panel-bg, rgba(20, 20, 20, 0.9))
+  );
 }

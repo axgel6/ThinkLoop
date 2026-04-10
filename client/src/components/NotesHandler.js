@@ -1,4 +1,10 @@
-import React, { useState, useEffect, useCallback, useRef } from "react";
+import React, {
+  useState,
+  useEffect,
+  useCallback,
+  useRef,
+  useMemo,
+} from "react";
 import { createWorker } from "tesseract.js";
 import TextField from "./TextField";
 import "./NotesHandler.css";
@@ -130,6 +136,8 @@ const NotesHandler = ({ currentUser }) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState("updated-desc");
   const [noteTypeFilter, setNoteTypeFilter] = useState("all");
+  const [notesViewMode, setNotesViewMode] = useState("cards");
+  const [focusedNoteId, setFocusedNoteId] = useState(null);
   const [showOCRModal, setShowOCRModal] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [ocrImage, setOcrImage] = useState(null);
@@ -368,6 +376,25 @@ const NotesHandler = ({ currentUser }) => {
     [currentUser],
   );
 
+  const handleColorFolder = useCallback(
+    async (folderId, color) => {
+      if (!currentUser) return;
+      setFolders((prev) =>
+        prev.map((f) => (f.id === folderId ? { ...f, color } : f)),
+      );
+      try {
+        await fetch(`${API_URL}/folders/${folderId}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ color }),
+        });
+      } catch (error) {
+        console.error("Failed to update folder color:", error);
+      }
+    },
+    [currentUser],
+  );
+
   const handleMoveNote = useCallback(
     async (noteId, folderId) => {
       setNotes((prev) =>
@@ -397,6 +424,14 @@ const NotesHandler = ({ currentUser }) => {
       }
     }
   }, [notes, currentUser, loading]);
+
+  useEffect(() => {
+    if (focusedNoteId == null) return;
+    const stillExists = notes.some(
+      (n) => String(n.id) === String(focusedNoteId),
+    );
+    if (!stillExists) setFocusedNoteId(null);
+  }, [focusedNoteId, notes]);
 
   const handleNewNote = useCallback(
     async (noteType = "text") => {
@@ -676,10 +711,12 @@ const NotesHandler = ({ currentUser }) => {
 
   const normalizedQuery = searchQuery.trim().toLowerCase();
 
-  // Filter by folder first, then by search query
+  // Filter by selected folder only (subfolders are shown as links)
   const folderFilteredNotes =
     selectedFolderId !== null
-      ? notes.filter((note) => note.folderId === selectedFolderId)
+      ? notes.filter(
+          (note) => String(note.folderId) === String(selectedFolderId),
+        )
       : notes;
 
   const typeFilteredNotes =
@@ -736,10 +773,56 @@ const NotesHandler = ({ currentUser }) => {
     });
   });
 
-  const hasSearch = normalizedQuery.length > 0;
+  const displayedNotes = focusedNoteId
+    ? sortedNotes.filter((n) => String(n.id) === String(focusedNoteId))
+    : sortedNotes;
 
-  const selectedFolderName = selectedFolderId
-    ? (folders.find((f) => f.id === selectedFolderId) || {}).name
+  const folderById = useMemo(
+    () => new Map(folders.map((f) => [String(f.id), f])),
+    [folders],
+  );
+
+  const selectedFolderPath = useMemo(() => {
+    if (selectedFolderId == null) return [];
+
+    const path = [];
+    const seen = new Set();
+    let cursor = folderById.get(String(selectedFolderId));
+
+    while (cursor && !seen.has(String(cursor.id))) {
+      path.unshift(cursor);
+      seen.add(String(cursor.id));
+      cursor =
+        cursor.parentId == null
+          ? null
+          : folderById.get(String(cursor.parentId));
+    }
+
+    return path;
+  }, [folderById, selectedFolderId]);
+
+  const selectedFolderChildren = useMemo(() => {
+    if (selectedFolderId == null) return [];
+    return folders.filter(
+      (folder) => String(folder.parentId) === String(selectedFolderId),
+    );
+  }, [folders, selectedFolderId]);
+
+  const noteCountByFolder = useMemo(() => {
+    const counts = new Map();
+    for (const note of notes) {
+      if (note.folderId == null) continue;
+      const key = String(note.folderId);
+      counts.set(key, (counts.get(key) || 0) + 1);
+    }
+    return counts;
+  }, [notes]);
+
+  const totalNotesCount = notes.length;
+
+  const hasSearch = normalizedQuery.length > 0;
+  const focusedNote = focusedNoteId
+    ? notes.find((n) => String(n.id) === String(focusedNoteId)) || null
     : null;
 
   return (
@@ -751,14 +834,18 @@ const NotesHandler = ({ currentUser }) => {
             selectedFolderId={selectedFolderId}
             onSelectFolder={(id) => {
               setSelectedFolderId(id);
+              setFocusedNoteId(null);
               setSidebarOpen(false);
             }}
             onCreateFolder={handleCreateFolder}
             onRenameFolder={handleRenameFolder}
             onDeleteFolder={handleDeleteFolder}
             onMoveFolder={handleMoveFolder}
+            onColorFolder={handleColorFolder}
             isOpen={sidebarOpen}
             onClose={() => setSidebarOpen(false)}
+            noteCountByFolder={noteCountByFolder}
+            totalNotesCount={totalNotesCount}
           />
         )}
         <div className="notes-main">
@@ -833,6 +920,45 @@ const NotesHandler = ({ currentUser }) => {
                   placeholder="Sort"
                 />
               </div>
+              <Button
+                onClick={() => {
+                  if (notesViewMode === "list") {
+                    setNotesViewMode("cards");
+                    return;
+                  }
+                  setFocusedNoteId(null);
+                  setNotesViewMode("list");
+                }}
+                className={`icon-button${notesViewMode === "list" ? " icon-button--active" : ""}`}
+                aria-label={
+                  notesViewMode === "list"
+                    ? "Switch to cards view"
+                    : "Switch to title list view"
+                }
+                title={
+                  notesViewMode === "list" ? "Cards view" : "Title list view"
+                }
+              >
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden="true"
+                >
+                  <line x1="8" y1="6" x2="21" y2="6" />
+                  <line x1="8" y1="12" x2="21" y2="12" />
+                  <line x1="8" y1="18" x2="21" y2="18" />
+                  <circle cx="4" cy="6" r="1" />
+                  <circle cx="4" cy="12" r="1" />
+                  <circle cx="4" cy="18" r="1" />
+                </svg>
+              </Button>
               <Button
                 onClick={() => setShowOCRModal(true)}
                 className="icon-button"
@@ -924,15 +1050,102 @@ const NotesHandler = ({ currentUser }) => {
             </div>
           </div>
 
-          {selectedFolderName && (
+          {selectedFolderPath.length > 0 && (
             <div className="folder-breadcrumb">
               <span>All Notes</span>
-              <span className="folder-breadcrumb-sep">›</span>
-              <span>{selectedFolderName}</span>
+              {selectedFolderPath.map((folder) => (
+                <React.Fragment key={folder.id}>
+                  <span className="folder-breadcrumb-sep">›</span>
+                  <span>{folder.name}</span>
+                </React.Fragment>
+              ))}
             </div>
           )}
 
-          {visibleNotes.length === 0 ? (
+          {selectedFolderChildren.length > 0 && (
+            <div
+              className="folder-subfolder-links"
+              role="navigation"
+              aria-label="Subfolders"
+            >
+              <span className="folder-subfolder-links-label">Subfolders</span>
+              <div className="folder-subfolder-links-row">
+                {selectedFolderChildren.map((folder) => (
+                  <button
+                    key={folder.id}
+                    type="button"
+                    className="folder-subfolder-link"
+                    onClick={() => {
+                      setSelectedFolderId(folder.id);
+                      setFocusedNoteId(null);
+                    }}
+                  >
+                    <span>{folder.name}</span>
+                    <span className="folder-subfolder-link-count">
+                      {noteCountByFolder.get(String(folder.id)) || 0}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {focusedNote && (
+            <div className="note-focus-filter">
+              <span className="note-focus-filter-label">Filtered note:</span>
+              <span className="note-focus-filter-title">
+                {focusedNote.title || "Untitled note"}
+              </span>
+              <button
+                className="note-focus-filter-clear"
+                onClick={() => setFocusedNoteId(null)}
+                aria-label="Clear note filter"
+              >
+                Clear
+              </button>
+            </div>
+          )}
+
+          {notesViewMode === "list" ? (
+            displayedNotes.length === 0 ? (
+              <div className="empty-state">
+                <p>{hasSearch ? "No matching notes" : "No notes yet"}</p>
+                <p className="empty-state-subtitle">
+                  {hasSearch
+                    ? "Try a different search"
+                    : 'Click "New Note" to begin'}
+                </p>
+              </div>
+            ) : (
+              <div className="notes-title-list" role="list">
+                {displayedNotes.map((n) => (
+                  <button
+                    key={n.id}
+                    type="button"
+                    className="notes-title-list-item"
+                    onClick={() => {
+                      setFocusedNoteId(n.id);
+                      setNotesViewMode("cards");
+                    }}
+                  >
+                    <span className="notes-title-list-item-title">
+                      {n.title || "Untitled note"}
+                    </span>
+                    <span className="notes-title-list-item-meta-wrap">
+                      {pinnedIds.includes(String(n.id)) && (
+                        <span className="notes-title-list-item-pin">
+                          Pinned
+                        </span>
+                      )}
+                      <span className="notes-title-list-item-meta">
+                        {n.noteType === "code" ? "Code" : "Note"}
+                      </span>
+                    </span>
+                  </button>
+                ))}
+              </div>
+            )
+          ) : displayedNotes.length === 0 ? (
             <div className="empty-state">
               <p>{hasSearch ? "No matching notes" : "No notes yet"}</p>
               <p className="empty-state-subtitle">
@@ -942,7 +1155,7 @@ const NotesHandler = ({ currentUser }) => {
               </p>
             </div>
           ) : (
-            sortedNotes.map((n) => (
+            displayedNotes.map((n) => (
               <NoteItem
                 key={n.id}
                 note={n}

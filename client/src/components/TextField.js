@@ -1678,16 +1678,13 @@ const TextField = ({
     const target = e.currentTarget;
     if (!target) return;
 
-    // Keep wheel gestures scoped to the code area to avoid page scroll chaining.
-    e.stopPropagation();
-
     const canScrollY = target.scrollHeight > target.clientHeight;
     const canScrollX = target.scrollWidth > target.clientWidth;
 
-    if (!canScrollY && !canScrollX) {
-      e.preventDefault();
-      return;
-    }
+    if (!canScrollY && !canScrollX) return;
+
+    // Keep wheel gestures scoped to the code area whenever it is scrollable.
+    e.stopPropagation();
 
     const atTop = target.scrollTop <= 0;
     const atBottom =
@@ -1699,7 +1696,30 @@ const TextField = ({
     const hitsYBoundary = (e.deltaY < 0 && atTop) || (e.deltaY > 0 && atBottom);
     const hitsXBoundary = (e.deltaX < 0 && atLeft) || (e.deltaX > 0 && atRight);
 
+    // Block scroll chaining when the wheel hits the code area's boundary.
     if (hitsYBoundary || hitsXBoundary) {
+      e.preventDefault();
+    }
+  }, []);
+
+  const handleTextAreaWheel = useCallback((e) => {
+    const target = e.currentTarget;
+    if (!target) return;
+
+    const canScrollY = target.scrollHeight > target.clientHeight + 1;
+    if (!canScrollY) return;
+
+    const atTop = target.scrollTop <= 0;
+    const atBottom =
+      target.scrollTop + target.clientHeight >= target.scrollHeight - 1;
+
+    // Keep wheel gestures scoped to the text area whenever it is scrollable.
+    e.stopPropagation();
+
+    const hitsBoundary = (e.deltaY < 0 && atTop) || (e.deltaY > 0 && atBottom);
+
+    // Block scroll chaining when the wheel hits the note boundary.
+    if (hitsBoundary) {
       e.preventDefault();
     }
   }, []);
@@ -3024,6 +3044,7 @@ const TextField = ({
         contentEditable={isEditMode}
         onInput={handleInput}
         onKeyDown={handleEditorKeyDown}
+        onWheel={handleTextAreaWheel}
         onClick={(e) => {
           if (isEditMode) return;
           const linkEl = e.target?.closest?.("a[href]");
@@ -3079,6 +3100,7 @@ const TextField = ({
             <div
               ref={editorRef}
               className="fullscreen-editor"
+              onWheel={handleTextAreaWheel}
               style={{
                 fontSize: `${noteFontSize}px`,
                 fontFamily: FONT_MAP[noteFont] || "monospace",

@@ -9,8 +9,17 @@
   gap: 1px;
   padding: 14px 10px;
   border-radius: 18px;
-  border: 1px solid var(--panel-border, rgba(255, 255, 255, 0.08));
-  background: var(--panel-bg, rgba(25, 25, 25, 0.4));
+  border: 1px solid
+    color-mix(
+      in srgb,
+      var(--panel-border, rgba(255, 255, 255, 0.14)) 80%,
+      var(--fg, #e0e0e0) 20%
+    );
+  background: color-mix(
+    in srgb,
+    var(--panel-bg-solid, rgba(25, 25, 25, 0.92)) 70%,
+    var(--panel-bg, rgba(25, 25, 25, 0.4))
+  );
   backdrop-filter: blur(6px) saturate(150%);
   -webkit-backdrop-filter: blur(6px) saturate(150%);
   overflow-y: auto;
@@ -30,26 +39,31 @@
 
 /* Collapsed state — narrow icon rail */
 .folder-sidebar--collapsed {
-  width: 48px;
-  min-width: 48px;
-  max-width: 48px;
-  padding: 14px 8px;
-}
-
-/* Hide text labels when collapsed */
-.folder-sidebar--collapsed .folder-name,
-.folder-sidebar--collapsed .folder-rename-input,
-.folder-sidebar--collapsed .folder-empty,
-.folder-sidebar--collapsed .folder-collapse-btn,
-.folder-sidebar--collapsed .folder-menu-btn {
-  display: none;
+  width: 52px;
+  min-width: 52px;
+  max-width: 52px;
+  padding: 14px 6px;
 }
 
 /* Center icons when collapsed */
 .folder-sidebar--collapsed .folder-row,
 .folder-sidebar--collapsed .folder-all-notes {
   justify-content: center;
-  padding: 6px 4px;
+  padding: 5px 4px;
+}
+
+.folder-sidebar--collapsed .folder-icon {
+  color: color-mix(in srgb, var(--fg, #dcdcdc) 92%, var(--muted, #888) 8%);
+}
+
+/* Hide count badge in compact mode */
+.folder-sidebar--collapsed .folder-count {
+  display: none;
+}
+
+/* Remove depth indentation in compact mode */
+.folder-sidebar--collapsed .folder-node {
+  padding-left: 0 !important;
 }
 
 /* Collapse/expand toggle button */
@@ -63,7 +77,7 @@
   background: none;
   border: none;
   cursor: pointer;
-  color: var(--muted, #777);
+  color: color-mix(in srgb, var(--fg, #dcdcdc) 48%, var(--muted, #777));
   width: 26px;
   height: 26px;
   display: flex;
@@ -78,7 +92,7 @@
 }
 
 .folder-collapse-toggle:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: color-mix(in srgb, var(--fg, #dcdcdc) 12%, transparent);
   color: var(--fg, #dcdcdc);
 }
 
@@ -101,17 +115,17 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 4px 10px 4px;
-  border-bottom: 1px solid var(--panel-border, rgba(255, 255, 255, 0.07));
-  margin-bottom: 4px;
+  padding: 0 4px 8px 4px;
+  margin-bottom: 2px;
   flex-shrink: 0;
 }
 
 .folder-sidebar-title {
-  font-size: 13px;
+  font-size: 10.5px;
   font-weight: 600;
-  color: var(--fg, #dcdcdc);
-  letter-spacing: 0.01em;
+  color: color-mix(in srgb, var(--fg, #dcdcdc) 52%, var(--muted, #666));
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
 }
 
 .folder-new-btn {
@@ -126,18 +140,27 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 6px 8px;
-  border-radius: 10px;
+  padding: 5px 8px;
+  border-radius: 9px;
   cursor: pointer;
   font-size: 13px;
-  color: color-mix(in srgb, var(--fg, #dcdcdc) 86%, var(--muted, #888) 14%);
+  color: color-mix(in srgb, var(--fg, #dcdcdc) 92%, var(--muted, #888) 8%);
   transition: background 0.15s ease;
   user-select: none;
   margin-bottom: 2px;
 }
 
 .folder-all-notes:hover {
-  background: rgba(255, 255, 255, 0.07);
+  background: color-mix(in srgb, var(--fg, #dcdcdc) 10%, transparent);
+}
+
+/* All Notes selected: neutral accent, no folder color */
+.folder-all-notes.folder-row--selected {
+  background: color-mix(
+    in srgb,
+    var(--fg, #ffffff) 20%,
+    transparent
+  ) !important;
 }
 
 /* Folder tree node */
@@ -145,28 +168,44 @@
   position: relative;
 }
 
+.folder-children {
+  position: relative;
+}
+
+.folder-children::before {
+  content: "";
+  position: absolute;
+  left: 7px;
+  top: 2px;
+  bottom: 6px;
+  width: 1px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 1px;
+  pointer-events: none;
+}
+
 .folder-row {
   display: flex;
   align-items: center;
   gap: 5px;
-  padding: 6px 8px;
-  border-radius: 10px;
+  padding: 5px 8px;
+  border-radius: 9px;
   cursor: pointer;
   font-size: 13px;
-  color: color-mix(in srgb, var(--fg, #dcdcdc) 86%, var(--muted, #888) 14%);
+  color: color-mix(in srgb, var(--fg, #dcdcdc) 92%, var(--muted, #888) 8%);
   transition: background 0.15s ease;
   user-select: none;
   position: relative;
 }
 
 .folder-row:hover {
-  background: rgba(255, 255, 255, 0.07);
+  background: color-mix(in srgb, var(--fg, #dcdcdc) 10%, transparent);
 }
 
 .folder-row--selected {
   background: color-mix(
     in srgb,
-    var(--fg, #ffffff) 16%,
+    var(--folder-color, var(--fg, #ffffff)) 22%,
     transparent
   ) !important;
   color: var(--fg, #e6e6e6);
@@ -178,7 +217,7 @@
   border: none;
   padding: 0;
   cursor: pointer;
-  color: var(--muted, #777);
+  color: color-mix(in srgb, var(--fg, #dcdcdc) 44%, var(--muted, #777));
   width: 16px;
   height: 16px;
   display: flex;
@@ -192,7 +231,7 @@
 }
 
 .folder-collapse-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: color-mix(in srgb, var(--fg, #dcdcdc) 12%, transparent);
   color: var(--fg, #dcdcdc);
 }
 
@@ -209,13 +248,46 @@
   display: flex;
   align-items: center;
   flex-shrink: 0;
-  color: var(--muted, #888);
   transition: color 0.15s ease;
 }
 
-.folder-row--selected .folder-icon,
-.folder-all-notes.folder-row--selected .folder-icon {
-  color: var(--fg, #dcdcdc);
+/* Colored avatar dot shown in compact (collapsed) mode */
+.folder-color-dot {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  border: 1px solid;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  flex-shrink: 0;
+  letter-spacing: 0;
+  transition:
+    opacity 0.15s ease,
+    box-shadow 0.15s ease;
+  opacity: 0.7;
+}
+
+.folder-sidebar--collapsed .folder-color-dot {
+  opacity: 0.95;
+  border-color: color-mix(
+    in srgb,
+    var(--panel-border, rgba(255, 255, 255, 0.22)) 70%,
+    var(--fg, #dcdcdc) 30%
+  );
+  box-shadow: inset 0 0 0 1px
+    color-mix(in srgb, var(--fg, #dcdcdc) 10%, transparent);
+}
+
+.folder-color-dot--selected {
+  opacity: 1;
+  box-shadow: 0 0 0 2px var(--folder-color, rgba(255, 255, 255, 0.3));
+}
+
+.folder-row:hover .folder-color-dot {
+  opacity: 0.95;
 }
 
 /* Folder name */
@@ -227,11 +299,120 @@
   font-size: 13px;
 }
 
+.folder-count {
+  margin-left: auto;
+  font-size: 11px;
+  font-weight: 500;
+  color: color-mix(in srgb, var(--fg, #dcdcdc) 42%, var(--muted, #555));
+  flex-shrink: 0;
+  min-width: 12px;
+  text-align: right;
+  transition: color 0.15s ease;
+}
+
+.folder-row--selected .folder-count,
+.folder-all-notes.folder-row--selected .folder-count {
+  color: color-mix(in srgb, var(--fg, #dcdcdc) 55%, transparent);
+}
+
+/* Compact sidebar hover tooltip (portal) */
+.folder-tooltip {
+  position: fixed;
+  transform: translateY(-50%);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 10px 6px 8px;
+  background: color-mix(
+    in srgb,
+    var(--panel-bg-solid, rgba(24, 24, 24, 0.97)) 86%,
+    var(--panel-bg, rgba(24, 24, 24, 0.52))
+  );
+  border: 1px solid
+    color-mix(
+      in srgb,
+      var(--panel-border, rgba(255, 255, 255, 0.1)) 80%,
+      var(--fg, #dcdcdc) 20%
+    );
+  border-radius: 9px;
+  box-shadow:
+    0 6px 24px rgba(0, 0, 0, 0.4),
+    0 1px 4px rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(12px) saturate(150%);
+  -webkit-backdrop-filter: blur(12px) saturate(150%);
+  pointer-events: none;
+  white-space: nowrap;
+  animation: tooltipIn 0.1s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes tooltipIn {
+  from {
+    opacity: 0;
+    transform: translateY(-50%) translateX(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(-50%) translateX(0);
+  }
+}
+
+.folder-tooltip-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.folder-tooltip-name {
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--fg, #dcdcdc);
+  letter-spacing: 0.01em;
+}
+
+.folder-tooltip-count {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--muted, #666);
+  margin-left: 2px;
+}
+
+/* Color picker swatches inside context menu */
+.folder-color-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 6px 8px 4px 8px;
+}
+
+.folder-color-swatch {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  padding: 0;
+  transition:
+    transform 0.12s ease,
+    border-color 0.12s ease;
+  outline: none;
+}
+
+.folder-color-swatch:hover {
+  transform: scale(1.2);
+}
+
+.folder-color-swatch--active {
+  border-color: rgba(255, 255, 255, 0.7);
+  transform: scale(1.15);
+}
+
 /* Three-dots menu button */
 .folder-menu-btn {
   background: none;
   border: none;
-  color: var(--muted, #777);
+  color: color-mix(in srgb, var(--fg, #dcdcdc) 42%, var(--muted, #777));
   cursor: pointer;
   width: 22px;
   height: 22px;
@@ -253,15 +434,24 @@
 }
 
 .folder-menu-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: color-mix(in srgb, var(--fg, #dcdcdc) 12%, transparent);
   color: var(--fg, #dcdcdc);
 }
 
 /* Rename inline input */
 .folder-rename-input {
   flex: 1;
-  background: rgba(255, 255, 255, 0.07);
-  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: color-mix(
+    in srgb,
+    var(--panel-bg-solid, rgba(18, 18, 18, 0.94)) 76%,
+    transparent
+  );
+  border: 1px solid
+    color-mix(
+      in srgb,
+      var(--panel-border, rgba(255, 255, 255, 0.14)) 82%,
+      var(--fg, #dcdcdc) 18%
+    );
   border-radius: 7px;
   color: var(--fg, #dcdcdc);
   font-size: 13px;
@@ -274,8 +464,12 @@
 }
 
 .folder-rename-input:focus {
-  border-color: rgba(255, 255, 255, 0.28);
-  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.05);
+  border-color: color-mix(
+    in srgb,
+    var(--fg, #dcdcdc) 36%,
+    var(--panel-border, rgba(255, 255, 255, 0.2))
+  );
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--fg, #dcdcdc) 14%, transparent);
 }
 
 /* Context menu */
@@ -284,8 +478,17 @@
   top: calc(100% + 2px);
   right: 0;
   z-index: 200;
-  background: var(--panel-bg-solid, rgba(30, 30, 30, 0.97));
-  border: 1px solid var(--panel-border, rgba(255, 255, 255, 0.1));
+  background: color-mix(
+    in srgb,
+    var(--panel-bg-solid, rgba(30, 30, 30, 0.97)) 88%,
+    var(--panel-bg, rgba(30, 30, 30, 0.52))
+  );
+  border: 1px solid
+    color-mix(
+      in srgb,
+      var(--panel-border, rgba(255, 255, 255, 0.1)) 78%,
+      var(--fg, #dcdcdc) 22%
+    );
   border-radius: 12px;
   padding: 4px;
   min-width: 165px;
@@ -331,7 +534,7 @@
 }
 
 .folder-menu-item:hover {
-  background: rgba(255, 255, 255, 0.08);
+  background: color-mix(in srgb, var(--fg, #dcdcdc) 11%, transparent);
 }
 
 .folder-menu-item:hover svg {
@@ -379,11 +582,6 @@
   color: var(--fg, #dcdcdc);
 }
 
-/* Children indentation */
-.folder-children {
-  /* indentation is handled by paddingLeft on parent .folder-node */
-}
-
 /* New folder input row */
 .folder-new-input-row {
   display: flex;
@@ -421,8 +619,17 @@
 .move-note-select {
   padding: 4px 8px;
   border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.09);
-  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid
+    color-mix(
+      in srgb,
+      var(--panel-border, rgba(255, 255, 255, 0.14)) 80%,
+      var(--fg, #dcdcdc) 20%
+    );
+  background: color-mix(
+    in srgb,
+    var(--panel-bg-solid, rgba(20, 20, 20, 0.92)) 72%,
+    transparent
+  );
   color: var(--fg, #dcdcdc);
   font-size: 11px;
   cursor: pointer;
@@ -431,7 +638,11 @@
 }
 
 .move-note-select:focus {
-  border-color: rgba(255, 255, 255, 0.2);
+  border-color: color-mix(
+    in srgb,
+    var(--fg, #dcdcdc) 34%,
+    var(--panel-border, rgba(255, 255, 255, 0.2))
+  );
 }
 
 /* Breadcrumb */
@@ -466,7 +677,7 @@
   transition: background 0.15s ease;
 }
 .folder-sidebar-toggle:hover {
-  background: rgba(255, 255, 255, 0.08);
+  background: color-mix(in srgb, var(--fg, #dcdcdc) 11%, transparent);
 }
 
 /* ── Mobile drawer ── */
