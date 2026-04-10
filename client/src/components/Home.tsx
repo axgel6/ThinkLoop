@@ -337,6 +337,26 @@ const PencilIcon = () => (
   </svg>
 );
 
+const TrashIcon = () => (
+  <svg
+    width="15"
+    height="15"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+  >
+    <path d="M3 6h18" />
+    <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+    <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+    <line x1="10" y1="11" x2="10" y2="17" />
+    <line x1="14" y1="11" x2="14" y2="17" />
+  </svg>
+);
+
 const CalendarIcon = () => (
   <svg
     width="13"
@@ -1190,20 +1210,24 @@ export default function Home({
                       )}
                     </div>
                   </div>
-                  <button
-                    className="countdown-edit-btn"
-                    onClick={() => startEditCountdown(cd)}
-                    aria-label="Edit countdown"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    className="countdown-remove"
-                    onClick={() => removeCountdown(cd.id)}
-                    aria-label="Remove countdown"
-                  >
-                    x
-                  </button>
+                  <div className="countdown-actions">
+                    <button
+                      className="countdown-edit-btn"
+                      onClick={() => startEditCountdown(cd)}
+                      aria-label="Edit countdown"
+                      title="Edit countdown"
+                    >
+                      <PencilIcon />
+                    </button>
+                    <button
+                      className="countdown-remove"
+                      onClick={() => removeCountdown(cd.id)}
+                      aria-label="Remove countdown"
+                      title="Remove countdown"
+                    >
+                      <TrashIcon />
+                    </button>
+                  </div>
                 </div>
               );
             })}
