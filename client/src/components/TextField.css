@@ -325,6 +325,18 @@
   gap: 6px;
 }
 
+.toolbar-popover-form .custom-select-button {
+  width: 100%;
+  justify-content: space-between;
+  font-size: 12px;
+  height: 30px;
+  border-radius: 8px;
+  border: 1px solid var(--panel-border, rgba(255, 255, 255, 0.16));
+  background-color: var(--bg, rgba(24, 24, 24, 0.9));
+  color: var(--fg, #f0f0f0);
+  padding: 0 9px;
+}
+
 .toolbar-popover-label {
   font-size: 11px;
   color: var(--muted, #9ea3ad);
@@ -506,25 +518,6 @@
   transform: translateY(0.25px);
 }
 
-.snippet-toolbar-group {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 2px 6px;
-  border: 1px solid
-    color-mix(
-      in srgb,
-      var(--panel-border, rgba(255, 255, 255, 0.16)) 78%,
-      var(--fg, #e0e0e0) 22%
-    );
-  border-radius: 10px;
-  background: color-mix(
-    in srgb,
-    var(--panel-bg-solid, rgba(18, 18, 18, 0.92)) 70%,
-    transparent
-  );
-}
-
 .code-history-group {
   gap: 6px;
   padding: 0;
@@ -577,110 +570,6 @@
 .code-edit-modal .code-history-group .redo-btn svg {
   width: 17px;
   height: 17px;
-}
-
-.snippet-insert-btn {
-  background: color-mix(
-    in srgb,
-    var(--fg, #e0e0e0) 16%,
-    transparent
-  ) !important;
-  border: 1px solid
-    color-mix(
-      in srgb,
-      var(--panel-border, rgba(255, 255, 255, 0.18)) 72%,
-      var(--fg, #e0e0e0) 28%
-    ) !important;
-  border-radius: 7px !important;
-  color: var(--fg, #e0e0e0) !important;
-  opacity: 1 !important;
-}
-
-.snippet-insert-btn:hover {
-  background: color-mix(
-    in srgb,
-    var(--fg, #e0e0e0) 24%,
-    transparent
-  ) !important;
-}
-
-.theme-light .snippet-insert-btn,
-.theme-purple .snippet-insert-btn,
-.theme-pink .snippet-insert-btn,
-.theme-skyblue .snippet-insert-btn,
-.theme-sage .snippet-insert-btn,
-.theme-cream .snippet-insert-btn {
-  background: color-mix(
-    in srgb,
-    var(--fg, #1a1a1a) 18%,
-    transparent
-  ) !important;
-  border-color: color-mix(
-    in srgb,
-    var(--fg, #1a1a1a) 36%,
-    var(--panel-border, rgba(0, 0, 0, 0.24))
-  ) !important;
-  color: color-mix(
-    in srgb,
-    var(--fg, #1a1a1a) 96%,
-    var(--muted, #555)
-  ) !important;
-}
-
-.theme-light .snippet-insert-btn:hover,
-.theme-purple .snippet-insert-btn:hover,
-.theme-pink .snippet-insert-btn:hover,
-.theme-skyblue .snippet-insert-btn:hover,
-.theme-sage .snippet-insert-btn:hover,
-.theme-cream .snippet-insert-btn:hover {
-  background: color-mix(
-    in srgb,
-    var(--fg, #1a1a1a) 26%,
-    transparent
-  ) !important;
-}
-
-.snippet-language-picker {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  color: color-mix(in srgb, var(--fg, #e0e0e0) 66%, var(--muted, #b0b0b0));
-  font-size: 11px;
-}
-
-.snippet-language-label {
-  letter-spacing: 0.03em;
-  text-transform: uppercase;
-}
-
-.snippet-language-picker .custom-select-button {
-  border: 1px solid
-    color-mix(
-      in srgb,
-      var(--panel-border, rgba(255, 255, 255, 0.16)) 76%,
-      var(--fg, #e0e0e0) 24%
-    );
-  border-radius: 7px;
-  background: color-mix(
-    in srgb,
-    var(--panel-bg-solid, rgba(18, 18, 18, 0.95)) 78%,
-    transparent
-  );
-  color: var(--fg, #e5e5e5);
-  font-size: 12px;
-  padding: 4px 8px;
-  outline: none;
-  min-width: 120px;
-  justify-content: space-between;
-}
-
-.snippet-language-picker .custom-select-button:hover,
-.snippet-language-picker .custom-select-button:focus {
-  border-color: color-mix(
-    in srgb,
-    var(--fg, #e0e0e0) 42%,
-    var(--panel-border, rgba(80, 160, 255, 0.5))
-  );
 }
 
 /* Color picker buttons */

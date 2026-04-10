@@ -350,6 +350,7 @@ const TextField = ({
   });
   const [showLinkPanel, setShowLinkPanel] = useState(false);
   const [showTablePanel, setShowTablePanel] = useState(false);
+  const [showSnippetPanel, setShowSnippetPanel] = useState(false);
   const [toolbarPopoverAnchor, setToolbarPopoverAnchor] = useState(null);
   const [linkDraftUrl, setLinkDraftUrl] = useState("https://");
   const [linkDraftText, setLinkDraftText] = useState("");
@@ -834,6 +835,7 @@ const TextField = ({
     sel.addRange(caret);
     lastEditorRangeRef.current = caret.cloneRange();
 
+    setShowSnippetPanel(false);
     handleInput();
   };
 
@@ -911,6 +913,7 @@ const TextField = ({
     setLinkDraftUrl("https://");
     setLinkDraftText(selectedText || "");
     setShowTablePanel(false);
+    setShowSnippetPanel(false);
     setShowLinkPanel(true);
   };
 
@@ -966,7 +969,20 @@ const TextField = ({
     }
 
     setShowLinkPanel(false);
+    setShowSnippetPanel(false);
     setShowTablePanel(true);
+  };
+
+  const handleOpenSnippetPanel = (event) => {
+    positionToolbarPopoverFromToggle(event);
+    const savedRange = saveEditorSelection();
+    if (savedRange) {
+      lastEditorRangeRef.current = savedRange;
+    }
+
+    setShowLinkPanel(false);
+    setShowTablePanel(false);
+    setShowSnippetPanel(true);
   };
 
   const applyTableInsertion = () => {
@@ -2971,47 +2987,27 @@ const TextField = ({
               <div className="toolbar-divider" />
 
               {/* ── Snippet ── */}
-              <div className="toolbar-group snippet-toolbar-group">
-                <button
-                  className="format-btn snippet-insert-btn"
-                  onMouseDown={(e) => e.preventDefault()}
-                  onClick={handleInsertCodeSnippet}
-                  title={`Insert ${snippetLanguage} snippet`}
+              <button
+                className={`format-btn${showSnippetPanel ? " is-active" : ""}`}
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={(e) => handleOpenSnippetPanel(e)}
+                title="Insert code snippet"
+              >
+                <svg
+                  width="15"
+                  height="15"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
                 >
-                  <svg
-                    width="15"
-                    height="15"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <polyline points="16 18 22 12 16 6" />
-                    <polyline points="8 6 2 12 8 18" />
-                    <line x1="10" y1="20" x2="14" y2="4" />
-                  </svg>
-                  <span className="format-btn-label">Snippet</span>
-                </button>
-                <div
-                  className="snippet-language-picker"
-                  title="Snippet language"
-                >
-                  <span className="snippet-language-label">Lang</span>
-                  <Dropdown
-                    options={LANGUAGE_OPTIONS}
-                    value={snippetLanguage}
-                    onChange={(nextLanguage) => {
-                      setSnippetLanguage(nextLanguage);
-                      setNoteLanguage(nextLanguage);
-                      hasPendingEditRef.current = true;
-                      if (onLanguageChange) onLanguageChange(nextLanguage);
-                    }}
-                    placeholder="Language"
-                  />
-                </div>
-              </div>
+                  <polyline points="16 18 22 12 16 6" />
+                  <polyline points="8 6 2 12 8 18" />
+                  <line x1="10" y1="20" x2="14" y2="4" />
+                </svg>
+              </button>
 
               <div className="toolbar-divider" />
 
@@ -3108,7 +3104,7 @@ const TextField = ({
               </div>
             </div>
 
-            {(showLinkPanel || showTablePanel) && (
+            {(showLinkPanel || showTablePanel || showSnippetPanel) && (
               <div
                 className="toolbar-popover"
                 onMouseDown={(e) => e.stopPropagation()}
@@ -3192,6 +3188,37 @@ const TextField = ({
                         onClick={applyTableInsertion}
                       >
                         Insert Table
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {showSnippetPanel && (
+                  <div className="toolbar-popover-form">
+                    <label className="toolbar-popover-label">Language</label>
+                    <Dropdown
+                      options={LANGUAGE_OPTIONS}
+                      value={snippetLanguage}
+                      onChange={(nextLanguage) => {
+                        setSnippetLanguage(nextLanguage);
+                        setNoteLanguage(nextLanguage);
+                        hasPendingEditRef.current = true;
+                        if (onLanguageChange) onLanguageChange(nextLanguage);
+                      }}
+                      placeholder="Language"
+                    />
+                    <div className="toolbar-popover-actions">
+                      <button
+                        className="toolbar-popover-btn ghost"
+                        onClick={() => setShowSnippetPanel(false)}
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        className="toolbar-popover-btn"
+                        onClick={handleInsertCodeSnippet}
+                      >
+                        Insert Snippet
                       </button>
                     </div>
                   </div>
