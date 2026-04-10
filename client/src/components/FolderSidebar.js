@@ -236,7 +236,13 @@ const IconMove = () => (
 );
 
 const IconColorPalette = () => (
-  <svg width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true">
+  <svg
+    width="13"
+    height="13"
+    viewBox="0 0 13 13"
+    fill="none"
+    aria-hidden="true"
+  >
     <circle cx="6.5" cy="6.5" r="5" stroke="currentColor" strokeWidth="1.1" />
     <circle cx="4.5" cy="5" r="1" fill="currentColor" />
     <circle cx="7" cy="4" r="1" fill="currentColor" />
@@ -391,7 +397,8 @@ const FolderNode = React.memo(function FolderNode({
           <>
             <span
               className={
-                "folder-color-dot" + (isSelected ? " folder-color-dot--selected" : "")
+                "folder-color-dot" +
+                (isSelected ? " folder-color-dot--selected" : "")
               }
               style={{
                 background: color + "26",
@@ -413,7 +420,9 @@ const FolderNode = React.memo(function FolderNode({
         ) : (
           <>
             <button
-              className={"folder-collapse-btn" + (collapsed ? " collapsed" : "")}
+              className={
+                "folder-collapse-btn" + (collapsed ? " collapsed" : "")
+              }
               onClick={(e) => {
                 e.stopPropagation();
                 setCollapsed((c) => !c);
@@ -766,7 +775,7 @@ const FolderSidebar = ({
           )}
         </div>
 
-        {tree.length === 0 && !showNewInput ? (
+        {tree.length === 0 && !showNewInput && !collapsed ? (
           <p className="folder-empty">No folders yet</p>
         ) : (
           tree.map((node) => (

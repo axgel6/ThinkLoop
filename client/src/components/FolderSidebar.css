@@ -31,10 +31,12 @@
   align-self: flex-start;
   box-sizing: border-box;
   transition:
-    width 0.22s cubic-bezier(0.4, 0, 0.2, 1),
-    min-width 0.22s cubic-bezier(0.4, 0, 0.2, 1),
-    max-width 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+    width 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+    min-width 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+    max-width 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+    padding 0.3s cubic-bezier(0.22, 1, 0.36, 1);
   overflow-x: hidden;
+  will-change: width, min-width, max-width, padding;
 }
 
 /* Collapsed state — narrow icon rail */
@@ -86,8 +88,8 @@
   border-radius: 7px;
   flex-shrink: 0;
   transition:
-    background 0.12s ease,
-    color 0.12s ease;
+    background 0.18s cubic-bezier(0.22, 1, 0.36, 1),
+    color 0.18s cubic-bezier(0.22, 1, 0.36, 1);
   padding: 0;
 }
 
@@ -145,7 +147,9 @@
   cursor: pointer;
   font-size: 13px;
   color: color-mix(in srgb, var(--fg, #dcdcdc) 92%, var(--muted, #888) 8%);
-  transition: background 0.15s ease;
+  transition:
+    background 0.2s cubic-bezier(0.22, 1, 0.36, 1),
+    color 0.2s cubic-bezier(0.22, 1, 0.36, 1);
   user-select: none;
   margin-bottom: 2px;
 }
@@ -193,7 +197,9 @@
   cursor: pointer;
   font-size: 13px;
   color: color-mix(in srgb, var(--fg, #dcdcdc) 92%, var(--muted, #888) 8%);
-  transition: background 0.15s ease;
+  transition:
+    background 0.2s cubic-bezier(0.22, 1, 0.36, 1),
+    color 0.2s cubic-bezier(0.22, 1, 0.36, 1);
   user-select: none;
   position: relative;
 }
@@ -236,7 +242,7 @@
 }
 
 .folder-collapse-btn svg {
-  transition: transform 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform 0.24s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .folder-collapse-btn.collapsed svg {
@@ -343,17 +349,17 @@
   -webkit-backdrop-filter: blur(12px) saturate(150%);
   pointer-events: none;
   white-space: nowrap;
-  animation: tooltipIn 0.1s cubic-bezier(0.4, 0, 0.2, 1);
+  animation: tooltipIn 0.16s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 @keyframes tooltipIn {
   from {
     opacity: 0;
-    transform: translateY(-50%) translateX(-4px);
+    transform: translateY(-50%) translateX(-6px) scale(0.98);
   }
   to {
     opacity: 1;
-    transform: translateY(-50%) translateX(0);
+    transform: translateY(-50%) translateX(0) scale(1);
   }
 }
 
@@ -394,8 +400,8 @@
   cursor: pointer;
   padding: 0;
   transition:
-    transform 0.12s ease,
-    border-color 0.12s ease;
+    transform 0.18s cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 0.18s cubic-bezier(0.22, 1, 0.36, 1);
   outline: none;
 }
 
@@ -422,9 +428,9 @@
   border-radius: 6px;
   opacity: 0;
   transition:
-    opacity 0.12s ease,
-    background 0.12s ease,
-    color 0.12s ease;
+    opacity 0.18s cubic-bezier(0.22, 1, 0.36, 1),
+    background 0.18s cubic-bezier(0.22, 1, 0.36, 1),
+    color 0.18s cubic-bezier(0.22, 1, 0.36, 1);
   flex-shrink: 0;
 }
 

@@ -970,6 +970,7 @@
   border-radius: 0 0 20px 20px;
   color: var(--fg, #f0f0f0);
   max-inline-size: 100%;
+  font-synthesis: style;
 }
 
 .view-mode .editor {

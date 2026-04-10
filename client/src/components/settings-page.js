@@ -10,7 +10,7 @@ import {
 } from "../utils/fontSize";
 import { COLOR_OPTIONS, applyTheme } from "../utils/themes";
 
-const API_URL = process.env.REACT_APP_API_URL || "http://localhost:3000";
+const API_URL = process.env.REACT_APP_API_URL || "http://localhost:3001";
 
 const CITY_OPTIONS = [
   { id: "Atlanta", label: "Atlanta" },

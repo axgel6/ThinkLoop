@@ -143,6 +143,8 @@ const Dropdown = ({
             role="listbox"
             className={`custom-select-list${openUpward ? " open-up" : " open-down"}`}
             onWheel={handleMenuWheel}
+            onMouseDown={(e) => e.stopPropagation()}
+            onTouchStart={(e) => e.stopPropagation()}
             style={{
               top: menuTop,
               left: menuLeft,
@@ -161,6 +163,8 @@ const Dropdown = ({
                   }}
                   placeholder="Search..."
                   onClick={(e) => e.stopPropagation()}
+                  onMouseDown={(e) => e.stopPropagation()}
+                  onTouchStart={(e) => e.stopPropagation()}
                 />
               </li>
             )}
@@ -174,6 +178,8 @@ const Dropdown = ({
                   (idx === highlight ? " highlight" : "")
                 }
                 onMouseEnter={() => setHighlight(idx)}
+                onMouseDown={(e) => e.stopPropagation()}
+                onTouchStart={(e) => e.stopPropagation()}
                 onClick={() => {
                   onChange(o.id);
                   setOpen(false);

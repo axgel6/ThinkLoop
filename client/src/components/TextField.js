@@ -700,9 +700,90 @@ const TextField = ({
 
   // Toolbar formatting (execCommand)
   const handleFormat = (cmd, val = null) => {
-    document.execCommand(cmd, false, val);
+    if (!editorRef.current) return;
     editorRef.current.focus();
+
+    const savedRange = lastEditorRangeRef.current;
+    if (
+      savedRange &&
+      editorRef.current.contains(savedRange.commonAncestorContainer)
+    ) {
+      restoreEditorSelection(savedRange);
+    }
+
+    document.execCommand("styleWithCSS", false, false);
+
+    if (cmd === "italic") {
+      const sel = window.getSelection();
+      if (sel && sel.rangeCount > 0) {
+        const range = sel.getRangeAt(0);
+        if (editorRef.current.contains(range.commonAncestorContainer)) {
+          if (!range.collapsed) {
+            let italicAncestor = range.commonAncestorContainer;
+            if (italicAncestor?.nodeType === Node.TEXT_NODE) {
+              italicAncestor = italicAncestor.parentNode;
+            }
+            while (italicAncestor && italicAncestor !== editorRef.current) {
+              if (
+                italicAncestor.nodeName === "EM" ||
+                italicAncestor.nodeName === "I"
+              ) {
+                const parent = italicAncestor.parentNode;
+                while (italicAncestor.firstChild) {
+                  parent.insertBefore(
+                    italicAncestor.firstChild,
+                    italicAncestor,
+                  );
+                }
+                parent.removeChild(italicAncestor);
+                handleInput();
+                return;
+              }
+              italicAncestor = italicAncestor.parentNode;
+            }
+
+            const wrapper = document.createElement("em");
+            wrapper.appendChild(range.extractContents());
+            range.insertNode(wrapper);
+
+            const nextRange = document.createRange();
+            nextRange.selectNodeContents(wrapper);
+            sel.removeAllRanges();
+            sel.addRange(nextRange);
+            lastEditorRangeRef.current = nextRange.cloneRange();
+            handleInput();
+            return;
+          }
+        }
+      }
+    }
+
+    document.execCommand(cmd, false, val);
     handleInput();
+  };
+
+  const handleFormattingShortcut = (e) => {
+    const meta = e.metaKey || e.ctrlKey;
+    if (!meta || e.altKey) return false;
+
+    const key = String(e.key || "").toLowerCase();
+    if (key === "b" || key === "i" || key === "u") {
+      e.preventDefault();
+      e.stopPropagation();
+      const command =
+        key === "b" ? "bold" : key === "i" ? "italic" : "underline";
+      handleFormat(command);
+      return true;
+    }
+
+    if (key === "x" && e.shiftKey) {
+      e.preventDefault();
+      e.stopPropagation();
+      handleFormat("strikeThrough");
+      return true;
+    }
+
+    return false;
   };
 
   const handleInsertCodeSnippet = () => {
@@ -1254,6 +1335,10 @@ const TextField = ({
         insertTextAtSelection("\n");
         return;
       }
+    }
+
+    if (handleFormattingShortcut(e)) {
+      return;
     }
 
     if (e.key === "Tab") {
@@ -2680,29 +2765,37 @@ const TextField = ({
               <div className="toolbar-group">
                 <button
                   className={`format-btn${formatState.bold ? " is-active" : ""}`}
+                  onMouseDown={(e) => e.preventDefault()}
                   onClick={() => handleFormat("bold")}
-                  title="Bold (⌘B)"
+                  title="Bold (Cmd/Ctrl+B)"
+                  aria-keyshortcuts="Meta+B Control+B"
                 >
                   <b>B</b>
                 </button>
                 <button
                   className={`format-btn${formatState.italic ? " is-active" : ""}`}
+                  onMouseDown={(e) => e.preventDefault()}
                   onClick={() => handleFormat("italic")}
-                  title="Italic (⌘I)"
+                  title="Italic (Cmd/Ctrl+I)"
+                  aria-keyshortcuts="Meta+I Control+I"
                 >
-                  <i>I</i>
+                  <span style={{ fontStyle: "italic" }}>I</span>
                 </button>
                 <button
                   className={`format-btn${formatState.underline ? " is-active" : ""}`}
+                  onMouseDown={(e) => e.preventDefault()}
                   onClick={() => handleFormat("underline")}
-                  title="Underline (⌘U)"
+                  title="Underline (Cmd/Ctrl+U)"
+                  aria-keyshortcuts="Meta+U Control+U"
                 >
                   <u>U</u>
                 </button>
                 <button
                   className={`format-btn${formatState.strikeThrough ? " is-active" : ""}`}
+                  onMouseDown={(e) => e.preventDefault()}
                   onClick={() => handleFormat("strikeThrough")}
                   title="Strikethrough"
+                  aria-keyshortcuts="Meta+Shift+X Control+Shift+X"
                 >
                   <s>S</s>
                 </button>
@@ -3295,7 +3388,7 @@ const TextField = ({
         className="editor"
         contentEditable={isEditMode}
         onInput={handleInput}
-        onKeyDown={handleEditorKeyDown}
+        onKeyDownCapture={handleEditorKeyDown}
         onWheel={handleTextAreaWheel}
         onClick={(e) => {
           if (isEditMode) return;

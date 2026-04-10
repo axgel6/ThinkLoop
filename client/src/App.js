@@ -10,7 +10,7 @@ import { applyFont } from "./utils/fonts";
 import { applyUIFontSize, normalizeUIFontSize } from "./utils/fontSize";
 import Home from "./components/Home";
 
-const API_URL = process.env.REACT_APP_API_URL || "http://localhost:3000";
+const API_URL = process.env.REACT_APP_API_URL || "http://localhost:3001";
 
 // Apply saved theme/font once at startup (before first render, no effect needed)
 try {
@@ -258,7 +258,10 @@ function App() {
             setWeatherCity(newCity);
             window.dispatchEvent(new Event("weatherCityChanged"));
           }
-          localStorage.setItem("sidebar:collapsed", String(newSidebarCollapsed));
+          localStorage.setItem(
+            "sidebar:collapsed",
+            String(newSidebarCollapsed),
+          );
         }
       } catch (error) {
         console.error("Failed to fetch settings:", error);

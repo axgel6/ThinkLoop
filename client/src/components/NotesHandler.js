@@ -125,7 +125,7 @@ const NoteItem = React.memo(function NoteItem({
   );
 });
 
-const API_URL = process.env.REACT_APP_API_URL || "http://localhost:3000";
+const API_URL = process.env.REACT_APP_API_URL || "http://localhost:3001";
 
 const NotesHandler = ({ currentUser }) => {
   const [notes, setNotes] = useState([]);

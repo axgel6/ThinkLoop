@@ -12,7 +12,7 @@ type Item = {
 };
 
 const STORAGE_KEY = "checklist:items";
-const API_URL = process.env.REACT_APP_API_URL || "http://localhost:3000";
+const API_URL = process.env.REACT_APP_API_URL || "http://localhost:3001";
 
 interface TasksProps {
   currentUser?: { id?: string | number } | null;

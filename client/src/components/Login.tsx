@@ -7,7 +7,7 @@ interface LoginModalProps {
   onLogin: (userData: { id: string; username: string; name?: string }) => void;
 }
 
-const API_URL = process.env.REACT_APP_API_URL || "http://localhost:3000";
+const API_URL = process.env.REACT_APP_API_URL || "http://localhost:3001";
 
 export default function LoginModal({
   isOpen,
