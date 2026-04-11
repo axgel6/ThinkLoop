@@ -24,6 +24,8 @@ const LIMITS = {
   MAX_TASK_TEXT_SIZE_CHARS: 2000, // 2000 characters for task text
 };
 
+const NOTE_RETENTION_MS = 10 * 24 * 60 * 60 * 1000;
+
 // Middleware
 app.use(cors());
 app.use(express.json());
@@ -71,7 +73,20 @@ app.get("/health", (_req, res) => {
 app.get("/notes", async (req, res) => {
   try {
     const { userId, folderId } = req.query;
+    const includeDeleted = req.query.includeDeleted === "true";
     const filter: any = userId ? { userId } : {};
+
+    if (userId) {
+      const deleteBefore = Date.now() - NOTE_RETENTION_MS;
+      await notesCollection.deleteMany({
+        userId,
+        deletedAt: { $lte: deleteBefore },
+      });
+    }
+
+    if (!includeDeleted) {
+      filter.$or = [{ deletedAt: null }, { deletedAt: { $exists: false } }];
+    }
 
     if (folderId !== undefined) {
       filter.folderId = folderId === "null" ? null : folderId;
@@ -98,6 +113,7 @@ app.get("/notes", async (req, res) => {
       userId: note.userId || null,
       isPinned: note.isPinned || false,
       folderId: note.folderId || null,
+      deletedAt: note.deletedAt || null,
     }));
 
     res.json(transformedNotes);
@@ -136,6 +152,7 @@ app.post("/notes", async (req, res) => {
       language,
       showLineNumbers,
       folderId,
+      deletedAt,
     } = req.body;
 
     // Validate userId is provided for limit checking
@@ -182,6 +199,7 @@ app.post("/notes", async (req, res) => {
       userId: userId || null,
       isPinned: isPinned || false,
       folderId: folderId || null,
+      deletedAt: deletedAt || null,
       createdAt: now,
       lastModified: now,
     };
@@ -208,6 +226,8 @@ app.put("/notes/:id", async (req, res) => {
       language,
       showLineNumbers,
       folderId,
+      deletedAt,
+      lastModified,
     } = req.body;
     const updateFields: any = {
       lastModified: Date.now(),
@@ -242,6 +262,8 @@ app.put("/notes/:id", async (req, res) => {
     if (showLineNumbers !== undefined)
       updateFields.showLineNumbers = Boolean(showLineNumbers);
     if (folderId !== undefined) updateFields.folderId = folderId;
+    if (deletedAt !== undefined) updateFields.deletedAt = deletedAt;
+    if (lastModified !== undefined) updateFields.lastModified = lastModified;
 
     const result = await notesCollection.updateOne(
       { _id: new ObjectId(req.params.id) },
@@ -253,6 +275,48 @@ app.put("/notes/:id", async (req, res) => {
     res.json({ message: "Note updated successfully" });
   } catch (error) {
     res.status(500).json({ error: "Failed to update note" });
+  }
+});
+
+// Restore a soft-deleted note
+app.put("/notes/:id/restore", async (req, res) => {
+  try {
+    const updateFields: any = {
+      deletedAt: null,
+      lastModified: req.body?.lastModified || Date.now(),
+    };
+
+    const result = await notesCollection.updateOne(
+      { _id: new ObjectId(req.params.id) },
+      { $set: updateFields },
+    );
+
+    if (result.matchedCount === 0) {
+      return res.status(404).json({ error: "Note not found" });
+    }
+
+    res.json({ message: "Note restored successfully" });
+  } catch (error) {
+    res.status(500).json({ error: "Failed to restore note" });
+  }
+});
+
+// Empty recently deleted notes for a user
+app.delete("/notes/recently-deleted", async (req, res) => {
+  try {
+    const { userId } = req.query;
+    if (!userId) {
+      return res.status(400).json({ error: "userId is required" });
+    }
+
+    await notesCollection.deleteMany({
+      userId,
+      deletedAt: { $ne: null },
+    });
+
+    res.json({ message: "Recently deleted emptied successfully" });
+  } catch (error) {
+    res.status(500).json({ error: "Failed to empty recently deleted" });
   }
 });
 
@@ -340,7 +404,8 @@ app.post("/folders", async (req, res) => {
       createdAt: now,
     };
     const { color } = req.body;
-    if (color !== undefined) newFolder.color = typeof color === "string" ? color : null;
+    if (color !== undefined)
+      newFolder.color = typeof color === "string" ? color : null;
     const result = await foldersCollection.insertOne(newFolder);
     res.status(201).json({
       id: result.insertedId.toString(),
@@ -938,7 +1003,8 @@ app.put("/auth/user/:userId/settings", async (req, res) => {
     const updateFields: any = {};
     if (colorTheme !== undefined) updateFields.colorTheme = colorTheme;
     if (fontTheme !== undefined) updateFields.fontTheme = fontTheme;
-    if (sidebarCollapsed !== undefined) updateFields.sidebarCollapsed = Boolean(sidebarCollapsed);
+    if (sidebarCollapsed !== undefined)
+      updateFields.sidebarCollapsed = Boolean(sidebarCollapsed);
     if (fontSize !== undefined) {
       const parsedFontSize = Number(fontSize);
       const allowedFontSizes = [14, 16, 18, 20];

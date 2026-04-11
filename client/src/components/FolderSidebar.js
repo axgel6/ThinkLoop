@@ -142,6 +142,42 @@ const IconAllNotes = () => (
   </svg>
 );
 
+const IconTrash = () => (
+  <svg
+    width="15"
+    height="15"
+    viewBox="0 0 15 15"
+    fill="none"
+    aria-hidden="true"
+  >
+    <path
+      d="M2 4.5H13M5.5 4.5V3.2H9.5V4.5M11.5 4.5L11 12H4L3.5 4.5"
+      stroke="currentColor"
+      strokeWidth="1.2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <line
+      x1="6"
+      y1="6.5"
+      x2="6"
+      y2="10.5"
+      stroke="currentColor"
+      strokeWidth="1.2"
+      strokeLinecap="round"
+    />
+    <line
+      x1="9"
+      y1="6.5"
+      x2="9"
+      y2="10.5"
+      stroke="currentColor"
+      strokeWidth="1.2"
+      strokeLinecap="round"
+    />
+  </svg>
+);
+
 const IconNewFolder = () => (
   <svg
     width="14"
@@ -652,6 +688,8 @@ const FolderSidebar = ({
   onClose,
   noteCountByFolder,
   totalNotesCount,
+  recentlyDeletedCount,
+  trashViewId,
 }) => {
   const [collapsed, setCollapsed] = useState(() => {
     try {
@@ -796,6 +834,29 @@ const FolderSidebar = ({
             />
           ))
         )}
+
+        <div className="folder-sidebar-bottom">
+          <div
+            className={
+              "folder-all-notes folder-all-notes--trash" +
+              (selectedFolderId === trashViewId ? " folder-row--selected" : "")
+            }
+            onClick={() => onSelectFolder(trashViewId)}
+            title={collapsed ? "Recently Deleted" : undefined}
+          >
+            <span className="folder-icon">
+              <IconTrash />
+            </span>
+            {!collapsed && (
+              <span className="folder-name">Recently Deleted</span>
+            )}
+            {!collapsed && (
+              <span className="folder-count folder-count--trash">
+                {recentlyDeletedCount || 0}
+              </span>
+            )}
+          </div>
+        </div>
       </div>
     </>
   );

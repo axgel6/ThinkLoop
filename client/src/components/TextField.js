@@ -7,6 +7,13 @@ import { FONT_MAP, FONT_OPTIONS } from "../utils/fonts";
 import { NOTE_THEME_OPTIONS, THEME_VARS } from "../utils/themes";
 import hljs from "highlight.js";
 import "highlight.js/styles/stackoverflow-dark.css";
+import RelativeTimestamp from "./RelativeTimestamp";
+import LinkPanel from "./panels/LinkPanel";
+import ImagePanel from "./panels/ImagePanel";
+import TablePanel from "./panels/TablePanel";
+import FindReplacePanel from "./panels/FindReplacePanel";
+import SnippetPanel from "./panels/SnippetPanel";
+import useCodeUndo from "../hooks/useCodeUndo";
 
 const LANGUAGE_OPTIONS = [
   { id: "javascript", label: "JavaScript" },
@@ -198,36 +205,6 @@ const TextField = ({
   folderId,
   onMoveNote,
 }) => {
-  // keep a ticking clock to refresh relative-time labels every minute
-  const [now, setNow] = useState(Date.now());
-
-  useEffect(() => {
-    if (!lastModified) return undefined;
-    const id = setInterval(() => setNow(Date.now()), 60000);
-    return () => clearInterval(id);
-  }, [lastModified]);
-
-  const formatRelative = (ts) => {
-    if (!ts) return "";
-    const diffSec = Math.floor((now - ts) / 1000);
-    if (diffSec < 10) return "just now";
-    if (diffSec < 60) return `${diffSec} seconds ago`;
-    if (diffSec < 3600) {
-      const m = Math.floor(diffSec / 60);
-      return m === 1 ? "1 minute ago" : `${m} minutes ago`;
-    }
-    if (diffSec < 86400) {
-      const h = Math.floor(diffSec / 3600);
-      return h === 1 ? "1 hour ago" : `${h} hours ago`;
-    }
-    if (diffSec < 172800) return "yesterday";
-    if (diffSec < 604800) {
-      const d = Math.floor(diffSec / 86400);
-      return `${d} days ago`;
-    }
-    const d = new Date(ts);
-    return `${d.getMonth() + 1}/${d.getDate()}/${d.getFullYear()}`;
-  };
   const [value, setValue] = useState(initialValue);
   const [noteTitle, setNoteTitle] = useState(title);
   // Default per-note font is inter
@@ -245,9 +222,6 @@ const TextField = ({
   );
   const [codeColorTheme, setCodeColorTheme] = useState(
     codeColorThemeProp ?? "night-owl",
-  );
-  const [snippetLanguage, setSnippetLanguage] = useState(
-    languageProp ?? "javascript",
   );
   // Show line numbers in code view
   const [showLineNumbers, setShowLineNumbers] = useState(
@@ -329,12 +303,11 @@ const TextField = ({
   const textNoteRef = useRef(null);
   const codeInlineNoteRef = useRef(null);
   const floatingToolbarRef = useRef(null);
-  const codeUndoStackRef = useRef([]);
-  const codeRedoStackRef = useRef([]);
-  const codeLastSnapshotTimeRef = useRef(Date.now());
-  const codeLastSnapshotTextRef = useRef(
-    String(initialValue || "").replace(/<[^>]+>/g, ""),
-  );
+  const {
+    maybeSnapshot: maybeCodeSnapshot,
+    popUndo: popCodeUndo,
+    popRedo: popCodeRedo,
+  } = useCodeUndo();
   // Color picker refs
   const textColorRef = useRef(null);
   const highlightColorRef = useRef(null);
@@ -351,11 +324,16 @@ const TextField = ({
   const [showLinkPanel, setShowLinkPanel] = useState(false);
   const [showTablePanel, setShowTablePanel] = useState(false);
   const [showSnippetPanel, setShowSnippetPanel] = useState(false);
+  const [showImagePanel, setShowImagePanel] = useState(false);
+  const [showFindReplacePanel, setShowFindReplacePanel] = useState(false);
+  const [tableToolsAnchor, setTableToolsAnchor] = useState(null);
   const [toolbarPopoverAnchor, setToolbarPopoverAnchor] = useState(null);
-  const [linkDraftUrl, setLinkDraftUrl] = useState("https://");
-  const [linkDraftText, setLinkDraftText] = useState("");
-  const [tableDraftColumns, setTableDraftColumns] = useState("3");
-  const [tableDraftRows, setTableDraftRows] = useState("3");
+  const [linkInitialUrl, setLinkInitialUrl] = useState("https://");
+  const [linkInitialText, setLinkInitialText] = useState("");
+  const [linkIsEditingExisting, setLinkIsEditingExisting] = useState(false);
+  const [lineHeightValue, setLineHeightValue] = useState("1.65");
+  const [findMatchMessage, setFindMatchMessage] = useState("");
+  const [isEditorDragOver, setIsEditorDragOver] = useState(false);
   // Undo/redo stacks for editor content (HTML strings)
   const undoStackRef = useRef([]);
   const redoStackRef = useRef([]);
@@ -371,8 +349,6 @@ const TextField = ({
   const isApplyingAutoColorRef = useRef(false);
   const SNAPSHOT_INTERVAL = 1200; // ms
   const STACK_LIMIT = 50;
-  const CODE_SNAPSHOT_INTERVAL = 1200; // ms
-  const CODE_STACK_LIMIT = 50;
 
   // track last focused area ('title'|'editor'|'other')
   const lastFocusRef = useRef("other");
@@ -380,6 +356,9 @@ const TextField = ({
   const lastEditorRangeRef = useRef(null);
   const lastTitleSelRef = useRef({ start: null, end: null });
   const hasPendingEditRef = useRef(false);
+  const activeLinkRef = useRef(null);
+  const tableContextRef = useRef(null);
+  const activeTableRef = useRef(null);
 
   // Stable refs for keyboard handler
   const undoRef = useRef(null);
@@ -575,10 +554,6 @@ const TextField = ({
     }, 0);
   }, [getEffectiveThemePalette, onChange, textColor, value]);
 
-  // THEME_OPTIONS and THEME_VARS now imported from themes.js
-
-  // Use shared FONT_MAP from ./fonts
-
   // Update content when parent changes it
   useEffect(() => {
     setValue(initialValue);
@@ -604,7 +579,6 @@ const TextField = ({
     }
     if (languageProp !== undefined && languageProp !== noteLanguage) {
       setNoteLanguage(languageProp);
-      setSnippetLanguage(languageProp);
     }
     if (showLineNumbersProp !== undefined) {
       const nextShowLineNumbers = Boolean(showLineNumbersProp);
@@ -712,8 +686,6 @@ const TextField = ({
       restoreEditorSelection(savedRange);
     }
 
-    document.execCommand("styleWithCSS", false, false);
-
     if (cmd === "italic") {
       const sel = window.getSelection();
       if (sel && sel.rangeCount > 0) {
@@ -759,6 +731,7 @@ const TextField = ({
       }
     }
 
+    document.execCommand("styleWithCSS", false, false);
     document.execCommand(cmd, false, val);
     handleInput();
   };
@@ -781,6 +754,48 @@ const TextField = ({
       e.preventDefault();
       e.stopPropagation();
       handleFormat("strikeThrough");
+      return true;
+    }
+
+    if (key === "l" && e.shiftKey) {
+      e.preventDefault();
+      e.stopPropagation();
+      handleFormat("justifyLeft");
+      return true;
+    }
+
+    if (key === "e" && e.shiftKey) {
+      e.preventDefault();
+      e.stopPropagation();
+      handleFormat("justifyCenter");
+      return true;
+    }
+
+    if (key === "r" && e.shiftKey) {
+      e.preventDefault();
+      e.stopPropagation();
+      handleFormat("justifyRight");
+      return true;
+    }
+
+    if (key === "j" && e.shiftKey) {
+      e.preventDefault();
+      e.stopPropagation();
+      handleFormat("justifyFull");
+      return true;
+    }
+
+    if (key === "k" && !e.shiftKey) {
+      e.preventDefault();
+      e.stopPropagation();
+      handleInsertLink();
+      return true;
+    }
+
+    if (key === "f" && !e.shiftKey) {
+      e.preventDefault();
+      e.stopPropagation();
+      openFindReplacePanel();
       return true;
     }
 
@@ -807,7 +822,7 @@ const TextField = ({
 
     const pre = document.createElement("pre");
     pre.className = "note-inline-snippet";
-    const snippetLangId = snippetLanguage || "snippet";
+    const snippetLangId = noteLanguage || "snippet";
     const snippetLangLabel =
       LANGUAGE_OPTIONS.find((opt) => opt.id === snippetLangId)?.label ||
       snippetLangId;
@@ -876,6 +891,35 @@ const TextField = ({
     handleInput();
   };
 
+  const getActiveLinkElement = () => {
+    const sel = window.getSelection();
+    if (!sel || sel.rangeCount === 0 || !editorRef.current) return null;
+    const range = sel.getRangeAt(0);
+    let node = range.startContainer;
+    if (!editorRef.current.contains(node)) return null;
+
+    if (node.nodeType === Node.TEXT_NODE) node = node.parentNode;
+    while (node && node !== editorRef.current) {
+      if (node.nodeName === "A") return node;
+      node = node.parentNode;
+    }
+    return null;
+  };
+
+  const focusEditorWithSavedRange = () => {
+    if (
+      lastEditorRangeRef.current &&
+      editorRef.current?.contains(
+        lastEditorRangeRef.current.commonAncestorContainer,
+      )
+    ) {
+      editorRef.current.focus();
+      restoreEditorSelection(lastEditorRangeRef.current);
+    } else {
+      editorRef.current?.focus();
+    }
+  };
+
   const positionToolbarPopoverFromToggle = (event) => {
     const toggleRect = event?.currentTarget?.getBoundingClientRect?.();
     const toolbarRect = floatingToolbarRef.current?.getBoundingClientRect?.();
@@ -899,8 +943,9 @@ const TextField = ({
     });
   };
 
-  const handleInsertLink = (event) => {
-    positionToolbarPopoverFromToggle(event);
+  const handleInsertLink = (event = null) => {
+    if (event) positionToolbarPopoverFromToggle(event);
+    else setToolbarPopoverAnchor(null);
     const savedRange = saveEditorSelection();
     if (savedRange) {
       lastEditorRangeRef.current = savedRange;
@@ -910,15 +955,28 @@ const TextField = ({
     const selectedText =
       sel && sel.rangeCount > 0 ? sel.getRangeAt(0).toString().trim() : "";
 
-    setLinkDraftUrl("https://");
-    setLinkDraftText(selectedText || "");
+    const activeLink = getActiveLinkElement();
+    activeLinkRef.current = activeLink;
+
+    if (activeLink) {
+      setLinkInitialUrl(activeLink.getAttribute("href") || "https://");
+      setLinkInitialText(activeLink.textContent || "");
+      setLinkIsEditingExisting(true);
+    } else {
+      setLinkInitialUrl("https://");
+      setLinkInitialText(selectedText || "");
+      setLinkIsEditingExisting(false);
+    }
+
     setShowTablePanel(false);
     setShowSnippetPanel(false);
+    setShowImagePanel(false);
+    setShowFindReplacePanel(false);
     setShowLinkPanel(true);
   };
 
-  const applyLinkInsertion = () => {
-    let href = linkDraftUrl.trim();
+  const applyLinkInsertion = (draftUrl, draftText) => {
+    let href = draftUrl.trim();
     if (!href) return;
 
     if (
@@ -930,7 +988,7 @@ const TextField = ({
     }
 
     const linkText =
-      linkDraftText.trim() || href.replace(/^https?:\/\//i, "") || href;
+      draftText.trim() || href.replace(/^https?:\/\//i, "") || href;
 
     const escapedText = String(linkText)
       .replace(/&/g, "&amp;")
@@ -942,23 +1000,112 @@ const TextField = ({
       .replace(/</g, "&lt;")
       .replace(/>/g, "&gt;");
 
-    if (
-      lastEditorRangeRef.current &&
-      editorRef.current?.contains(
-        lastEditorRangeRef.current.commonAncestorContainer,
-      )
-    ) {
-      editorRef.current.focus();
-      restoreEditorSelection(lastEditorRangeRef.current);
+    focusEditorWithSavedRange();
+
+    const activeLink = getActiveLinkElement() || activeLinkRef.current;
+    if (activeLink && editorRef.current?.contains(activeLink)) {
+      activeLink.setAttribute("href", href);
+      activeLink.setAttribute("target", "_blank");
+      activeLink.setAttribute("rel", "noopener noreferrer");
+      if (draftText.trim()) {
+        activeLink.textContent = draftText.trim();
+      }
+      handleInput();
     } else {
-      editorRef.current?.focus();
+      handleFormat(
+        "insertHTML",
+        `<a href="${escapedHref}" target="_blank" rel="noopener noreferrer">${escapedText}</a>`,
+      );
     }
+
+    activeLinkRef.current = null;
+    setLinkIsEditingExisting(false);
+    setShowLinkPanel(false);
+  };
+
+  const removeActiveLink = () => {
+    const activeLink = getActiveLinkElement() || activeLinkRef.current;
+    if (!activeLink || !editorRef.current?.contains(activeLink)) {
+      setShowLinkPanel(false);
+      return;
+    }
+
+    const parent = activeLink.parentNode;
+    while (activeLink.firstChild) {
+      parent.insertBefore(activeLink.firstChild, activeLink);
+    }
+    parent.removeChild(activeLink);
+
+    activeLinkRef.current = null;
+    setLinkIsEditingExisting(false);
+    setShowLinkPanel(false);
+    handleInput();
+  };
+
+  const handleInsertImage = (event = null) => {
+    if (event) positionToolbarPopoverFromToggle(event);
+    else setToolbarPopoverAnchor(null);
+    const savedRange = saveEditorSelection();
+    if (savedRange) {
+      lastEditorRangeRef.current = savedRange;
+    }
+
+    setShowLinkPanel(false);
+    setShowTablePanel(false);
+    setShowSnippetPanel(false);
+    setShowFindReplacePanel(false);
+    setShowImagePanel(true);
+  };
+
+  const insertImageHtml = (src, alt = "") => {
+    const escapedSrc = String(src)
+      .replace(/&/g, "&amp;")
+      .replace(/"/g, "&quot;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;");
+    const escapedAlt = String(alt)
+      .replace(/&/g, "&amp;")
+      .replace(/"/g, "&quot;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;");
 
     handleFormat(
       "insertHTML",
-      `<a href="${escapedHref}" target="_blank" rel="noopener noreferrer">${escapedText}</a>`,
+      `<figure class="note-inline-image"><img src="${escapedSrc}" alt="${escapedAlt}" loading="lazy" /><figcaption contenteditable="true">${escapedAlt || "Add a caption..."}</figcaption></figure><p><br></p>`,
     );
-    setShowLinkPanel(false);
+  };
+
+  const applyImageInsertion = (draftUrl, draftAlt) => {
+    let src = draftUrl.trim();
+    if (!src) return;
+    if (!/^https?:\/\//i.test(src) && !/^data:image\//i.test(src)) {
+      src = `https://${src}`;
+    }
+
+    focusEditorWithSavedRange();
+    insertImageHtml(src, draftAlt.trim());
+    setShowImagePanel(false);
+  };
+
+  const insertImageFiles = (files) => {
+    const imageFiles = Array.from(files || []).filter((f) =>
+      String(f.type || "").startsWith("image/"),
+    );
+    if (imageFiles.length === 0) return;
+
+    imageFiles.forEach((file) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const dataUrl = String(reader.result || "");
+        if (!dataUrl) return;
+        focusEditorWithSavedRange();
+        insertImageHtml(dataUrl, file.name || "Image");
+      };
+      reader.readAsDataURL(file);
+    });
+
+    setShowImagePanel(false);
+    setIsEditorDragOver(false);
   };
 
   const handleInsertTable = (event) => {
@@ -982,17 +1129,398 @@ const TextField = ({
 
     setShowLinkPanel(false);
     setShowTablePanel(false);
+    setShowImagePanel(false);
+    setShowFindReplacePanel(false);
     setShowSnippetPanel(true);
   };
 
-  const applyTableInsertion = () => {
+  const getTableContext = () => {
+    const sel = window.getSelection();
+    if (!sel || sel.rangeCount === 0 || !editorRef.current) return null;
+    const range = sel.getRangeAt(0);
+    let node = range.startContainer;
+    if (!editorRef.current.contains(node)) return null;
+    if (node.nodeType === Node.TEXT_NODE) node = node.parentNode;
+
+    let cell = null;
+    let row = null;
+    let table = null;
+    while (node && node !== editorRef.current) {
+      if (!cell && ["TD", "TH"].includes(node.nodeName)) cell = node;
+      if (!row && node.nodeName === "TR") row = node;
+      if (!table && node.nodeName === "TABLE") {
+        table = node;
+        break;
+      }
+      node = node.parentNode;
+    }
+
+    if (!table) return null;
+    const rowIndex = row ? Array.from(table.rows).indexOf(row) : -1;
+    const cellIndex = row && cell ? Array.from(row.cells).indexOf(cell) : -1;
+    return { table, row, cell, rowIndex, cellIndex };
+  };
+
+  const setActiveTable = (table) => {
+    if (activeTableRef.current && activeTableRef.current !== table) {
+      activeTableRef.current.removeAttribute("data-table-tools-active");
+    }
+    if (!table) {
+      activeTableRef.current = null;
+      return;
+    }
+    table.setAttribute("data-table-tools-active", "true");
+    activeTableRef.current = table;
+  };
+
+  const focusTableCell = (cell) => {
+    if (!cell) return;
+    const sel = window.getSelection();
+    const range = document.createRange();
+    range.selectNodeContents(cell);
+    range.collapse(true);
+    sel.removeAllRanges();
+    sel.addRange(range);
+    lastEditorRangeRef.current = range.cloneRange();
+  };
+
+  const editTable = (action) => {
+    focusEditorWithSavedRange();
+
+    const liveContext = getTableContext();
+    const savedContext =
+      tableContextRef.current?.table &&
+      editorRef.current?.contains(tableContextRef.current.table)
+        ? tableContextRef.current
+        : null;
+    const markedTable =
+      activeTableRef.current &&
+      editorRef.current?.contains(activeTableRef.current)
+        ? activeTableRef.current
+        : null;
+
+    const context =
+      liveContext ||
+      savedContext ||
+      (markedTable
+        ? {
+            table: markedTable,
+            row: markedTable.rows[0] || null,
+            cell: markedTable.rows[0]?.cells[0] || null,
+            rowIndex: 0,
+            cellIndex: 0,
+          }
+        : null);
+    if (!context) {
+      setFindMatchMessage("Place the caret inside a table first.");
+      return;
+    }
+
+    const { table, row, rowIndex, cellIndex } = context;
+    setActiveTable(table);
+    const rowCount = table.rows.length;
+    const safeCellIndex = Math.max(0, cellIndex);
+
+    if (action === "row-above" || action === "row-below") {
+      const insertIndex = action === "row-above" ? rowIndex : rowIndex + 1;
+      const newRow = table.insertRow(insertIndex);
+      const templateCells = row
+        ? row.cells.length
+        : table.rows[0]?.cells.length || 1;
+      for (let i = 0; i < templateCells; i += 1) {
+        const cell = document.createElement("td");
+        cell.innerHTML = "<br>";
+        newRow.appendChild(cell);
+      }
+      focusTableCell(newRow.cells[safeCellIndex] || newRow.cells[0]);
+    }
+
+    if (action === "delete-row" && rowCount > 1 && row) {
+      table.deleteRow(rowIndex);
+      const targetRow = table.rows[Math.min(rowIndex, table.rows.length - 1)];
+      focusTableCell(
+        targetRow?.cells[Math.min(safeCellIndex, targetRow.cells.length - 1)],
+      );
+    }
+
+    if (action === "col-left" || action === "col-right") {
+      const insertIndex =
+        action === "col-left" ? safeCellIndex : safeCellIndex + 1;
+      Array.from(table.rows).forEach((tr, idx) => {
+        const cellTag = idx === 0 && tr.querySelector("th") ? "th" : "td";
+        const newCell = document.createElement(cellTag);
+        newCell.innerHTML = idx === 0 ? "Column" : "<br>";
+        tr.insertBefore(newCell, tr.cells[insertIndex] || null);
+      });
+      const targetRow = table.rows[Math.max(1, rowIndex)] || table.rows[0];
+      focusTableCell(targetRow?.cells[insertIndex]);
+    }
+
+    if (action === "delete-col") {
+      const colCount = table.rows[0]?.cells.length || 0;
+      if (colCount > 1) {
+        Array.from(table.rows).forEach((tr) => {
+          if (tr.cells[safeCellIndex]) tr.deleteCell(safeCellIndex);
+        });
+      }
+      const targetRow =
+        table.rows[Math.min(Math.max(rowIndex, 0), table.rows.length - 1)];
+      const nextCellIndex = Math.max(
+        0,
+        Math.min(safeCellIndex, (targetRow?.cells.length || 1) - 1),
+      );
+      focusTableCell(targetRow?.cells[nextCellIndex]);
+    }
+
+    if (action === "delete-table") {
+      const p = document.createElement("p");
+      p.innerHTML = "<br>";
+      table.parentNode.insertBefore(p, table.nextSibling);
+      table.parentNode.removeChild(table);
+      setActiveTable(null);
+      tableContextRef.current = null;
+      focusTableCell(null);
+      const sel = window.getSelection();
+      const range = document.createRange();
+      range.selectNodeContents(p);
+      range.collapse(true);
+      sel.removeAllRanges();
+      sel.addRange(range);
+      lastEditorRangeRef.current = range.cloneRange();
+    }
+
+    handleInput();
+  };
+
+  const openFindReplacePanel = (event = null) => {
+    if (event) positionToolbarPopoverFromToggle(event);
+    else setToolbarPopoverAnchor(null);
+    setShowLinkPanel(false);
+    setShowTablePanel(false);
+    setShowSnippetPanel(false);
+    setShowImagePanel(false);
+    setShowFindReplacePanel(true);
+    setFindMatchMessage("");
+  };
+
+  useEffect(() => {
+    if (!isEditMode) {
+      setTableToolsAnchor(null);
+      tableContextRef.current = null;
+      setActiveTable(null);
+      return;
+    }
+
+    const updateInlineTableTools = () => {
+      const context = getTableContext();
+      if (!context?.table) {
+        setTableToolsAnchor(null);
+        tableContextRef.current = null;
+        setActiveTable(null);
+        return;
+      }
+
+      tableContextRef.current = context;
+      setActiveTable(context.table);
+
+      const rect = context.table.getBoundingClientRect();
+      const left = Math.max(
+        12,
+        Math.min(rect.right - 10, window.innerWidth - 12),
+      );
+      const top = Math.max(12, rect.top - 10);
+      setTableToolsAnchor({ left, top });
+    };
+
+    let rafId = null;
+    const scheduleUpdate = () => {
+      if (rafId) cancelAnimationFrame(rafId);
+      rafId = requestAnimationFrame(updateInlineTableTools);
+    };
+
+    scheduleUpdate();
+    document.addEventListener("selectionchange", scheduleUpdate);
+    window.addEventListener("resize", scheduleUpdate);
+    window.addEventListener("scroll", scheduleUpdate, true);
+
+    return () => {
+      if (rafId) cancelAnimationFrame(rafId);
+      document.removeEventListener("selectionchange", scheduleUpdate);
+      window.removeEventListener("resize", scheduleUpdate);
+      window.removeEventListener("scroll", scheduleUpdate, true);
+      setActiveTable(null);
+    };
+  }, [isEditMode, value]);
+
+  useEffect(() => {
+    if (isEditMode) return;
+    setShowLinkPanel(false);
+    setShowTablePanel(false);
+    setShowSnippetPanel(false);
+    setShowImagePanel(false);
+    setShowFindReplacePanel(false);
+    setToolbarPopoverAnchor(null);
+  }, [isEditMode]);
+
+  const findNextMatch = (query, caseSensitive, direction = 1) => {
+    const editor = editorRef.current;
+    if (!editor || !query.trim()) return;
+
+    const textNodes = [];
+    const walker = document.createTreeWalker(
+      editor,
+      NodeFilter.SHOW_TEXT,
+      null,
+    );
+    let allText = "";
+    while (walker.nextNode()) {
+      const node = walker.currentNode;
+      textNodes.push({ node, start: allText.length });
+      allText += node.nodeValue || "";
+    }
+
+    const haystack = caseSensitive ? allText : allText.toLowerCase();
+    const needle = caseSensitive ? query : query.toLowerCase();
+    if (!needle) return;
+
+    const sel = window.getSelection();
+    let cursor = direction > 0 ? 0 : haystack.length;
+    if (
+      sel &&
+      sel.rangeCount > 0 &&
+      editor.contains(sel.anchorNode) &&
+      editor.contains(sel.focusNode)
+    ) {
+      const range = sel.getRangeAt(0);
+      const before = document.createRange();
+      before.selectNodeContents(editor);
+      before.setEnd(range.startContainer, range.startOffset);
+      cursor = before.toString().length;
+      if (direction > 0) cursor += range.toString().length;
+    }
+
+    let matchIndex =
+      direction > 0
+        ? haystack.indexOf(needle, cursor)
+        : haystack.lastIndexOf(needle, cursor - 1);
+
+    if (matchIndex === -1) {
+      matchIndex =
+        direction > 0
+          ? haystack.indexOf(needle, 0)
+          : haystack.lastIndexOf(needle, haystack.length);
+    }
+
+    if (matchIndex === -1) {
+      setFindMatchMessage("No matches found.");
+      return;
+    }
+
+    const targetRange = buildRangeInNodeByChars(
+      editor,
+      matchIndex,
+      matchIndex + needle.length,
+    );
+    if (!targetRange) {
+      setFindMatchMessage("Unable to select match.");
+      return;
+    }
+
+    sel.removeAllRanges();
+    sel.addRange(targetRange);
+    lastEditorRangeRef.current = targetRange.cloneRange();
+    targetRange.startContainer.parentElement?.scrollIntoView({
+      block: "nearest",
+      inline: "nearest",
+    });
+    setFindMatchMessage("Match selected.");
+  };
+
+  const replaceCurrentMatch = (query, replacement, caseSensitive) => {
+    const sel = window.getSelection();
+    const selectedText = sel?.toString?.() || "";
+    if (!query.trim() || !sel || sel.rangeCount === 0) return;
+    const matchesCurrent = caseSensitive
+      ? selectedText === query
+      : selectedText.toLowerCase() === query.toLowerCase();
+    if (!matchesCurrent || !editorRef.current?.contains(sel.anchorNode)) {
+      setFindMatchMessage("Select a matching result before replacing.");
+      return;
+    }
+
+    const range = sel.getRangeAt(0);
+    range.deleteContents();
+    const node = document.createTextNode(replacement);
+    range.insertNode(node);
+    range.setStartAfter(node);
+    range.collapse(true);
+    sel.removeAllRanges();
+    sel.addRange(range);
+    lastEditorRangeRef.current = range.cloneRange();
+    handleInput();
+    findNextMatch(query, caseSensitive, 1);
+  };
+
+  const replaceAllMatches = (query, replacement, caseSensitive) => {
+    const editor = editorRef.current;
+    if (!editor || !query.trim()) return;
+    const flags = caseSensitive ? "g" : "gi";
+    const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const re = new RegExp(escaped, flags);
+
+    const walker = document.createTreeWalker(
+      editor,
+      NodeFilter.SHOW_TEXT,
+      null,
+    );
+    let replaced = 0;
+    while (walker.nextNode()) {
+      const node = walker.currentNode;
+      const original = node.nodeValue || "";
+      let nodeReplacedCount = 0;
+      const nextValue = original.replace(re, () => {
+        nodeReplacedCount += 1;
+        return replacement;
+      });
+      if (nodeReplacedCount > 0) {
+        node.nodeValue = nextValue;
+        replaced += nodeReplacedCount;
+      }
+    }
+
+    if (replaced > 0) {
+      handleInput();
+      setFindMatchMessage(
+        `Replaced ${replaced} match${replaced === 1 ? "" : "es"}.`,
+      );
+    } else {
+      setFindMatchMessage("No matches found.");
+    }
+  };
+
+  const applyLineHeightToSelection = (nextValue) => {
+    const editor = editorRef.current;
+    if (!editor) return;
+    const sel = window.getSelection();
+    if (!sel || sel.rangeCount === 0) return;
+    const range = sel.getRangeAt(0);
+    if (!editor.contains(range.commonAncestorContainer)) return;
+
+    const block = getClosestBlock(range.startContainer);
+    if (!block || block === editor) return;
+    block.style.lineHeight = nextValue;
+    setLineHeightValue(nextValue);
+    handleInput();
+  };
+
+  const applyTableInsertion = (draftColumns, draftRows) => {
     const columnCount = Math.min(
       8,
-      Math.max(1, parseInt(tableDraftColumns, 10) || 3),
+      Math.max(1, parseInt(draftColumns, 10) || 3),
     );
     const rowCount = Math.min(
       20,
-      Math.max(1, parseInt(tableDraftRows, 10) || 3),
+      Math.max(1, parseInt(draftRows, 10) || 3),
     );
 
     const headerCells = Array.from(
@@ -1009,17 +1537,7 @@ const TextField = ({
 
     const tableHTML = `<table><thead><tr>${headerCells}</tr></thead><tbody>${bodyRows}</tbody></table><p><br></p>`;
 
-    if (
-      lastEditorRangeRef.current &&
-      editorRef.current?.contains(
-        lastEditorRangeRef.current.commonAncestorContainer,
-      )
-    ) {
-      editorRef.current.focus();
-      restoreEditorSelection(lastEditorRangeRef.current);
-    } else {
-      editorRef.current?.focus();
-    }
+    focusEditorWithSavedRange();
 
     handleFormat("insertHTML", tableHTML);
     setShowTablePanel(false);
@@ -1027,17 +1545,7 @@ const TextField = ({
 
   // Restore last editor selection then apply a color command
   const applyColorFormat = (cmd, color) => {
-    const range = lastEditorRangeRef.current;
-    if (
-      range &&
-      editorRef.current &&
-      editorRef.current.contains(range.commonAncestorContainer)
-    ) {
-      editorRef.current.focus();
-      restoreEditorSelection(range);
-    } else {
-      editorRef.current?.focus();
-    }
+    focusEditorWithSavedRange();
     if (cmd === "foreColor") {
       const { bg, fg } = getEffectiveThemePalette();
       const correctedColor =
@@ -1357,6 +1865,30 @@ const TextField = ({
       return;
     }
 
+    const meta = e.metaKey || e.ctrlKey;
+    if (meta && e.altKey && !e.shiftKey) {
+      if (e.key === "ArrowRight") {
+        e.preventDefault();
+        handleFormat("indent");
+        return;
+      }
+      if (e.key === "ArrowLeft") {
+        e.preventDefault();
+        handleFormat("outdent");
+        return;
+      }
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        editTable("row-below");
+        return;
+      }
+      if (e.key === "ArrowUp") {
+        e.preventDefault();
+        editTable("row-above");
+        return;
+      }
+    }
+
     if (e.key === "Tab") {
       e.preventDefault();
       document.execCommand("insertText", false, "  ");
@@ -1508,16 +2040,6 @@ const TextField = ({
     });
   }, []);
 
-  const pushCodeUndoSnapshot = useCallback((previousValue) => {
-    const stack = codeUndoStackRef.current;
-    if (stack.length > 0 && stack[stack.length - 1] === previousValue) {
-      return;
-    }
-    stack.push(previousValue);
-    if (stack.length > CODE_STACK_LIMIT) stack.shift();
-    codeRedoStackRef.current = [];
-  }, []);
-
   const commitCodeValue = useCallback(
     (
       nextValue,
@@ -1529,31 +2051,7 @@ const TextField = ({
       const previousValue = value;
       const nextText = String(nextValue || "").replace(/<[^>]+>/g, "");
       if (previousValue !== nextValue) {
-        const nowTs = Date.now();
-        const prevSnapshotText = codeLastSnapshotTextRef.current || "";
-        const lenDelta = nextText.length - prevSnapshotText.length;
-        const insertedSingleChar =
-          lenDelta === 1 && nextText.startsWith(prevSnapshotText);
-        const deletedSingleChar =
-          lenDelta === -1 && prevSnapshotText.startsWith(nextText);
-        const singleCharEdit = insertedSingleChar || deletedSingleChar;
-        const whitespaceBoundary = /\s$/.test(nextText);
-        const timeExceeded =
-          nowTs - codeLastSnapshotTimeRef.current > CODE_SNAPSHOT_INTERVAL;
-        const structuralEdit = Math.abs(lenDelta) > 1;
-        const needsSnapshot =
-          codeUndoStackRef.current.length === 0 ||
-          !singleCharEdit ||
-          structuralEdit ||
-          whitespaceBoundary ||
-          timeExceeded;
-
-        if (needsSnapshot) {
-          pushCodeUndoSnapshot(previousValue);
-          codeLastSnapshotTimeRef.current = nowTs;
-        }
-
-        codeLastSnapshotTextRef.current = nextText;
+        maybeCodeSnapshot(previousValue, nextText);
         hasPendingEditRef.current = true;
       }
 
@@ -1586,8 +2084,8 @@ const TextField = ({
       }
     },
     [
+      maybeCodeSnapshot,
       onChange,
-      pushCodeUndoSnapshot,
       revealCodeCaret,
       runAfterCodeLayout,
       syncCodeEditorLayers,
@@ -1597,38 +2095,20 @@ const TextField = ({
   );
 
   const undoCode = useCallback(() => {
-    const stack = codeUndoStackRef.current;
-    if (stack.length === 0) return;
-    const previousValue = stack.pop();
-    const redoStack = codeRedoStackRef.current;
-    redoStack.push(value);
-    if (redoStack.length > CODE_STACK_LIMIT) redoStack.shift();
+    const previousValue = popCodeUndo(value);
+    if (previousValue === null) return;
     setValue(previousValue);
     updateCodeHighlight(previousValue);
     if (onChange) onChange(previousValue);
-    codeLastSnapshotTimeRef.current = Date.now();
-    codeLastSnapshotTextRef.current = String(previousValue || "").replace(
-      /<[^>]+>/g,
-      "",
-    );
-  }, [onChange, updateCodeHighlight, value]);
+  }, [onChange, popCodeUndo, updateCodeHighlight, value]);
 
   const redoCode = useCallback(() => {
-    const stack = codeRedoStackRef.current;
-    if (stack.length === 0) return;
-    const nextValue = stack.pop();
-    const undoStack = codeUndoStackRef.current;
-    undoStack.push(value);
-    if (undoStack.length > CODE_STACK_LIMIT) undoStack.shift();
+    const nextValue = popCodeRedo(value);
+    if (nextValue === null) return;
     setValue(nextValue);
     updateCodeHighlight(nextValue);
     if (onChange) onChange(nextValue);
-    codeLastSnapshotTimeRef.current = Date.now();
-    codeLastSnapshotTextRef.current = String(nextValue || "").replace(
-      /<[^>]+>/g,
-      "",
-    );
-  }, [onChange, updateCodeHighlight, value]);
+  }, [onChange, popCodeRedo, updateCodeHighlight, value]);
 
   const handleCodeEditorKeyDown = (e) => {
     const ta = e.target;
@@ -2077,6 +2557,40 @@ const TextField = ({
     }
   }, []);
 
+  const handleEditorDragOver = (e) => {
+    if (!isEditMode) return;
+    const hasImage = Array.from(e.dataTransfer?.items || []).some((item) =>
+      String(item.type || "").startsWith("image/"),
+    );
+    if (!hasImage) return;
+    e.preventDefault();
+    setIsEditorDragOver(true);
+  };
+
+  const handleEditorDragLeave = () => {
+    setIsEditorDragOver(false);
+  };
+
+  const handleEditorDrop = (e) => {
+    if (!isEditMode) return;
+    const files = e.dataTransfer?.files;
+    if (!files || files.length === 0) return;
+    e.preventDefault();
+    insertImageFiles(files);
+  };
+
+  const handleEditorPaste = (e) => {
+    if (!isEditMode) return;
+    const files = e.clipboardData?.files;
+    if (!files || files.length === 0) return;
+    const hasImage = Array.from(files).some((f) =>
+      String(f.type || "").startsWith("image/"),
+    );
+    if (!hasImage) return;
+    e.preventDefault();
+    insertImageFiles(files);
+  };
+
   const handleCodeViewScroll = useCallback((e) => {
     if (!codeViewLineNumbersRef.current) return;
     codeViewLineNumbersRef.current.scrollTop = e.currentTarget.scrollTop;
@@ -2142,6 +2656,17 @@ const TextField = ({
   }, [closeFullScreen, isEditMode, isFullScreen, stopEdit]);
 
   useEffect(() => {
+    if (!isEditMode) {
+      document.body.classList.remove("editor-mode-active");
+      return;
+    }
+    document.body.classList.add("editor-mode-active");
+    return () => {
+      document.body.classList.remove("editor-mode-active");
+    };
+  }, [isEditMode]);
+
+  useEffect(() => {
     const handleVisibility = () => {
       if (document.hidden) commitPendingEdits();
     };
@@ -2202,6 +2727,66 @@ const TextField = ({
     updateCodeHighlight,
     value,
   ]);
+
+  const renderFolderBadge = () => {
+    if (!folders.length) return null;
+    return (
+      <div
+        className="note-folder-badge-wrapper"
+        ref={folderPickerRef}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <button
+          className={`note-folder-badge${currentFolder ? " has-folder" : ""}`}
+          onClick={() => setShowFolderPicker((v) => !v)}
+          title={
+            currentFolder ? `Folder: ${currentFolder.name}` : "Move to folder"
+          }
+        >
+          <svg
+            width="11"
+            height="11"
+            viewBox="0 0 15 15"
+            fill="none"
+            aria-hidden="true"
+          >
+            <path
+              d="M1.5 4.5C1.5 3.95 1.95 3.5 2.5 3.5H5.5L7 5H12.5C13.05 5 13.5 5.45 13.5 6V11C13.5 11.55 13.05 12 12.5 12H2.5C1.95 12 1.5 11.55 1.5 11V4.5Z"
+              stroke="currentColor"
+              strokeWidth="1.2"
+              strokeLinejoin="round"
+            />
+          </svg>
+          <span>{currentFolder ? currentFolder.name : "folder"}</span>
+        </button>
+        {showFolderPicker && (
+          <div className="note-folder-picker">
+            <button
+              className={`note-folder-picker-item${!folderId ? " active" : ""}`}
+              onClick={() => {
+                onMoveNote?.(null);
+                setShowFolderPicker(false);
+              }}
+            >
+              No folder
+            </button>
+            {folders.map((f) => (
+              <button
+                key={f.id}
+                className={`note-folder-picker-item${String(folderId) === String(f.id) ? " active" : ""}`}
+                onClick={() => {
+                  onMoveNote?.(f.id);
+                  setShowFolderPicker(false);
+                }}
+              >
+                {f.name}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  };
 
   const renderCodeEditorPanel = (isFullscreenLayout = false) => {
     const panelClassName = isFullscreenLayout
@@ -2430,7 +3015,7 @@ const TextField = ({
             aria-atomic="true"
           >
             {lastModified ? (
-              <span>Last modified: {formatRelative(lastModified)}</span>
+              <span>Last modified: <RelativeTimestamp timestamp={lastModified} /></span>
             ) : null}
           </div>
           <div className="note-footer-actions">
@@ -2583,70 +3168,11 @@ const TextField = ({
                     {noteTitle || "New code note"}
                   </div>
                   <span className="code-note-lang-badge">{noteLanguage}</span>
-                  {folders.length > 0 && (
-                    <div
-                      className="note-folder-badge-wrapper"
-                      ref={folderPickerRef}
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <button
-                        className={`note-folder-badge${currentFolder ? " has-folder" : ""}`}
-                        onClick={() => setShowFolderPicker((v) => !v)}
-                        title={
-                          currentFolder
-                            ? `Folder: ${currentFolder.name}`
-                            : "Move to folder"
-                        }
-                      >
-                        <svg
-                          width="11"
-                          height="11"
-                          viewBox="0 0 15 15"
-                          fill="none"
-                          aria-hidden="true"
-                        >
-                          <path
-                            d="M1.5 4.5C1.5 3.95 1.95 3.5 2.5 3.5H5.5L7 5H12.5C13.05 5 13.5 5.45 13.5 6V11C13.5 11.55 13.05 12 12.5 12H2.5C1.95 12 1.5 11.55 1.5 11V4.5Z"
-                            stroke="currentColor"
-                            strokeWidth="1.2"
-                            strokeLinejoin="round"
-                          />
-                        </svg>
-                        <span>
-                          {currentFolder ? currentFolder.name : "folder"}
-                        </span>
-                      </button>
-                      {showFolderPicker && (
-                        <div className="note-folder-picker">
-                          <button
-                            className={`note-folder-picker-item${!folderId ? " active" : ""}`}
-                            onClick={() => {
-                              onMoveNote?.(null);
-                              setShowFolderPicker(false);
-                            }}
-                          >
-                            No folder
-                          </button>
-                          {folders.map((f) => (
-                            <button
-                              key={f.id}
-                              className={`note-folder-picker-item${String(folderId) === String(f.id) ? " active" : ""}`}
-                              onClick={() => {
-                                onMoveNote?.(f.id);
-                                setShowFolderPicker(false);
-                              }}
-                            >
-                              {f.name}
-                            </button>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  )}
+                  {renderFolderBadge()}
                 </div>
                 {lastModified && (
                   <div className="note-last-modified-header">
-                    Last modified: {formatRelative(lastModified)}
+                    Last modified: <RelativeTimestamp timestamp={lastModified} />
                   </div>
                 )}
               </div>
@@ -2700,68 +3226,11 @@ const TextField = ({
               <div className="note-title-display">
                 {noteTitle || "New note"}
               </div>
-              {folders.length > 0 && (
-                <div
-                  className="note-folder-badge-wrapper"
-                  ref={folderPickerRef}
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <button
-                    className={`note-folder-badge${currentFolder ? " has-folder" : ""}`}
-                    onClick={() => setShowFolderPicker((v) => !v)}
-                    title={
-                      currentFolder
-                        ? `Folder: ${currentFolder.name}`
-                        : "Move to folder"
-                    }
-                  >
-                    <svg
-                      width="11"
-                      height="11"
-                      viewBox="0 0 15 15"
-                      fill="none"
-                      aria-hidden="true"
-                    >
-                      <path
-                        d="M1.5 4.5C1.5 3.95 1.95 3.5 2.5 3.5H5.5L7 5H12.5C13.05 5 13.5 5.45 13.5 6V11C13.5 11.55 13.05 12 12.5 12H2.5C1.95 12 1.5 11.55 1.5 11V4.5Z"
-                        stroke="currentColor"
-                        strokeWidth="1.2"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                    <span>{currentFolder ? currentFolder.name : "folder"}</span>
-                  </button>
-                  {showFolderPicker && (
-                    <div className="note-folder-picker">
-                      <button
-                        className={`note-folder-picker-item${!folderId ? " active" : ""}`}
-                        onClick={() => {
-                          onMoveNote?.(null);
-                          setShowFolderPicker(false);
-                        }}
-                      >
-                        No folder
-                      </button>
-                      {folders.map((f) => (
-                        <button
-                          key={f.id}
-                          className={`note-folder-picker-item${String(folderId) === String(f.id) ? " active" : ""}`}
-                          onClick={() => {
-                            onMoveNote?.(f.id);
-                            setShowFolderPicker(false);
-                          }}
-                        >
-                          {f.name}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )}
+              {renderFolderBadge()}
             </div>
             {lastModified && (
               <div className="note-last-modified-header">
-                Last modified: {formatRelative(lastModified)}
+                Last modified: <RelativeTimestamp timestamp={lastModified} />
               </div>
             )}
           </div>
@@ -2777,6 +3246,7 @@ const TextField = ({
             className="toolbar floating-editor-toolbar"
           >
             <div className="toolbar-scroll">
+              <span className="toolbar-section-tag">Text</span>
               {/* ── Text formatting ── */}
               <div className="toolbar-group">
                 <button
@@ -2819,7 +3289,9 @@ const TextField = ({
                   className={`format-btn format-btn--link${showLinkPanel ? " is-active" : ""}`}
                   onMouseDown={(e) => e.preventDefault()}
                   onClick={(e) => handleInsertLink(e)}
-                  title="Insert smart link"
+                  title={
+                    linkIsEditingExisting ? "Edit link" : "Insert smart link"
+                  }
                 >
                   <svg
                     width="15"
@@ -2836,9 +3308,31 @@ const TextField = ({
                     <line x1="8" y1="16" x2="16" y2="8" />
                   </svg>
                 </button>
+                <button
+                  className={`format-btn${showImagePanel ? " is-active" : ""}`}
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={(e) => handleInsertImage(e)}
+                  title="Insert image"
+                >
+                  <svg
+                    width="15"
+                    height="15"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                    <circle cx="8.5" cy="8.5" r="1.5" />
+                    <path d="M21 15l-5-5L5 21" />
+                  </svg>
+                </button>
               </div>
 
               <div className="toolbar-divider" />
+              <span className="toolbar-section-tag">Blocks</span>
 
               {/* ── Headings ── */}
               <div className="toolbar-group">
@@ -2863,9 +3357,75 @@ const TextField = ({
                 >
                   H3
                 </button>
+                <button
+                  className="format-btn format-btn--label"
+                  onClick={() => handleFormat("formatBlock", "H4")}
+                  title="Heading 4"
+                >
+                  H4
+                </button>
+                <button
+                  className="format-btn format-btn--label"
+                  onClick={() => handleFormat("formatBlock", "H5")}
+                  title="Heading 5"
+                >
+                  H5
+                </button>
+                <button
+                  className="format-btn format-btn--label"
+                  onClick={() => handleFormat("formatBlock", "H6")}
+                  title="Heading 6"
+                >
+                  H6
+                </button>
+                <button
+                  className="format-btn format-btn--label"
+                  onClick={() => handleFormat("formatBlock", "P")}
+                  title="Paragraph"
+                >
+                  P
+                </button>
+                <button
+                  className="format-btn"
+                  onClick={() => handleFormat("formatBlock", "BLOCKQUOTE")}
+                  title="Blockquote"
+                >
+                  <svg
+                    width="15"
+                    height="15"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M10 11H6a4 4 0 1 0 0 8h4v-8z" />
+                    <path d="M22 11h-4a4 4 0 1 0 0 8h4v-8z" />
+                  </svg>
+                </button>
+                <button
+                  className="format-btn"
+                  onClick={() => handleFormat("insertHorizontalRule")}
+                  title="Horizontal rule"
+                >
+                  <svg
+                    width="15"
+                    height="15"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <line x1="4" y1="12" x2="20" y2="12" />
+                  </svg>
+                </button>
               </div>
 
               <div className="toolbar-divider" />
+              <span className="toolbar-section-tag">Lists</span>
 
               {/* ── Lists ── */}
               <div className="toolbar-group">
@@ -2985,6 +3545,135 @@ const TextField = ({
               </div>
 
               <div className="toolbar-divider" />
+              <span className="toolbar-section-tag">Layout</span>
+
+              <div className="toolbar-group">
+                <button
+                  className="format-btn"
+                  onClick={() => handleFormat("justifyLeft")}
+                  title="Align left"
+                >
+                  <svg
+                    width="15"
+                    height="15"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <line x1="4" y1="6" x2="20" y2="6" />
+                    <line x1="4" y1="12" x2="14" y2="12" />
+                    <line x1="4" y1="18" x2="18" y2="18" />
+                  </svg>
+                </button>
+                <button
+                  className="format-btn"
+                  onClick={() => handleFormat("justifyCenter")}
+                  title="Align center"
+                >
+                  <svg
+                    width="15"
+                    height="15"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <line x1="4" y1="6" x2="20" y2="6" />
+                    <line x1="7" y1="12" x2="17" y2="12" />
+                    <line x1="5" y1="18" x2="19" y2="18" />
+                  </svg>
+                </button>
+                <button
+                  className="format-btn"
+                  onClick={() => handleFormat("justifyRight")}
+                  title="Align right"
+                >
+                  <svg
+                    width="15"
+                    height="15"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <line x1="4" y1="6" x2="20" y2="6" />
+                    <line x1="10" y1="12" x2="20" y2="12" />
+                    <line x1="6" y1="18" x2="20" y2="18" />
+                  </svg>
+                </button>
+                <button
+                  className="format-btn"
+                  onClick={() => handleFormat("justifyFull")}
+                  title="Justify"
+                >
+                  <svg
+                    width="15"
+                    height="15"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <line x1="4" y1="6" x2="20" y2="6" />
+                    <line x1="4" y1="12" x2="20" y2="12" />
+                    <line x1="4" y1="18" x2="20" y2="18" />
+                  </svg>
+                </button>
+                <button
+                  className="format-btn"
+                  onClick={() => handleFormat("outdent")}
+                  title="Outdent"
+                >
+                  <svg
+                    width="15"
+                    height="15"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <polyline points="7 8 3 12 7 16" />
+                    <line x1="21" y1="6" x2="11" y2="6" />
+                    <line x1="21" y1="12" x2="11" y2="12" />
+                    <line x1="21" y1="18" x2="11" y2="18" />
+                  </svg>
+                </button>
+                <button
+                  className="format-btn"
+                  onClick={() => handleFormat("indent")}
+                  title="Indent"
+                >
+                  <svg
+                    width="15"
+                    height="15"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <polyline points="5 8 9 12 5 16" />
+                    <line x1="21" y1="6" x2="11" y2="6" />
+                    <line x1="21" y1="12" x2="11" y2="12" />
+                    <line x1="21" y1="18" x2="11" y2="18" />
+                  </svg>
+                </button>
+              </div>
+
+              <div className="toolbar-divider" />
+              <span className="toolbar-section-tag">Code</span>
 
               {/* ── Snippet ── */}
               <button
@@ -3008,6 +3697,26 @@ const TextField = ({
                   <line x1="10" y1="20" x2="14" y2="4" />
                 </svg>
               </button>
+
+              <div className="toolbar-divider" />
+              <span className="toolbar-section-tag">Theme</span>
+
+              <div className="font-size-picker">
+                <Dropdown
+                  options={[
+                    { id: "1.35", label: "LH 1.35" },
+                    { id: "1.5", label: "LH 1.5" },
+                    { id: "1.65", label: "LH 1.65" },
+                    { id: "1.8", label: "LH 1.8" },
+                    { id: "2", label: "LH 2" },
+                  ]}
+                  value={lineHeightValue}
+                  onChange={(nextValue) =>
+                    applyLineHeightToSelection(nextValue)
+                  }
+                  placeholder="Line height"
+                />
+              </div>
 
               <div className="toolbar-divider" />
 
@@ -3102,9 +3811,38 @@ const TextField = ({
                   }}
                 />
               </div>
+
+              <div className="toolbar-divider" />
+
+              <button
+                className={`format-btn${showFindReplacePanel ? " is-active" : ""}`}
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={(e) => openFindReplacePanel(e)}
+                title="Find and replace (Cmd/Ctrl+F)"
+              >
+                <svg
+                  width="15"
+                  height="15"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <circle cx="11" cy="11" r="8" />
+                  <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                  <path d="M9 11h4" />
+                  <path d="M9 14h6" />
+                </svg>
+              </button>
             </div>
 
-            {(showLinkPanel || showTablePanel || showSnippetPanel) && (
+            {(showLinkPanel ||
+              showTablePanel ||
+              showSnippetPanel ||
+              showImagePanel ||
+              showFindReplacePanel) && (
               <div
                 className="toolbar-popover"
                 onMouseDown={(e) => e.stopPropagation()}
@@ -3122,106 +3860,57 @@ const TextField = ({
                 }
               >
                 {showLinkPanel && (
-                  <div className="toolbar-popover-form">
-                    <label className="toolbar-popover-label">Link URL</label>
-                    <input
-                      className="toolbar-popover-input"
-                      value={linkDraftUrl}
-                      onChange={(e) => setLinkDraftUrl(e.target.value)}
-                      placeholder="https://example.com"
-                    />
-                    <label className="toolbar-popover-label">Link text</label>
-                    <input
-                      className="toolbar-popover-input"
-                      value={linkDraftText}
-                      onChange={(e) => setLinkDraftText(e.target.value)}
-                      placeholder="Optional"
-                    />
-                    <div className="toolbar-popover-actions">
-                      <button
-                        className="toolbar-popover-btn ghost"
-                        onClick={() => setShowLinkPanel(false)}
-                      >
-                        Cancel
-                      </button>
-                      <button
-                        className="toolbar-popover-btn"
-                        onClick={applyLinkInsertion}
-                      >
-                        Insert Link
-                      </button>
-                    </div>
-                  </div>
+                  <LinkPanel
+                    initialUrl={linkInitialUrl}
+                    initialText={linkInitialText}
+                    isEditingExisting={linkIsEditingExisting}
+                    onInsert={(url, text) => applyLinkInsertion(url, text)}
+                    onRemove={removeActiveLink}
+                    onClose={() => {
+                      setShowLinkPanel(false);
+                      activeLinkRef.current = null;
+                      setLinkIsEditingExisting(false);
+                    }}
+                  />
+                )}
+
+                {showImagePanel && (
+                  <ImagePanel
+                    onInsert={(url, alt) => applyImageInsertion(url, alt)}
+                    onUploadFiles={insertImageFiles}
+                    onClose={() => setShowImagePanel(false)}
+                  />
                 )}
 
                 {showTablePanel && (
-                  <div className="toolbar-popover-form">
-                    <label className="toolbar-popover-label">
-                      Columns (1-8)
-                    </label>
-                    <input
-                      className="toolbar-popover-input"
-                      type="number"
-                      min="1"
-                      max="8"
-                      value={tableDraftColumns}
-                      onChange={(e) => setTableDraftColumns(e.target.value)}
-                    />
-                    <label className="toolbar-popover-label">Rows (1-20)</label>
-                    <input
-                      className="toolbar-popover-input"
-                      type="number"
-                      min="1"
-                      max="20"
-                      value={tableDraftRows}
-                      onChange={(e) => setTableDraftRows(e.target.value)}
-                    />
-                    <div className="toolbar-popover-actions">
-                      <button
-                        className="toolbar-popover-btn ghost"
-                        onClick={() => setShowTablePanel(false)}
-                      >
-                        Cancel
-                      </button>
-                      <button
-                        className="toolbar-popover-btn"
-                        onClick={applyTableInsertion}
-                      >
-                        Insert Table
-                      </button>
-                    </div>
-                  </div>
+                  <TablePanel
+                    onInsert={(cols, rows) => applyTableInsertion(cols, rows)}
+                    onClose={() => setShowTablePanel(false)}
+                  />
                 )}
 
                 {showSnippetPanel && (
-                  <div className="toolbar-popover-form">
-                    <label className="toolbar-popover-label">Language</label>
-                    <Dropdown
-                      options={LANGUAGE_OPTIONS}
-                      value={snippetLanguage}
-                      onChange={(nextLanguage) => {
-                        setSnippetLanguage(nextLanguage);
-                        setNoteLanguage(nextLanguage);
-                        hasPendingEditRef.current = true;
-                        if (onLanguageChange) onLanguageChange(nextLanguage);
-                      }}
-                      placeholder="Language"
-                    />
-                    <div className="toolbar-popover-actions">
-                      <button
-                        className="toolbar-popover-btn ghost"
-                        onClick={() => setShowSnippetPanel(false)}
-                      >
-                        Cancel
-                      </button>
-                      <button
-                        className="toolbar-popover-btn"
-                        onClick={handleInsertCodeSnippet}
-                      >
-                        Insert Snippet
-                      </button>
-                    </div>
-                  </div>
+                  <SnippetPanel
+                    language={noteLanguage}
+                    onLanguageChange={(nextLanguage) => {
+                      setNoteLanguage(nextLanguage);
+                      hasPendingEditRef.current = true;
+                      if (onLanguageChange) onLanguageChange(nextLanguage);
+                    }}
+                    onInsert={handleInsertCodeSnippet}
+                    onClose={() => setShowSnippetPanel(false)}
+                  />
+                )}
+
+                {showFindReplacePanel && (
+                  <FindReplacePanel
+                    matchMessage={findMatchMessage}
+                    onFindNext={(q, cs) => findNextMatch(q, cs, 1)}
+                    onFindPrev={(q, cs) => findNextMatch(q, cs, -1)}
+                    onReplace={(q, r, cs) => replaceCurrentMatch(q, r, cs)}
+                    onReplaceAll={(q, r, cs) => replaceAllMatches(q, r, cs)}
+                    onClose={() => setShowFindReplacePanel(false)}
+                  />
                 )}
               </div>
             )}
@@ -3232,6 +3921,7 @@ const TextField = ({
                 className="done-btn"
                 onClick={() => stopEdit()}
                 aria-label="Done editing"
+                title="Done editing"
               >
                 <svg
                   width="12"
@@ -3249,6 +3939,71 @@ const TextField = ({
                 Done
               </Button>
             </div>
+          </div>,
+          document.body,
+        )}
+
+      {isEditMode &&
+        tableToolsAnchor &&
+        typeof document !== "undefined" &&
+        createPortal(
+          <div
+            className="table-tools-inline"
+            style={{
+              left: `${tableToolsAnchor.left}px`,
+              top: `${tableToolsAnchor.top}px`,
+            }}
+            onMouseDown={(e) => e.stopPropagation()}
+          >
+            <button
+              className="table-tools-inline-btn"
+              onClick={() => editTable("row-above")}
+              title="Add row above"
+            >
+              Row↑
+            </button>
+            <button
+              className="table-tools-inline-btn"
+              onClick={() => editTable("row-below")}
+              title="Add row below"
+            >
+              Row↓
+            </button>
+            <button
+              className="table-tools-inline-btn"
+              onClick={() => editTable("col-left")}
+              title="Add column left"
+            >
+              Col←
+            </button>
+            <button
+              className="table-tools-inline-btn"
+              onClick={() => editTable("col-right")}
+              title="Add column right"
+            >
+              Col→
+            </button>
+            <button
+              className="table-tools-inline-btn"
+              onClick={() => editTable("delete-row")}
+              title="Delete row"
+            >
+              Row−
+            </button>
+            <button
+              className="table-tools-inline-btn"
+              onClick={() => editTable("delete-col")}
+              title="Delete column"
+            >
+              Col−
+            </button>
+            <button
+              className="table-tools-inline-btn danger"
+              onClick={() => editTable("delete-table")}
+              title="Delete table"
+            >
+              Delete
+            </button>
           </div>,
           document.body,
         )}
@@ -3272,7 +4027,7 @@ const TextField = ({
               aria-atomic="true"
             >
               {lastModified && (
-                <span>Last modified: {formatRelative(lastModified)}</span>
+                <span>Last modified: <RelativeTimestamp timestamp={lastModified} /></span>
               )}
             </div>
             <span id="editor-char-count" className="char-count">
@@ -3412,10 +4167,15 @@ const TextField = ({
 
       <div
         ref={editorRef}
-        className="editor"
+        className={`editor${isEditorDragOver ? " drag-over" : ""}`}
         contentEditable={isEditMode}
         onInput={handleInput}
         onKeyDownCapture={handleEditorKeyDown}
+        onPaste={handleEditorPaste}
+        onDragOver={handleEditorDragOver}
+        onDragEnter={handleEditorDragOver}
+        onDragLeave={handleEditorDragLeave}
+        onDrop={handleEditorDrop}
         onWheel={handleTextAreaWheel}
         onClick={(e) => {
           if (isEditMode) return;

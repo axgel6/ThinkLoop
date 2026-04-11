@@ -29,6 +29,9 @@ const NOTE_TYPE_OPTIONS = [
   { id: "code", label: "Code" },
 ];
 
+const TRASH_VIEW_ID = "__recently_deleted__";
+const AUTO_DELETE_AFTER_MS = 10 * 24 * 60 * 60 * 1000;
+
 // Stable NoteItem component defined outside the parent to avoid remounts on each render.
 // Defining a memoized component inside a parent recreates its type every render,
 // causing React to unmount/remount children (losing focus in editors).
@@ -138,6 +141,8 @@ const NotesHandler = ({ currentUser }) => {
   const [noteTypeFilter, setNoteTypeFilter] = useState("all");
   const [notesViewMode, setNotesViewMode] = useState("cards");
   const [focusedNoteId, setFocusedNoteId] = useState(null);
+  const [pendingDeleteNoteId, setPendingDeleteNoteId] = useState(null);
+  const [pendingDeleteFolder, setPendingDeleteFolder] = useState(null);
   const [showOCRModal, setShowOCRModal] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [ocrImage, setOcrImage] = useState(null);
@@ -196,7 +201,7 @@ const NotesHandler = ({ currentUser }) => {
         }
 
         // If logged in, fetch from server
-        const url = `${API_URL}/notes?userId=${currentUser.id}`;
+        const url = `${API_URL}/notes?userId=${currentUser.id}&includeDeleted=true`;
         const response = await fetch(url);
         if (response.ok) {
           const serverNotes = await response.json();
@@ -341,39 +346,11 @@ const NotesHandler = ({ currentUser }) => {
   );
 
   const handleDeleteFolder = useCallback(
-    async (folderId, folderName) => {
+    (folderId, folderName) => {
       if (!currentUser) return;
-      if (
-        !window.confirm(
-          `Delete folder "${folderName}"? Notes inside will be moved to root.`,
-        )
-      )
-        return;
-      // Optimistically collect descendant ids from local state
-      const collectIds = (id) => {
-        const ids = [id];
-        folders
-          .filter((f) => f.parentId === id)
-          .forEach((child) => ids.push(...collectIds(child.id)));
-        return ids;
-      };
-      const idsToRemove = collectIds(folderId);
-      setFolders((prev) => prev.filter((f) => !idsToRemove.includes(f.id)));
-      setNotes((prev) =>
-        prev.map((n) =>
-          idsToRemove.includes(n.folderId) ? { ...n, folderId: null } : n,
-        ),
-      );
-      if (selectedFolderId && idsToRemove.includes(selectedFolderId)) {
-        setSelectedFolderId(null);
-      }
-      try {
-        await fetch(`${API_URL}/folders/${folderId}`, { method: "DELETE" });
-      } catch (error) {
-        console.error("Failed to delete folder:", error);
-      }
+      setPendingDeleteFolder({ id: folderId, name: folderName });
     },
-    [currentUser, folders, selectedFolderId],
+    [currentUser],
   );
 
   const handleMoveFolder = useCallback(
@@ -447,6 +424,20 @@ const NotesHandler = ({ currentUser }) => {
   }, [notes, currentUser, loading]);
 
   useEffect(() => {
+    const cutoff = Date.now() - AUTO_DELETE_AFTER_MS;
+    const hasExpired = notes.some(
+      (note) => note.deletedAt && Number(note.deletedAt) <= cutoff,
+    );
+    if (!hasExpired) return;
+
+    setNotes((prev) =>
+      prev.filter(
+        (note) => !(note.deletedAt && Number(note.deletedAt) <= cutoff),
+      ),
+    );
+  }, [notes]);
+
+  useEffect(() => {
     if (focusedNoteId == null) return;
     const stillExists = notes.some(
       (n) => String(n.id) === String(focusedNoteId),
@@ -456,6 +447,10 @@ const NotesHandler = ({ currentUser }) => {
 
   const handleNewNote = useCallback(
     async (noteType = "text") => {
+      const targetFolderId =
+        selectedFolderId && selectedFolderId !== TRASH_VIEW_ID
+          ? selectedFolderId
+          : null;
       const newNote = {
         content: "",
         title: "",
@@ -467,7 +462,7 @@ const NotesHandler = ({ currentUser }) => {
         codeColorTheme: noteType === "code" ? "night-owl" : undefined,
         showLineNumbers: noteType === "code" ? false : undefined,
         userId: currentUser ? currentUser.id : null,
-        folderId: selectedFolderId,
+        folderId: targetFolderId,
       };
 
       // If logged out, only create locally
@@ -630,24 +625,138 @@ const NotesHandler = ({ currentUser }) => {
     };
   }, []);
 
-  const handleRemove = useCallback(
-    async (id) => {
-      const stringId = String(id);
-      setPinnedIds((prev) => prev.filter((p) => p !== stringId));
-      // Always delete locally
-      setNotes((prev) => prev.filter((n) => n.id !== id));
+  const handleRemove = useCallback((id) => {
+    setPendingDeleteNoteId(id);
+  }, []);
 
-      // Only delete from server if logged in
+  const confirmDeleteNote = useCallback(async () => {
+    if (!pendingDeleteNoteId) return;
+
+    const id = pendingDeleteNoteId;
+    const noteToDelete = notes.find((note) => String(note.id) === String(id));
+    if (!noteToDelete) {
+      setPendingDeleteNoteId(null);
+      return;
+    }
+
+    const stringId = String(id);
+    const isAlreadyDeleted = Boolean(noteToDelete.deletedAt);
+    setPinnedIds((prev) => prev.filter((p) => p !== stringId));
+
+    if (isAlreadyDeleted) {
+      setNotes((prev) => prev.filter((n) => String(n.id) !== String(id)));
+      if (focusedNoteId && String(focusedNoteId) === String(id)) {
+        setFocusedNoteId(null);
+      }
+      if (editingNoteId && String(editingNoteId) === String(id)) {
+        setEditingNoteId(null);
+      }
+
+      if (currentUser) {
+        try {
+          await fetch(`${API_URL}/notes/${id}`, { method: "DELETE" });
+        } catch (error) {
+          console.error("Failed to permanently delete note:", error);
+        }
+      }
+      setPendingDeleteNoteId(null);
+      return;
+    }
+
+    const deletedAt = Date.now();
+    setNotes((prev) =>
+      prev.map((n) =>
+        String(n.id) === String(id)
+          ? {
+              ...n,
+              isPinned: false,
+              deletedAt,
+              lastModified: deletedAt,
+            }
+          : n,
+      ),
+    );
+
+    if (focusedNoteId && String(focusedNoteId) === String(id)) {
+      setFocusedNoteId(null);
+    }
+    if (editingNoteId && String(editingNoteId) === String(id)) {
+      setEditingNoteId(null);
+    }
+
+    if (currentUser) {
+      try {
+        await fetch(`${API_URL}/notes/${id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ deletedAt, isPinned: false }),
+        });
+      } catch (error) {
+        console.error("Failed to move note to recently deleted:", error);
+      }
+    }
+
+    setPendingDeleteNoteId(null);
+  }, [currentUser, editingNoteId, focusedNoteId, notes, pendingDeleteNoteId]);
+
+  const handleRestoreNote = useCallback(
+    async (id) => {
+      const restoredAt = Date.now();
+      setNotes((prev) =>
+        prev.map((n) =>
+          String(n.id) === String(id)
+            ? {
+                ...n,
+                deletedAt: null,
+                lastModified: restoredAt,
+              }
+            : n,
+        ),
+      );
+
       if (!currentUser) return;
 
       try {
-        await fetch(`${API_URL}/notes/${id}`, { method: "DELETE" });
+        await fetch(`${API_URL}/notes/${id}/restore`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ lastModified: restoredAt }),
+        });
       } catch (error) {
-        console.error("Failed to delete note:", error);
+        console.error("Failed to restore note:", error);
       }
     },
     [currentUser],
   );
+
+  const handleEmptyRecentlyDeleted = useCallback(async () => {
+    const deletedIds = notes
+      .filter((note) => note.deletedAt)
+      .map((note) => String(note.id));
+
+    if (deletedIds.length === 0) return;
+    if (!window.confirm("Empty Recently Deleted? This cannot be undone.")) {
+      return;
+    }
+
+    setNotes((prev) => prev.filter((note) => !note.deletedAt));
+    setPinnedIds((prev) =>
+      prev.filter((id) => !deletedIds.includes(String(id))),
+    );
+
+    if (!currentUser) return;
+
+    try {
+      await fetch(
+        `${API_URL}/notes/recently-deleted?userId=${currentUser.id}`,
+        {
+          method: "DELETE",
+        },
+      );
+    } catch (error) {
+      console.error("Failed to empty recently deleted:", error);
+    }
+  }, [currentUser, notes]);
 
   const handleTogglePin = useCallback(
     (id) => {
@@ -732,14 +841,103 @@ const NotesHandler = ({ currentUser }) => {
 
   const normalizedQuery = searchQuery.trim().toLowerCase();
 
-  // Filter by selected folder only (subfolders are shown as links)
-  const folderFilteredNotes =
-    selectedFolderId !== null
-      ? notes.filter(
-          (note) => String(note.folderId) === String(selectedFolderId),
-        )
-      : notes;
+  const activeNotes = useMemo(
+    () => notes.filter((note) => !note.deletedAt),
+    [notes],
+  );
 
+  const deletedNotes = useMemo(
+    () => notes.filter((note) => Boolean(note.deletedAt)),
+    [notes],
+  );
+
+  const confirmDeleteFolder = useCallback(async () => {
+    if (!currentUser || !pendingDeleteFolder) return;
+
+    const { id: folderId } = pendingDeleteFolder;
+
+    const collectIds = (id) => {
+      const ids = [id];
+      folders
+        .filter((f) => f.parentId === id)
+        .forEach((child) => ids.push(...collectIds(child.id)));
+      return ids;
+    };
+
+    const idsToRemove = collectIds(folderId);
+    setFolders((prev) => prev.filter((f) => !idsToRemove.includes(f.id)));
+    setNotes((prev) =>
+      prev.map((n) =>
+        idsToRemove.includes(n.folderId) ? { ...n, folderId: null } : n,
+      ),
+    );
+    if (selectedFolderId && idsToRemove.includes(selectedFolderId)) {
+      setSelectedFolderId(null);
+    }
+
+    try {
+      await fetch(`${API_URL}/folders/${folderId}`, { method: "DELETE" });
+    } catch (error) {
+      console.error("Failed to delete folder:", error);
+    } finally {
+      setPendingDeleteFolder(null);
+    }
+  }, [currentUser, folders, pendingDeleteFolder, selectedFolderId]);
+
+  const cancelDeleteFolder = useCallback(() => {
+    setPendingDeleteFolder(null);
+  }, []);
+
+  const folderChildrenByParent = useMemo(() => {
+    const map = new Map();
+    for (const folder of folders) {
+      const parentKey =
+        folder.parentId == null ? null : String(folder.parentId);
+      const children = map.get(parentKey) || [];
+      children.push(String(folder.id));
+      map.set(parentKey, children);
+    }
+    return map;
+  }, [folders]);
+
+  const collectDescendantFolderIds = useCallback(
+    (folderId) => {
+      const rootId = String(folderId);
+      const ids = new Set([rootId]);
+      const queue = [rootId];
+
+      while (queue.length > 0) {
+        const current = queue.shift();
+        const children = folderChildrenByParent.get(current) || [];
+        for (const childId of children) {
+          if (ids.has(childId)) continue;
+          ids.add(childId);
+          queue.push(childId);
+        }
+      }
+
+      return ids;
+    },
+    [folderChildrenByParent],
+  );
+
+  const isTrashView = selectedFolderId === TRASH_VIEW_ID;
+
+  const selectedFolderScopeIds = useMemo(() => {
+    if (selectedFolderId == null || selectedFolderId === TRASH_VIEW_ID) {
+      return null;
+    }
+    return collectDescendantFolderIds(selectedFolderId);
+  }, [collectDescendantFolderIds, selectedFolderId]);
+
+  const folderFilteredNotes = isTrashView
+    ? deletedNotes
+    : selectedFolderScopeIds
+      ? activeNotes.filter((note) => {
+          if (note.folderId == null) return false;
+          return selectedFolderScopeIds.has(String(note.folderId));
+        })
+      : activeNotes;
   const typeFilteredNotes =
     noteTypeFilter === "all"
       ? folderFilteredNotes
@@ -767,6 +965,10 @@ const NotesHandler = ({ currentUser }) => {
 
   // Sort to show pinned notes at the top, then apply selected ordering
   const sortedNotes = [...visibleNotes].sort((a, b) => {
+    if (isTrashView) {
+      return toTimestamp(b.deletedAt) - toTimestamp(a.deletedAt);
+    }
+
     const aIsPinned = pinnedIds.includes(String(a.id)) ? 1 : 0;
     const bIsPinned = pinnedIds.includes(String(b.id)) ? 1 : 0;
     if (bIsPinned !== aIsPinned) return bIsPinned - aIsPinned;
@@ -804,7 +1006,8 @@ const NotesHandler = ({ currentUser }) => {
   );
 
   const selectedFolderPath = useMemo(() => {
-    if (selectedFolderId == null) return [];
+    if (selectedFolderId == null || selectedFolderId === TRASH_VIEW_ID)
+      return [];
 
     const path = [];
     const seen = new Set();
@@ -823,27 +1026,53 @@ const NotesHandler = ({ currentUser }) => {
   }, [folderById, selectedFolderId]);
 
   const selectedFolderChildren = useMemo(() => {
-    if (selectedFolderId == null) return [];
+    if (selectedFolderId == null || selectedFolderId === TRASH_VIEW_ID)
+      return [];
     return folders.filter(
       (folder) => String(folder.parentId) === String(selectedFolderId),
     );
   }, [folders, selectedFolderId]);
 
   const noteCountByFolder = useMemo(() => {
-    const counts = new Map();
-    for (const note of notes) {
+    const directCounts = new Map();
+    for (const note of activeNotes) {
       if (note.folderId == null) continue;
       const key = String(note.folderId);
-      counts.set(key, (counts.get(key) || 0) + 1);
+      directCounts.set(key, (directCounts.get(key) || 0) + 1);
     }
-    return counts;
-  }, [notes]);
 
-  const totalNotesCount = notes.length;
+    const totals = new Map();
+    const computeTotal = (folderId) => {
+      const key = String(folderId);
+      if (totals.has(key)) return totals.get(key);
+
+      let total = directCounts.get(key) || 0;
+      const children = folderChildrenByParent.get(key) || [];
+      for (const childId of children) {
+        total += computeTotal(childId);
+      }
+
+      totals.set(key, total);
+      return total;
+    };
+
+    for (const folder of folders) {
+      computeTotal(folder.id);
+    }
+
+    return totals;
+  }, [activeNotes, folderChildrenByParent, folders]);
+
+  const totalNotesCount = activeNotes.length;
+  const totalDeletedCount = deletedNotes.length;
 
   const hasSearch = normalizedQuery.length > 0;
   const focusedNote = focusedNoteId
     ? notes.find((n) => String(n.id) === String(focusedNoteId)) || null
+    : null;
+
+  const pendingDeleteNote = pendingDeleteNoteId
+    ? notes.find((n) => String(n.id) === String(pendingDeleteNoteId)) || null
     : null;
 
   return (
@@ -875,6 +1104,8 @@ const NotesHandler = ({ currentUser }) => {
             onClose={() => setSidebarOpen(false)}
             noteCountByFolder={noteCountByFolder}
             totalNotesCount={totalNotesCount}
+            recentlyDeletedCount={totalDeletedCount}
+            trashViewId={TRASH_VIEW_ID}
           />
         )}
         <div className="notes-main">
@@ -933,6 +1164,35 @@ const NotesHandler = ({ currentUser }) => {
               />
             </div>
             <div className="notes-toolbar-right">
+              {isTrashView && (
+                <Button
+                  onClick={handleEmptyRecentlyDeleted}
+                  className="icon-button"
+                  aria-label="Empty recently deleted"
+                >
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden="true"
+                  >
+                    <polyline points="3 6 5 6 21 6" />
+                    <path d="M19 6l-1 14H6L5 6" />
+                    <path d="M10 11v6" />
+                    <path d="M14 11v6" />
+                    <path d="M9 6V4h6v2" />
+                  </svg>
+                  <span className="notes-toolbar-tooltip">
+                    Empty recently deleted
+                  </span>
+                </Button>
+              )}
               <div className="notes-type-picker">
                 <Dropdown
                   options={NOTE_TYPE_OPTIONS}
@@ -1071,6 +1331,15 @@ const NotesHandler = ({ currentUser }) => {
             </div>
           )}
 
+          {isTrashView && (
+            <div className="trash-banner">
+              <span className="trash-banner-title">Recently Deleted</span>
+              <span className="trash-banner-subtitle">
+                Notes are permanently deleted after 10 days.
+              </span>
+            </div>
+          )}
+
           {selectedFolderChildren.length > 0 && (
             <div
               className="folder-subfolder-links"
@@ -1115,7 +1384,47 @@ const NotesHandler = ({ currentUser }) => {
             </div>
           )}
 
-          {notesViewMode === "list" ? (
+          {isTrashView ? (
+            displayedNotes.length === 0 ? (
+              <div className="empty-state">
+                <p>Recently deleted is empty</p>
+                <p className="empty-state-subtitle">
+                  Deleted notes will appear here for 10 days.
+                </p>
+              </div>
+            ) : (
+              <div className="notes-title-list" role="list">
+                {displayedNotes.map((n) => (
+                  <div key={n.id} className="trash-note-item">
+                    <div className="trash-note-meta">
+                      <span className="trash-note-title">
+                        {n.title || "Untitled note"}
+                      </span>
+                      <span className="trash-note-date">
+                        Deleted {new Date(n.deletedAt).toLocaleDateString()}
+                      </span>
+                    </div>
+                    <div className="trash-note-actions">
+                      <button
+                        type="button"
+                        className="trash-note-action"
+                        onClick={() => handleRestoreNote(n.id)}
+                      >
+                        Restore
+                      </button>
+                      <button
+                        type="button"
+                        className="trash-note-action trash-note-action--danger"
+                        onClick={() => handleRemove(n.id)}
+                      >
+                        Delete forever
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )
+          ) : notesViewMode === "list" ? (
             displayedNotes.length === 0 ? (
               <div className="empty-state">
                 <p>{hasSearch ? "No matching notes" : "No notes yet"}</p>
@@ -1285,6 +1594,85 @@ const NotesHandler = ({ currentUser }) => {
                   Choose Image
                 </Button>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {pendingDeleteNote && (
+        <div
+          className="recently-delete-modal-overlay"
+          onClick={() => setPendingDeleteNoteId(null)}
+        >
+          <div
+            className="recently-delete-modal"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="recently-delete-modal-header">
+              <h2>
+                {pendingDeleteNote.deletedAt
+                  ? "Delete Permanently?"
+                  : "Move to Recently Deleted?"}
+              </h2>
+            </div>
+            <div className="recently-delete-modal-body">
+              <p className="recently-delete-modal-text">
+                {pendingDeleteNote.deletedAt
+                  ? "This note will be permanently deleted and cannot be recovered."
+                  : "This note will be moved to Recently Deleted and removed permanently after 10 days."}
+              </p>
+            </div>
+            <div className="recently-delete-modal-actions">
+              <Button
+                onClick={() => setPendingDeleteNoteId(null)}
+                className="recently-delete-btn recently-delete-btn--ghost"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={confirmDeleteNote}
+                className="recently-delete-btn recently-delete-btn--primary"
+              >
+                {pendingDeleteNote.deletedAt
+                  ? "Delete forever"
+                  : "Move to recently deleted"}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {pendingDeleteFolder && (
+        <div
+          className="recently-delete-modal-overlay"
+          onClick={cancelDeleteFolder}
+        >
+          <div
+            className="recently-delete-modal"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="recently-delete-modal-header">
+              <h2>Delete Folder?</h2>
+            </div>
+            <div className="recently-delete-modal-body">
+              <p className="recently-delete-modal-text">
+                Delete folder "{pendingDeleteFolder.name}"? Notes inside this
+                folder and subfolders will be moved to root.
+              </p>
+            </div>
+            <div className="recently-delete-modal-actions">
+              <Button
+                onClick={cancelDeleteFolder}
+                className="recently-delete-btn recently-delete-btn--ghost"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={confirmDeleteFolder}
+                className="recently-delete-btn recently-delete-btn--primary"
+              >
+                Delete folder
+              </Button>
             </div>
           </div>
         </div>

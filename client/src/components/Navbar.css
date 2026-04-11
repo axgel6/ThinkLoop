@@ -8,6 +8,10 @@
   pointer-events: none;
 }
 
+body.editor-mode-active .navbar {
+  display: none;
+}
+
 .nav-links {
   pointer-events: auto;
   list-style: none;
@@ -110,11 +114,12 @@ body:has(.floating-editor-toolbar) .nav-divider {
     var(--panel-bg-solid, rgba(24, 24, 24, 0.97)) 86%,
     var(--panel-bg, rgba(24, 24, 24, 0.52))
   );
-  border: 1px solid color-mix(
-    in srgb,
-    var(--panel-border, rgba(255, 255, 255, 0.1)) 80%,
-    var(--fg, #dcdcdc) 20%
-  );
+  border: 1px solid
+    color-mix(
+      in srgb,
+      var(--panel-border, rgba(255, 255, 255, 0.1)) 80%,
+      var(--fg, #dcdcdc) 20%
+    );
   border-radius: 9px;
   box-shadow:
     0 6px 24px rgba(0, 0, 0, 0.4),
