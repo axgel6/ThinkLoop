@@ -97,6 +97,7 @@ const DEFAULT_WIDGET_CONFIG: WidgetConfig[] = [
   { id: "focus-stats", label: "Focus Stats", visible: true, size: "large" },
   { id: "countdowns", label: "Countdowns", visible: true, size: "large" },
   { id: "tasks", label: "Tasks", visible: true, size: "medium" },
+  { id: "pinned", label: "Pinned Notes", visible: true, size: "medium" },
   { id: "recent", label: "Recent Notes", visible: true, size: "medium" },
   { id: "recent-code", label: "Recent Code", visible: true, size: "medium" },
   { id: "quick-note", label: "Capture Note", visible: true, size: "medium" },
