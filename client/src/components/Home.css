@@ -263,13 +263,7 @@
 .widget-cell-today.widget-cell-large .home-info {
   justify-content: center;
   gap: 12px;
-  background:
-    radial-gradient(
-      130% 90% at 10% 0%,
-      color-mix(in srgb, var(--accent-today, #6be2ff) 24%, transparent),
-      transparent 58%
-    ),
-    var(--panel-bg, rgba(25, 25, 25, 0.4));
+  background: var(--panel-bg, rgba(25, 25, 25, 0.4));
 }
 
 .widget-cell-today.widget-cell-large .home-info h2 {
@@ -305,7 +299,7 @@
   opacity: 0.75;
 }
 
-/* Give all other large widgets the same accent-led atmosphere as Today. */
+/* Keep large widgets on the same solid panel surface. */
 .widget-cell-large
   > :is(
     .home-pinned,
@@ -318,17 +312,7 @@
     .home-countdowns,
     .home-pomodoro
   ) {
-  background:
-    radial-gradient(
-      140% 95% at 8% 0%,
-      color-mix(
-        in srgb,
-        var(--title-accent, var(--fg, #dcdcdc)) 22%,
-        transparent
-      ),
-      transparent 58%
-    ),
-    var(--panel-bg, rgba(25, 25, 25, 0.4));
+  background: var(--panel-bg, rgba(25, 25, 25, 0.4));
   border-color: color-mix(
     in srgb,
     var(--panel-border, rgba(255, 255, 255, 0.08)) 92%,
@@ -337,6 +321,18 @@
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.025),
     0 3px 14px rgba(0, 0, 0, 0.11);
+}
+
+.widget-cell-large .home-recent-code-card {
+  background: var(--panel-bg-solid, #17191d);
+}
+
+.widget-cell-large .countdown-row {
+  background: var(--panel-bg-solid, rgba(255, 255, 255, 0.04));
+}
+
+.widget-cell-large .today-day-progress-fill {
+  background: var(--accent-today, #fbbf24);
 }
 
 .widget-cell-small .home-recent-code-lang {
