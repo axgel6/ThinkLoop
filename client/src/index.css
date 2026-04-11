@@ -9,6 +9,12 @@ html {
   font-size: var(--ui-font-size, 16px);
 }
 
+#root,
+.App {
+  width: 100%;
+  max-width: none;
+}
+
 body {
   margin: 0;
   font-size: 1rem;

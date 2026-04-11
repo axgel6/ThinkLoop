@@ -26,6 +26,73 @@ const LIMITS = {
 
 const NOTE_RETENTION_MS = 10 * 24 * 60 * 60 * 1000;
 
+const SERVER_DEFAULT_WIDGET_CONFIG = [
+  { id: "today", label: "Today", visible: true, size: "large" },
+  { id: "quick-actions", label: "Quick Actions", visible: true, size: "large" },
+  { id: "pomodoro", label: "Pomodoro Timer", visible: true, size: "large" },
+  { id: "tasks", label: "Tasks", visible: true, size: "medium" },
+  { id: "pinned", label: "Pinned Notes", visible: true, size: "medium" },
+  { id: "recent", label: "Recent Notes", visible: true, size: "medium" },
+  { id: "recent-code", label: "Recent Code", visible: true, size: "medium" },
+  { id: "quick-note", label: "Capture Note", visible: true, size: "medium" },
+  { id: "focus-stats", label: "Focus Stats", visible: true, size: "large" },
+  { id: "countdowns", label: "Countdowns", visible: true, size: "large" },
+] as const;
+
+const NON_SMALL_WIDGET_IDS = new Set(["quick-actions", "pomodoro"]);
+const LARGE_ONLY_WIDGET_IDS = new Set(["focus-stats"]);
+
+const normalizeServerWidgetSize = (id: string, raw: unknown) => {
+  const resolved =
+    raw === "full"
+      ? "large"
+      : raw === "half"
+        ? "small"
+        : raw === "small" || raw === "medium" || raw === "large"
+          ? raw
+          : "small";
+
+  if (LARGE_ONLY_WIDGET_IDS.has(id)) return "large";
+  if (NON_SMALL_WIDGET_IDS.has(id) && resolved === "small") return "medium";
+  return resolved;
+};
+
+const normalizeServerWidgetConfig = (rawConfig: unknown) => {
+  if (!Array.isArray(rawConfig)) {
+    return SERVER_DEFAULT_WIDGET_CONFIG.map((w) => ({ ...w }));
+  }
+
+  const defaults = new Map(SERVER_DEFAULT_WIDGET_CONFIG.map((w) => [w.id, w]));
+  const seen = new Set<string>();
+  const cleaned: Array<{
+    id: string;
+    label: string;
+    visible: boolean;
+    size: "small" | "medium" | "large";
+  }> = [];
+
+  for (const item of rawConfig.slice(0, 20)) {
+    if (!item || typeof item !== "object") continue;
+    const id = typeof (item as any).id === "string" ? (item as any).id : "";
+    if (!id || !defaults.has(id) || seen.has(id)) continue;
+
+    const def = defaults.get(id)!;
+    cleaned.push({
+      id,
+      label: def.label,
+      visible: (item as any).visible !== false,
+      size: normalizeServerWidgetSize(id, (item as any).size),
+    });
+    seen.add(id);
+  }
+
+  for (const def of SERVER_DEFAULT_WIDGET_CONFIG) {
+    if (!seen.has(def.id)) cleaned.push({ ...def });
+  }
+
+  return cleaned;
+};
+
 // Middleware
 app.use(cors());
 app.use(express.json());
@@ -976,7 +1043,7 @@ app.get("/auth/user/:userId/settings", async (req, res) => {
       weatherCity: user.weatherCity || "Atlanta",
       sidebarCollapsed: user.sidebarCollapsed ?? false,
       countdowns: Array.isArray(user.countdowns) ? user.countdowns : [],
-      widgetConfig: Array.isArray(user.widgetConfig) ? user.widgetConfig : [],
+      widgetConfig: normalizeServerWidgetConfig(user.widgetConfig),
       focusSessions: Array.isArray(user.focusSessions)
         ? user.focusSessions
         : [],
@@ -1038,34 +1105,7 @@ app.put("/auth/user/:userId/settings", async (req, res) => {
       if (!Array.isArray(widgetConfig)) {
         return res.status(400).json({ error: "widgetConfig must be an array" });
       }
-      const allowedIds = new Set([
-        "today",
-        "pinned",
-        "recent",
-        "recent-code",
-        "tasks",
-        "quick-note",
-        "quick-actions",
-        "focus-stats",
-        "countdowns",
-        "pomodoro",
-      ]);
-      const seen = new Set<string>();
-      const cleaned = widgetConfig
-        .slice(0, 20)
-        .map((w: any) => {
-          const id = typeof w?.id === "string" ? w.id : "";
-          if (!id || !allowedIds.has(id) || seen.has(id)) return null;
-          seen.add(id);
-          return {
-            id,
-            label: typeof w?.label === "string" ? w.label.slice(0, 60) : id,
-            visible: w?.visible !== false,
-            size: w?.size === "full" ? "full" : "half",
-          };
-        })
-        .filter(Boolean);
-      updateFields.widgetConfig = cleaned;
+      updateFields.widgetConfig = normalizeServerWidgetConfig(widgetConfig);
     }
 
     if (focusSessions !== undefined) {

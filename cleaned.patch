@@ -1,0 +1,1018 @@
+                                                                                
++  font-size: 14px;
+   color: var(--muted, #9a9a9a);
+   margin: 0;
+ }
+ 
++.widget-edit-sections {
++  display: grid;
++  grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
++  gap: 12px;
++  min-height: 0;
++  flex: 1;
++}
++
++.widget-edit-section {
++  border-radius: 14px;
++  border: 1px solid rgba(255, 255, 255, 0.08);
++  background: rgba(255, 255, 255, 0.03);
++  min-height: 0;
++  display: flex;
++  flex-direction: column;
++}
++
++.widget-edit-section-head {
++  display: flex;
++  align-items: center;
++  justify-content: space-between;
++  padding: 10px 12px;
++  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
++}
++
++.widget-edit-section-head h3 {
++  margin: 0;
++  font-size: 12px;
++  letter-spacing: 0.08em;
++  text-transform: uppercase;
++  color: var(--muted, #9a9a9a);
++}
++
++.widget-edit-section-head span {
++  min-width: 24px;
++  height: 24px;
++  border-radius: 999px;
++  display: inline-flex;
++  align-items: center;
++  justify-content: center;
++  font-size: 12px;
++  color: var(--fg, #dcdcdc);
++  border: 1px solid rgba(255, 255, 255, 0.14);
++  background: rgba(255, 255, 255, 0.03);
++}
++
+ .widget-edit-list {
+   list-style: none;
+-  margin: 0 0 20px;
+-  padding: 0;
++  margin: 0;
++  padding: 10px;
+   display: flex;
+   flex-direction: column;
+-  gap: 6px;
++  gap: 8px;
++  overflow: auto;
++  min-height: 0;
+ }
+ 
+ .widget-edit-item {
++  display: flex;
++  align-items: flex-start;
++  justify-content: space-between;
++  gap: 10px;
++  padding: 9px 10px;
++  border-radius: 12px;
++  background: rgba(255, 255, 255, 0.025);
++  border: 1px solid rgba(255, 255, 255, 0.07);
++}
++
++.widget-edit-item.draggable {
++  cursor: grab;
++}
++
++.widget-edit-item.draggable:active {
++  cursor: grabbing;
++}
++
++.widget-edit-item.drag-over {
++  border-color: rgba(255, 255, 255, 0.28);
++  background: rgba(255, 255, 255, 0.08);
++}
++
++.widget-edit-item.dragging {
++  opacity: 0.5;
++}
++
++.widget-edit-main {
+   display: flex;
+   align-items: center;
+-  gap: 12px;
+-  padding: 8px 10px;
+-  border-radius: 10px;
+-  background: rgba(255, 255, 255, 0.03);
+-  border: 1px solid rgba(255, 255, 255, 0.05);
++  gap: 10px;
++  min-width: 0;
++  padding-top: 4px;
+ }
+ 
+-/* Toggle switch */
+-.widget-toggle {
+-  width: 36px;
++.widget-drag-handle {
++  width: 20px;
+   height: 20px;
+-  border-radius: 10px;
+-  background: rgba(255, 255, 255, 0.1);
+-  border: 1px solid rgba(255, 255, 255, 0.14);
+-  cursor: pointer;
+-  padding: 0;
+-  position: relative;
++  border-radius: 6px;
++  display: inline-flex;
++  align-items: center;
++  justify-content: center;
++  color: var(--muted, #9a9a9a);
++  border: 1px solid rgba(255, 255, 255, 0.1);
++  background: rgba(255, 255, 255, 0.02);
+   flex-shrink: 0;
+-  transition:
+-    background 0.2s ease,
+-    border-color 0.2s ease;
+ }
+ 
+-.widget-toggle.on {
+-  background: rgba(72, 199, 142, 0.3);
+-  border-color: rgba(72, 199, 142, 0.5);
++.widget-edit-controls {
++  display: flex;
++  align-items: center;
++  gap: 8px;
++  flex-wrap: wrap;
++  justify-content: flex-end;
+ }
+ 
+-.widget-toggle-knob {
+-  position: absolute;
+-  top: 2px;
+-  width: 14px;
+-  height: 14px;
+-  border-radius: 50%;
+-  background: rgba(255, 255, 255, 0.45);
+-  transition:
+-    left 0.2s ease,
+-    background 0.2s ease;
++.widget-size-group {
++  display: inline-flex;
++  align-items: center;
++  border-radius: 9px;
++  border: 1px solid rgba(255, 255, 255, 0.12);
++  overflow: hidden;
++  background: rgba(255, 255, 255, 0.02);
+ }
+ 
+-.widget-toggle.off .widget-toggle-knob {
+-  left: 2px;
++.widget-size-pill {
++  width: 28px;
++  height: 28px;
++  border: 0;
++  border-right: 1px solid rgba(255, 255, 255, 0.1);
++  background: transparent;
++  color: var(--muted, #9a9a9a);
++  font-size: 11px;
++  font-weight: 700;
++  cursor: pointer;
+ }
+-.widget-toggle.on .widget-toggle-knob {
+-  left: 18px;
+-  background: #48c78e;
++
++.widget-size-pill:last-child {
++  border-right: 0;
++}
++
++.widget-size-pill.active {
++  background: rgba(255, 255, 255, 0.12);
++  color: var(--fg, #dcdcdc);
++}
++
++.widget-size-pill:disabled {
++  opacity: 0.3;
++  cursor: default;
+ }
+ 
+ .widget-edit-label {
+@@ -2123,26 +2784,33 @@
+   font-size: 14px;
+   color: var(--fg, #dcdcdc);
+   font-weight: 500;
++  overflow: hidden;
++  text-overflow: ellipsis;
++  white-space: nowrap;
+ }
+ 
+ .widget-edit-label.muted {
+   color: var(--muted, #9a9a9a);
+ }
+ 
++.hidden-item {
++  align-items: center;
++}
++
+ .widget-edit-arrows {
+   display: flex;
+   flex-direction: column;
+-  gap: 2px;
++  gap: 3px;
+ }
+ 
+ .widget-arrow-btn {
+-  width: 22px;
+-  height: 18px;
+-  border-radius: 5px;
++  width: 26px;
++  height: 20px;
++  border-radius: 6px;
+   background: transparent;
+-  border: 1px solid rgba(255, 255, 255, 0.08);
++  border: 1px solid rgba(255, 255, 255, 0.12);
+   color: var(--muted, #9a9a9a);
+-  font-size: 9px;
++  font-size: 10px;
+   cursor: pointer;
+   display: flex;
+   align-items: center;
+@@ -2163,15 +2831,42 @@
+   cursor: default;
+ }
+ 
++.widget-visibility-btn {
++  padding: 5px 10px;
++  border-radius: 7px;
++  background: transparent;
++  border: 1px solid rgba(255, 255, 255, 0.14);
++  color: var(--muted, #b3b3b3);
++  font-size: 12px;
++  font-weight: 600;
++  cursor: pointer;
++  transition:
++    background 0.12s ease,
++    color 0.12s ease,
++    border-color 0.12s ease;
++}
++
++.widget-visibility-btn:hover {
++  background: rgba(255, 255, 255, 0.08);
++  color: var(--fg, #dcdcdc);
++  border-color: rgba(255, 255, 255, 0.26);
++}
++
++.widget-visibility-btn.show {
++  color: #98e8b8;
++  border-color: rgba(152, 232, 184, 0.38);
++  background: rgba(152, 232, 184, 0.08);
++}
++
+ .widget-edit-done {
+   width: 100%;
+-  padding: 7px 13px;
+-  border-radius: 8px;
+-  background: rgba(255, 255, 255, 0.05);
++  padding: 10px 14px;
++  border-radius: 10px;
++  background: rgba(255, 255, 255, 0.07);
+   border: 1px solid var(--panel-border, rgba(255, 255, 255, 0.1));
+   color: var(--fg, #dcdcdc);
+-  font-size: 13px;
+-  font-weight: 500;
++  font-size: 14px;
++  font-weight: 600;
+   cursor: pointer;
+   transition:
+     background 0.15s ease,
+@@ -2183,45 +2878,83 @@
+   border-color: rgba(255, 255, 255, 0.18);
+ }
+ 
+-/* Widget size toggle */
+-.widget-size-btn {
++.widget-edit-footer {
+   display: flex;
+-  align-items: center;
+-  gap: 3px;
+-  padding: 4px 6px;
+-  border-radius: 6px;
+-  background: transparent;
+-  border: 1px solid rgba(255, 255, 255, 0.1);
++  gap: 10px;
++  align-items: stretch;
++}
++
++.widget-edit-reset,
++.widget-edit-done {
++  flex: 1;
++}
++
++.widget-edit-reset {
++  padding: 10px 14px;
++  border-radius: 10px;
++  border: 1px solid rgba(255, 255, 255, 0.14);
++  background: rgba(255, 255, 255, 0.02);
++  color: var(--muted, #c0c0c0);
++  font-size: 13px;
++  font-weight: 600;
+   cursor: pointer;
+-  flex-shrink: 0;
+   transition:
+     background 0.15s ease,
+-    border-color 0.15s ease;
++    border-color 0.15s ease,
++    color 0.15s ease;
+ }
+ 
+-.widget-size-btn:hover {
+-  background: rgba(255, 255, 255, 0.07);
+-  border-color: rgba(255, 255, 255, 0.18);
++.widget-edit-reset:hover {
++  background: rgba(255, 255, 255, 0.08);
++  border-color: rgba(255, 255, 255, 0.24);
++  color: var(--fg, #dcdcdc);
+ }
+ 
+-.size-icon-block {
+-  display: block;
+-  width: 10px;
+-  height: 12px;
+-  border-radius: 2px;
+-  background: var(--fg, #dcdcdc);
+-  opacity: 0.85;
+-  transition: opacity 0.15s ease;
+-}
++@media (max-width: 760px) {
++  .widget-edit-popup {
++    padding: 18px;
++    width: min(96vw, 620px);
++    max-height: 88vh;
++  }
++
++  .widget-edit-header {
++    padding-left: 40px;
++  }
++
++  .widget-edit-sections {
++    grid-template-columns: minmax(0, 1fr);
++  }
++
++  .widget-edit-item {
++    flex-direction: column;
++    align-items: stretch;
++  }
+ 
+-/* Full width: both blocks bright */
+-.widget-size-btn .size-icon-block {
+-  opacity: 0.85;
++  .widget-edit-controls {
++    justify-content: space-between;
++  }
++
++  .widget-edit-footer {
++    flex-direction: column;
++  }
+ }
+ 
+-/* Half width: second block dimmed */
+-.widget-size-btn.is-half .size-icon-block:last-child {
+-  opacity: 0.2;
++/* Ensure each widget consistently adopts spacing from its size class. */
++.widget-cell
++  > :is(
++    .home-info,
++    .home-pinned,
++    .home-recent,
++    .home-recent-code,
++    .home-tasks,
++    .home-quick-note,
++    .home-quick-actions,
++    .home-focus-stats,
++    .home-countdowns,
++    .home-pomodoro
++  ) {
++  padding: var(--widget-pad-top) var(--widget-pad-x) var(--widget-pad-bottom);
++  border-radius: var(--widget-radius);
+ }
+ 
+ .countdown-add-btn:hover {
+@@ -2476,6 +3209,10 @@
+ }
+ 
+ @media (max-width: 480px) {
++  .home-welcome-banner {
++    padding-inline: 8px;
++  }
++
+   #home-content {
+     grid-template-columns: 1fr;
+     gap: 8px;
+@@ -2483,7 +3220,9 @@
+   }
+ 
+   .widget-cell,
+-  .widget-cell-full {
++  .widget-cell-small,
++  .widget-cell-medium,
++  .widget-cell-large {
+     grid-column: 1 / -1;
+   }
+ 
+diff --git a/client/src/components/Home.tsx b/client/src/components/Home.tsx
+index c0df2f6..ce31021 100644
+--- a/client/src/components/Home.tsx
++++ b/client/src/components/Home.tsx
+@@ -87,32 +87,52 @@ interface WidgetConfig {
+   id: WidgetId;
+   label: string;
+   visible: boolean;
+-  size: "full" | "half";
++  size: "small" | "medium" | "large";
+ }
+ 
+ const DEFAULT_WIDGET_CONFIG: WidgetConfig[] = [
+-  // Row 1: today(1) + quick-actions(2) = 3
+-  { id: "today", label: "Today", visible: true, size: "half" },
+-  { id: "quick-actions", label: "Quick Actions", visible: true, size: "full" },
+-  // Row 2: pinned(1) + recent(1) + recent-code(1) = 3
+-  { id: "pinned", label: "Pinned Notes", visible: true, size: "half" },
+-  { id: "recent", label: "Recent Notes", visible: true, size: "half" },
+-  { id: "recent-code", label: "Recent Code", visible: true, size: "half" },
+-  // Row 3: tasks(1) + quick-note(1) + countdowns(1) = 3
+-  { id: "tasks", label: "Tasks", visible: true, size: "half" },
+-  { id: "quick-note", label: "Capture Note", visible: true, size: "half" },
+-  { id: "countdowns", label: "Countdowns", visible: true, size: "half" },
+-  // Row 4: focus-stats(2) + pomodoro(1) = 3
+-  { id: "focus-stats", label: "Focus Stats", visible: true, size: "full" },
+-  { id: "pomodoro", label: "Pomodoro Timer", visible: true, size: "half" },
++  { id: "today", label: "Today", visible: true, size: "large" },
++  { id: "quick-actions", label: "Quick Actions", visible: true, size: "large" },
++  { id: "pomodoro", label: "Pomodoro Timer", visible: true, size: "large" },
++  { id: "tasks", label: "Tasks", visible: true, size: "medium" },
++  { id: "pinned", label: "Pinned Notes", visible: true, size: "medium" },
++  { id: "recent", label: "Recent Notes", visible: true, size: "medium" },
++  { id: "recent-code", label: "Recent Code", visible: true, size: "medium" },
++  { id: "quick-note", label: "Capture Note", visible: true, size: "medium" },
++  { id: "focus-stats", label: "Focus Stats", visible: true, size: "large" },
++  { id: "countdowns", label: "Countdowns", visible: true, size: "large" },
+ ];
+ 
+-const WIDGET_CONFIG_KEY = "home:widget-config-v2";
++const WIDGET_CONFIG_KEY = "home:widget-config-v3";
+ const COUNTDOWNS_KEY = "countdowns:items";
+ const FOCUS_SESSIONS_KEY = "focusStats:sessions";
++const NON_SMALL_WIDGETS = new Set<WidgetId>(["quick-actions", "pomodoro"]);
++const LARGE_ONLY_WIDGETS = new Set<WidgetId>(["focus-stats"]);
++
++const cloneDefaultWidgetConfig = (): WidgetConfig[] =>
++  DEFAULT_WIDGET_CONFIG.map((w) => ({ ...w }));
++
++const normalizeWidgetSize = (rawSize: unknown): WidgetConfig["size"] => {
++  if (rawSize === "small" || rawSize === "medium" || rawSize === "large") {
++    return rawSize;
++  }
++  if (rawSize === "full") return "large";
++  if (rawSize === "half") return "small";
++  return "small";
++};
++
++const normalizeWidgetSizeForId = (
++  id: WidgetId,
++  rawSize: unknown,
++): WidgetConfig["size"] => {
++  const size = normalizeWidgetSize(rawSize);
++  if (LARGE_ONLY_WIDGETS.has(id)) return "large";
++  if (NON_SMALL_WIDGETS.has(id) && size === "small") return "medium";
++  return size;
++};
+ 
+ const normalizeWidgetConfig = (input: unknown): WidgetConfig[] => {
+-  if (!Array.isArray(input)) return DEFAULT_WIDGET_CONFIG;
++  if (!Array.isArray(input)) return cloneDefaultWidgetConfig();
+ 
+   const defaultById = new Map(DEFAULT_WIDGET_CONFIG.map((w) => [w.id, w]));
+   const seen = new Set<WidgetId>();
+@@ -130,13 +150,13 @@ const normalizeWidgetConfig = (input: unknown): WidgetConfig[] => {
+       id: def.id,
+       label: def.label,
+       visible: (raw as { visible?: unknown }).visible !== false,
+-      size: (raw as { size?: unknown }).size === "full" ? "full" : "half",
++      size: normalizeWidgetSizeForId(def.id, (raw as { size?: unknown }).size),
+     });
+     seen.add(def.id);
+   }
+ 
+   for (const def of DEFAULT_WIDGET_CONFIG) {
+-    if (!seen.has(def.id)) normalized.push(def);
++    if (!seen.has(def.id)) normalized.push({ ...def });
+   }
+ 
+   return normalized;
+@@ -547,18 +567,22 @@ export default function Home({
+       );
+       return normalizeWidgetConfig(saved);
+     } catch {
+-      return DEFAULT_WIDGET_CONFIG;
++      return cloneDefaultWidgetConfig();
+     }
+   });
+   const [isEditingWidgets, setIsEditingWidgets] = useState(false);
+   const [homeSettingsReady, setHomeSettingsReady] = useState(!currentUser?.id);
++  const [draggedWidgetId, setDraggedWidgetId] = useState<WidgetId | null>(null);
++  const [dragOverWidgetId, setDragOverWidgetId] = useState<WidgetId | null>(
++    null,
++  );
+ 
+   const prevUserIdRef = useRef<string | number | undefined>(currentUser?.id);
+ 
+   // Reset widget/countdown state when user logs out
+   useEffect(() => {
+     if (prevUserIdRef.current && !currentUser?.id) {
+-      setWidgetConfig(DEFAULT_WIDGET_CONFIG);
++      setWidgetConfig(cloneDefaultWidgetConfig());
+       setCountdowns([]);
+     }
+     prevUserIdRef.current = currentUser?.id;
+@@ -955,29 +979,92 @@ export default function Home({
+   };
+ 
+   // --- Widget config helpers ---
+-  const moveWidget = (index: number, dir: -1 | 1) => {
+-    const next = [...widgetConfig];
+-    const target = index + dir;
+-    if (target < 0 || target >= next.length) return;
+-    const tmp = next[index]!;
+-    next[index] = next[target]!;
+-    next[target] = tmp;
+-    setWidgetConfig(next);
+-  };
+   const toggleWidgetVisible = (id: WidgetId) => {
+     setWidgetConfig((prev) =>
+       prev.map((w) => (w.id === id ? { ...w, visible: !w.visible } : w)),
+     );
+   };
+ 
+-  const toggleWidgetSize = (id: WidgetId) => {
++  const setWidgetSize = (id: WidgetId, size: WidgetConfig["size"]) => {
+     setWidgetConfig((prev) =>
+-      prev.map((w) =>
+-        w.id === id ? { ...w, size: w.size === "full" ? "half" : "full" } : w,
+-      ),
++      prev.map((w) => {
++        if (w.id !== id) return w;
++        if (LARGE_ONLY_WIDGETS.has(id) && size !== "large") return w;
++        if (NON_SMALL_WIDGETS.has(id) && size === "small") return w;
++        return { ...w, size };
++      }),
+     );
+   };
+ 
++  const moveVisibleWidget = (id: WidgetId, dir: -1 | 1) => {
++    setWidgetConfig((prev) => {
++      const visible = prev.filter((w) => w.visible);
++      const from = visible.findIndex((w) => w.id === id);
++      const to = from + dir;
++      if (from < 0 || to < 0 || to >= visible.length) return prev;
++
++      const nextVisible = [...visible];
++      const tmp = nextVisible[from]!;
++      nextVisible[from] = nextVisible[to]!;
++      nextVisible[to] = tmp;
++
++      let i = 0;
++      return prev.map((w) => (w.visible ? nextVisible[i++]! : w));
++    });
++  };
++
++  const reorderVisibleWidgets = (dragId: WidgetId, targetId: WidgetId) => {
++    if (dragId === targetId) return;
++    setWidgetConfig((prev) => {
++      const visible = prev.filter((w) => w.visible);
++      const from = visible.findIndex((w) => w.id === dragId);
++      const to = visible.findIndex((w) => w.id === targetId);
++      if (from < 0 || to < 0) return prev;
++
++      const nextVisible = [...visible];
++      const [moved] = nextVisible.splice(from, 1);
++      if (!moved) return prev;
++      nextVisible.splice(to, 0, moved);
++
++      let i = 0;
++      return prev.map((w) => (w.visible ? nextVisible[i++]! : w));
++    });
++  };
++
++  const onWidgetDragStart = (id: WidgetId) => {
++    setDraggedWidgetId(id);
++    setDragOverWidgetId(null);
++  };
++
++  const onWidgetDragOver = (
++    e: React.DragEvent<HTMLLIElement>,
++    targetId: WidgetId,
++  ) => {
++    e.preventDefault();
++    if (!draggedWidgetId || draggedWidgetId === targetId) return;
++    setDragOverWidgetId(targetId);
++  };
++
++  const onWidgetDrop = (
++    e: React.DragEvent<HTMLLIElement>,
++    targetId: WidgetId,
++  ) => {
++    e.preventDefault();
++    if (!draggedWidgetId) return;
++    reorderVisibleWidgets(draggedWidgetId, targetId);
++    setDraggedWidgetId(null);
++    setDragOverWidgetId(null);
++  };
++
++  const onWidgetDragEnd = () => {
++    setDraggedWidgetId(null);
++    setDragOverWidgetId(null);
++  };
++
++  const resetWidgetLayout = () => {
++    setWidgetConfig(cloneDefaultWidgetConfig());
++  };
++
+   // --- Effects ---
+   useEffect(() => {
+     const id = setInterval(() => setNow(new Date()), 1000);
+@@ -1048,13 +1135,16 @@ export default function Home({
+         const res = await fetch(
+           `${API_URL}/auth/user/${currentUser.id}/settings`,
+         );
+-        if (!res.ok) return;
++        if (!res.ok) {
++          if (active) setHomeSettingsReady(true);
++          return;
++        }
+         const settings = await res.json();
+ 
+         if (Array.isArray(settings.countdowns) && active) {
+           setCountdowns(normalizeCountdowns(settings.countdowns));
+         }
+-        if (Array.isArray(settings.widgetConfig) && active) {
++        if (active) {
+           setWidgetConfig(normalizeWidgetConfig(settings.widgetConfig));
+         }
+         if (Array.isArray(settings.focusSessions)) {
+@@ -1125,6 +1215,9 @@ export default function Home({
+   }, [widgetConfig, currentUser?.id, homeSettingsReady]);
+ 
+   // --- Widget JSX map ---
++  const visibleWidgets = widgetConfig.filter((w) => w.visible);
++  const hiddenWidgets = widgetConfig.filter((w) => !w.visible);
++
+   const widgetMap: Record<WidgetId, ReactElement> = {
+     today: (
+       <div
+@@ -1618,16 +1711,14 @@ export default function Home({
+       </div>
+       <div id="home-content">
+         {/* Render widgets in configured order */}
+-        {widgetConfig
+-          .filter((w) => w.visible)
+-          .map((w) => (
+-            <div
+-              key={w.id}
+-              className={`widget-cell${w.size === "full" ? " widget-cell-full" : ""}`}
+-            >
+-              {widgetMap[w.id]}
+-            </div>
+-          ))}
++        {visibleWidgets.map((w) => (
++          <div
++            key={w.id}
++            className={`widget-cell widget-cell-${w.size} widget-cell-${w.id}`}
++          >
++            {widgetMap[w.id]}
++          </div>
++        ))}
+ 
+         {/* Edit widgets button */}
+         <div className="widget-cell widget-cell-row">
+@@ -1661,59 +1752,135 @@ export default function Home({
+               </button>
+               <div className="widget-edit-header">
+                 <h2>Customize Widgets</h2>
+-                <p>Toggle visibility and reorder</p>
++                <p>Drag to reorder, tune sizes, hide what you do not need.</p>
+               </div>
+-              <ul className="widget-edit-list">
+-                {widgetConfig.map((w, i) => (
+-                  <li key={w.id} className="widget-edit-item">
+-                    <button
+-                      className={`widget-toggle${w.visible ? " on" : " off"}`}
+-                      onClick={() => toggleWidgetVisible(w.id)}
+-                      aria-label={w.visible ? "Hide" : "Show"}
+-                    >
+-                      <span className="widget-toggle-knob" />
+-                    </button>
+-                    <span
+-                      className={`widget-edit-label${!w.visible ? " muted" : ""}`}
+-                    >
+-                      {w.label}
+-                    </span>
+-                    <button
+-                      className={`widget-size-btn${w.size === "half" ? " is-half" : ""}`}
+-                      onClick={() => toggleWidgetSize(w.id)}
+-                      title={w.size === "half" ? "Half width" : "Full width"}
+-                      aria-label="Toggle width"
+-                    >
+-                      <span className="size-icon-block" />
+-                      <span className="size-icon-block" />
+-                    </button>
+-                    <div className="widget-edit-arrows">
+-                      <button
+-                        className="widget-arrow-btn"
+-                        disabled={i === 0}
+-                        onClick={() => moveWidget(i, -1)}
+-                        aria-label="Move up"
+-                      >
+-                        ▲
+-                      </button>
+-                      <button
+-                        className="widget-arrow-btn"
+-                        disabled={i === widgetConfig.length - 1}
+-                        onClick={() => moveWidget(i, 1)}
+-                        aria-label="Move down"
++              <div className="widget-edit-sections">
++                <section
++                  className="widget-edit-section"
++                  aria-label="Visible widgets"
++                >
++                  <div className="widget-edit-section-head">
++                    <h3>Visible</h3>
++                    <span>{visibleWidgets.length}</span>
++                  </div>
++                  <ul className="widget-edit-list widget-edit-list-visible">
++                    {visibleWidgets.map((w, index) => (
++                      <li
++                        key={w.id}
++                        className={`widget-edit-item draggable${draggedWidgetId === w.id ? " dragging" : ""}${dragOverWidgetId === w.id ? " drag-over" : ""}`}
++                        draggable
++                        onDragStart={() => onWidgetDragStart(w.id)}
++                        onDragOver={(e) => onWidgetDragOver(e, w.id)}
++                        onDrop={(e) => onWidgetDrop(e, w.id)}
++                        onDragEnd={onWidgetDragEnd}
+                       >
+-                        ▼
+-                      </button>
+-                    </div>
+-                  </li>
+-                ))}
+-              </ul>
+-              <button
+-                className="widget-edit-done"
+-                onClick={() => setIsEditingWidgets(false)}
+-              >
+-                Done
+-              </button>
++                        <div className="widget-edit-main">
++                          <span
++                            className="widget-drag-handle"
++                            aria-hidden="true"
++                          >
++                            ≡
++                          </span>
++                          <span className="widget-edit-label">{w.label}</span>
++                        </div>
++                        <div className="widget-edit-controls">
++                          <div
++                            className="widget-size-group"
++                            role="group"
++                            aria-label="Widget size"
++                          >
++                            {(["small", "medium", "large"] as const).map(
++                              (size) => {
++                                const blocked =
++                                  (LARGE_ONLY_WIDGETS.has(w.id) &&
++                                    size !== "large") ||
++                                  (NON_SMALL_WIDGETS.has(w.id) &&
++                                    size === "small");
++                                return (
++                                  <button
++                                    key={size}
++                                    className={`widget-size-pill${w.size === size ? " active" : ""}`}
++                                    onClick={() => setWidgetSize(w.id, size)}
++                                    disabled={blocked}
++                                    aria-label={`Set size to ${size}`}
++                                  >
++                                    {size[0]?.toUpperCase()}
++                                  </button>
++                                );
++                              },
++                            )}
++                          </div>
++                          <div className="widget-edit-arrows">
++                            <button
++                              className="widget-arrow-btn"
++                              disabled={index === 0}
++                              onClick={() => moveVisibleWidget(w.id, -1)}
++                              aria-label="Move up"
++                            >
++                              ▲
++                            </button>
++                            <button
++                              className="widget-arrow-btn"
++                              disabled={index === visibleWidgets.length - 1}
++                              onClick={() => moveVisibleWidget(w.id, 1)}
++                              aria-label="Move down"
++                            >
++                              ▼
++                            </button>
++                          </div>
++                          <button
++                            className="widget-visibility-btn"
++                            onClick={() => toggleWidgetVisible(w.id)}
++                            aria-label="Hide widget"
++                          >
++                            Hide
++                          </button>
++                        </div>
++                      </li>
++                    ))}
++                  </ul>
++                </section>
++
++                <section
++                  className="widget-edit-section"
++                  aria-label="Hidden widgets"
++                >
++                  <div className="widget-edit-section-head">
++                    <h3>Hidden</h3>
++                    <span>{hiddenWidgets.length}</span>
++                  </div>
++                  <ul className="widget-edit-list">
++                    {hiddenWidgets.map((w) => (
++                      <li key={w.id} className="widget-edit-item hidden-item">
++                        <span className="widget-edit-label muted">
++                          {w.label}
++                        </span>
++                        <button
++                          className="widget-visibility-btn show"
++                          onClick={() => toggleWidgetVisible(w.id)}
++                          aria-label="Show widget"
++                        >
++                          Show
++                        </button>
++                      </li>
++                    ))}
++                  </ul>
++                </section>
++              </div>
++              <div className="widget-edit-footer">
++                <button
++                  className="widget-edit-reset"
++                  onClick={resetWidgetLayout}
++                >
++                  Reset Layout to Default
++                </button>
++                <button
++                  className="widget-edit-done"
++                  onClick={() => setIsEditingWidgets(false)}
++                >
++                  Done
++                </button>
++              </div>
+             </div>
+           </div>
+         )}
+diff --git a/client/src/index.css b/client/src/index.css
+index 6e2a475..ebcf50d 100644
+--- a/client/src/index.css
++++ b/client/src/index.css
+@@ -9,6 +9,12 @@ html {
+   font-size: var(--ui-font-size, 16px);
+ }
+ 
++#root,
++.App {
++  width: 100%;
++  max-width: none;
++}
++
+ body {
+   margin: 0;
+   font-size: 1rem;
+diff --git a/server/src/server.ts b/server/src/server.ts
+index d1dd9db..a710292 100644
+--- a/server/src/server.ts
++++ b/server/src/server.ts
+@@ -26,6 +26,73 @@ const LIMITS = {
+ 
+ const NOTE_RETENTION_MS = 10 * 24 * 60 * 60 * 1000;
+ 
++const SERVER_DEFAULT_WIDGET_CONFIG = [
++  { id: "today", label: "Today", visible: true, size: "large" },
++  { id: "quick-actions", label: "Quick Actions", visible: true, size: "large" },
++  { id: "pomodoro", label: "Pomodoro Timer", visible: true, size: "large" },
++  { id: "tasks", label: "Tasks", visible: true, size: "medium" },
++  { id: "pinned", label: "Pinned Notes", visible: true, size: "medium" },
++  { id: "recent", label: "Recent Notes", visible: true, size: "medium" },
++  { id: "recent-code", label: "Recent Code", visible: true, size: "medium" },
++  { id: "quick-note", label: "Capture Note", visible: true, size: "medium" },
++  { id: "focus-stats", label: "Focus Stats", visible: true, size: "large" },
++  { id: "countdowns", label: "Countdowns", visible: true, size: "large" },
++] as const;
++
++const NON_SMALL_WIDGET_IDS = new Set(["quick-actions", "pomodoro"]);
++const LARGE_ONLY_WIDGET_IDS = new Set(["focus-stats"]);
++
++const normalizeServerWidgetSize = (id: string, raw: unknown) => {
++  const resolved =
++    raw === "full"
++      ? "large"
++      : raw === "half"
++        ? "small"
++        : raw === "small" || raw === "medium" || raw === "large"
++          ? raw
++          : "small";
++
++  if (LARGE_ONLY_WIDGET_IDS.has(id)) return "large";
++  if (NON_SMALL_WIDGET_IDS.has(id) && resolved === "small") return "medium";
++  return resolved;
++};
++
++const normalizeServerWidgetConfig = (rawConfig: unknown) => {
++  if (!Array.isArray(rawConfig)) {
++    return SERVER_DEFAULT_WIDGET_CONFIG.map((w) => ({ ...w }));
++  }
++
++  const defaults = new Map(SERVER_DEFAULT_WIDGET_CONFIG.map((w) => [w.id, w]));
++  const seen = new Set<string>();
++  const cleaned: Array<{
++    id: string;
++    label: string;
++    visible: boolean;
++    size: "small" | "medium" | "large";
++  }> = [];
++
++  for (const item of rawConfig.slice(0, 20)) {
++    if (!item || typeof item !== "object") continue;
++    const id = typeof (item as any).id === "string" ? (item as any).id : "";
++    if (!id || !defaults.has(id) || seen.has(id)) continue;
++
++    const def = defaults.get(id)!;
++    cleaned.push({
++      id,
++      label: def.label,
++      visible: (item as any).visible !== false,
++      size: normalizeServerWidgetSize(id, (item as any).size),
++    });
++    seen.add(id);
++  }
++
++  for (const def of SERVER_DEFAULT_WIDGET_CONFIG) {
++    if (!seen.has(def.id)) cleaned.push({ ...def });
++  }
++
++  return cleaned;
++};
++
+ // Middleware
+ app.use(cors());
+ app.use(express.json());
+@@ -976,7 +1043,7 @@ app.get("/auth/user/:userId/settings", async (req, res) => {
+       weatherCity: user.weatherCity || "Atlanta",
+       sidebarCollapsed: user.sidebarCollapsed ?? false,
+       countdowns: Array.isArray(user.countdowns) ? user.countdowns : [],
+-      widgetConfig: Array.isArray(user.widgetConfig) ? user.widgetConfig : [],
++      widgetConfig: normalizeServerWidgetConfig(user.widgetConfig),
+       focusSessions: Array.isArray(user.focusSessions)
+         ? user.focusSessions
+         : [],
+@@ -1038,34 +1105,7 @@ app.put("/auth/user/:userId/settings", async (req, res) => {
+       if (!Array.isArray(widgetConfig)) {
+         return res.status(400).json({ error: "widgetConfig must be an array" });
+       }
+-      const allowedIds = new Set([
+-        "today",
+-        "pinned",
+-        "recent",
+-        "recent-code",
+-        "tasks",
+-        "quick-note",
+-        "quick-actions",
+-        "focus-stats",
+-        "countdowns",
+-        "pomodoro",
+-      ]);
+-      const seen = new Set<string>();
+-      const cleaned = widgetConfig
+-        .slice(0, 20)
+-        .map((w: any) => {
+-          const id = typeof w?.id === "string" ? w.id : "";
+-          if (!id || !allowedIds.has(id) || seen.has(id)) return null;
+-          seen.add(id);
+-          return {
+-            id,
+-            label: typeof w?.label === "string" ? w.label.slice(0, 60) : id,
+-            visible: w?.visible !== false,
+-            size: w?.size === "full" ? "full" : "half",
+-          };
+-        })
+-        .filter(Boolean);
+-      updateFields.widgetConfig = cleaned;
++      updateFields.widgetConfig = normalizeServerWidgetConfig(widgetConfig);
+     }
+ 
+     if (focusSessions !== undefined) {

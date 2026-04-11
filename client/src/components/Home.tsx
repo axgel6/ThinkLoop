@@ -87,32 +87,51 @@ interface WidgetConfig {
   id: WidgetId;
   label: string;
   visible: boolean;
-  size: "full" | "half";
+  size: "small" | "medium" | "large";
 }
 
 const DEFAULT_WIDGET_CONFIG: WidgetConfig[] = [
-  // Row 1: today(1) + quick-actions(2) = 3
-  { id: "today", label: "Today", visible: true, size: "half" },
-  { id: "quick-actions", label: "Quick Actions", visible: true, size: "full" },
-  // Row 2: pinned(1) + recent(1) + recent-code(1) = 3
-  { id: "pinned", label: "Pinned Notes", visible: true, size: "half" },
-  { id: "recent", label: "Recent Notes", visible: true, size: "half" },
-  { id: "recent-code", label: "Recent Code", visible: true, size: "half" },
-  // Row 3: tasks(1) + quick-note(1) + countdowns(1) = 3
-  { id: "tasks", label: "Tasks", visible: true, size: "half" },
-  { id: "quick-note", label: "Capture Note", visible: true, size: "half" },
-  { id: "countdowns", label: "Countdowns", visible: true, size: "half" },
-  // Row 4: focus-stats(2) + pomodoro(1) = 3
-  { id: "focus-stats", label: "Focus Stats", visible: true, size: "full" },
-  { id: "pomodoro", label: "Pomodoro Timer", visible: true, size: "half" },
+  { id: "today", label: "Today", visible: true, size: "large" },
+  { id: "quick-actions", label: "Quick Actions", visible: true, size: "large" },
+  { id: "pomodoro", label: "Pomodoro Timer", visible: true, size: "large" },
+  { id: "focus-stats", label: "Focus Stats", visible: true, size: "large" },
+  { id: "countdowns", label: "Countdowns", visible: true, size: "large" },
+  { id: "tasks", label: "Tasks", visible: true, size: "medium" },
+  { id: "recent", label: "Recent Notes", visible: true, size: "medium" },
+  { id: "recent-code", label: "Recent Code", visible: true, size: "medium" },
+  { id: "quick-note", label: "Capture Note", visible: true, size: "medium" },
 ];
 
-const WIDGET_CONFIG_KEY = "home:widget-config-v2";
+const WIDGET_CONFIG_KEY = "home:widget-config-v4";
 const COUNTDOWNS_KEY = "countdowns:items";
 const FOCUS_SESSIONS_KEY = "focusStats:sessions";
+const NON_SMALL_WIDGETS = new Set<WidgetId>(["quick-actions", "pomodoro"]);
+const LARGE_ONLY_WIDGETS = new Set<WidgetId>(["focus-stats"]);
+
+const cloneDefaultWidgetConfig = (): WidgetConfig[] =>
+  DEFAULT_WIDGET_CONFIG.map((w) => ({ ...w }));
+
+const normalizeWidgetSize = (rawSize: unknown): WidgetConfig["size"] => {
+  if (rawSize === "small" || rawSize === "medium" || rawSize === "large") {
+    return rawSize;
+  }
+  if (rawSize === "full") return "large";
+  if (rawSize === "half") return "small";
+  return "small";
+};
+
+const normalizeWidgetSizeForId = (
+  id: WidgetId,
+  rawSize: unknown,
+): WidgetConfig["size"] => {
+  const size = normalizeWidgetSize(rawSize);
+  if (LARGE_ONLY_WIDGETS.has(id)) return "large";
+  if (NON_SMALL_WIDGETS.has(id) && size === "small") return "medium";
+  return size;
+};
 
 const normalizeWidgetConfig = (input: unknown): WidgetConfig[] => {
-  if (!Array.isArray(input)) return DEFAULT_WIDGET_CONFIG;
+  if (!Array.isArray(input)) return cloneDefaultWidgetConfig();
 
   const defaultById = new Map(DEFAULT_WIDGET_CONFIG.map((w) => [w.id, w]));
   const seen = new Set<WidgetId>();
@@ -130,13 +149,13 @@ const normalizeWidgetConfig = (input: unknown): WidgetConfig[] => {
       id: def.id,
       label: def.label,
       visible: (raw as { visible?: unknown }).visible !== false,
-      size: (raw as { size?: unknown }).size === "full" ? "full" : "half",
+      size: normalizeWidgetSizeForId(def.id, (raw as { size?: unknown }).size),
     });
     seen.add(def.id);
   }
 
   for (const def of DEFAULT_WIDGET_CONFIG) {
-    if (!seen.has(def.id)) normalized.push(def);
+    if (!seen.has(def.id)) normalized.push({ ...def });
   }
 
   return normalized;
@@ -547,18 +566,22 @@ export default function Home({
       );
       return normalizeWidgetConfig(saved);
     } catch {
-      return DEFAULT_WIDGET_CONFIG;
+      return cloneDefaultWidgetConfig();
     }
   });
   const [isEditingWidgets, setIsEditingWidgets] = useState(false);
   const [homeSettingsReady, setHomeSettingsReady] = useState(!currentUser?.id);
+  const [draggedWidgetId, setDraggedWidgetId] = useState<WidgetId | null>(null);
+  const [dragOverWidgetId, setDragOverWidgetId] = useState<WidgetId | null>(
+    null,
+  );
 
   const prevUserIdRef = useRef<string | number | undefined>(currentUser?.id);
 
   // Reset widget/countdown state when user logs out
   useEffect(() => {
     if (prevUserIdRef.current && !currentUser?.id) {
-      setWidgetConfig(DEFAULT_WIDGET_CONFIG);
+      setWidgetConfig(cloneDefaultWidgetConfig());
       setCountdowns([]);
     }
     prevUserIdRef.current = currentUser?.id;
@@ -955,27 +978,90 @@ export default function Home({
   };
 
   // --- Widget config helpers ---
-  const moveWidget = (index: number, dir: -1 | 1) => {
-    const next = [...widgetConfig];
-    const target = index + dir;
-    if (target < 0 || target >= next.length) return;
-    const tmp = next[index]!;
-    next[index] = next[target]!;
-    next[target] = tmp;
-    setWidgetConfig(next);
-  };
   const toggleWidgetVisible = (id: WidgetId) => {
     setWidgetConfig((prev) =>
       prev.map((w) => (w.id === id ? { ...w, visible: !w.visible } : w)),
     );
   };
 
-  const toggleWidgetSize = (id: WidgetId) => {
+  const setWidgetSize = (id: WidgetId, size: WidgetConfig["size"]) => {
     setWidgetConfig((prev) =>
-      prev.map((w) =>
-        w.id === id ? { ...w, size: w.size === "full" ? "half" : "full" } : w,
-      ),
+      prev.map((w) => {
+        if (w.id !== id) return w;
+        if (LARGE_ONLY_WIDGETS.has(id) && size !== "large") return w;
+        if (NON_SMALL_WIDGETS.has(id) && size === "small") return w;
+        return { ...w, size };
+      }),
     );
+  };
+
+  const moveVisibleWidget = (id: WidgetId, dir: -1 | 1) => {
+    setWidgetConfig((prev) => {
+      const visible = prev.filter((w) => w.visible);
+      const from = visible.findIndex((w) => w.id === id);
+      const to = from + dir;
+      if (from < 0 || to < 0 || to >= visible.length) return prev;
+
+      const nextVisible = [...visible];
+      const tmp = nextVisible[from]!;
+      nextVisible[from] = nextVisible[to]!;
+      nextVisible[to] = tmp;
+
+      let i = 0;
+      return prev.map((w) => (w.visible ? nextVisible[i++]! : w));
+    });
+  };
+
+  const reorderVisibleWidgets = (dragId: WidgetId, targetId: WidgetId) => {
+    if (dragId === targetId) return;
+    setWidgetConfig((prev) => {
+      const visible = prev.filter((w) => w.visible);
+      const from = visible.findIndex((w) => w.id === dragId);
+      const to = visible.findIndex((w) => w.id === targetId);
+      if (from < 0 || to < 0) return prev;
+
+      const nextVisible = [...visible];
+      const [moved] = nextVisible.splice(from, 1);
+      if (!moved) return prev;
+      nextVisible.splice(to, 0, moved);
+
+      let i = 0;
+      return prev.map((w) => (w.visible ? nextVisible[i++]! : w));
+    });
+  };
+
+  const onWidgetDragStart = (id: WidgetId) => {
+    setDraggedWidgetId(id);
+    setDragOverWidgetId(null);
+  };
+
+  const onWidgetDragOver = (
+    e: React.DragEvent<HTMLLIElement>,
+    targetId: WidgetId,
+  ) => {
+    e.preventDefault();
+    if (!draggedWidgetId || draggedWidgetId === targetId) return;
+    setDragOverWidgetId(targetId);
+  };
+
+  const onWidgetDrop = (
+    e: React.DragEvent<HTMLLIElement>,
+    targetId: WidgetId,
+  ) => {
+    e.preventDefault();
+    if (!draggedWidgetId) return;
+    reorderVisibleWidgets(draggedWidgetId, targetId);
+    setDraggedWidgetId(null);
+    setDragOverWidgetId(null);
+  };
+
+  const onWidgetDragEnd = () => {
+    setDraggedWidgetId(null);
+    setDragOverWidgetId(null);
+  };
+
+  const resetWidgetLayout = () => {
+    setWidgetConfig(cloneDefaultWidgetConfig());
   };
 
   // --- Effects ---
@@ -1048,13 +1134,16 @@ export default function Home({
         const res = await fetch(
           `${API_URL}/auth/user/${currentUser.id}/settings`,
         );
-        if (!res.ok) return;
+        if (!res.ok) {
+          if (active) setHomeSettingsReady(true);
+          return;
+        }
         const settings = await res.json();
 
         if (Array.isArray(settings.countdowns) && active) {
           setCountdowns(normalizeCountdowns(settings.countdowns));
         }
-        if (Array.isArray(settings.widgetConfig) && active) {
+        if (active) {
           setWidgetConfig(normalizeWidgetConfig(settings.widgetConfig));
         }
         if (Array.isArray(settings.focusSessions)) {
@@ -1125,6 +1214,9 @@ export default function Home({
   }, [widgetConfig, currentUser?.id, homeSettingsReady]);
 
   // --- Widget JSX map ---
+  const visibleWidgets = widgetConfig.filter((w) => w.visible);
+  const hiddenWidgets = widgetConfig.filter((w) => !w.visible);
+
   const widgetMap: Record<WidgetId, ReactElement> = {
     today: (
       <div
@@ -1618,16 +1710,14 @@ export default function Home({
       </div>
       <div id="home-content">
         {/* Render widgets in configured order */}
-        {widgetConfig
-          .filter((w) => w.visible)
-          .map((w) => (
-            <div
-              key={w.id}
-              className={`widget-cell${w.size === "full" ? " widget-cell-full" : ""}`}
-            >
-              {widgetMap[w.id]}
-            </div>
-          ))}
+        {visibleWidgets.map((w) => (
+          <div
+            key={w.id}
+            className={`widget-cell widget-cell-${w.size} widget-cell-${w.id}`}
+          >
+            {widgetMap[w.id]}
+          </div>
+        ))}
 
         {/* Edit widgets button */}
         <div className="widget-cell widget-cell-row">
@@ -1661,59 +1751,135 @@ export default function Home({
               </button>
               <div className="widget-edit-header">
                 <h2>Customize Widgets</h2>
-                <p>Toggle visibility and reorder</p>
+                <p>Drag to reorder, tune sizes, hide what you do not need.</p>
               </div>
-              <ul className="widget-edit-list">
-                {widgetConfig.map((w, i) => (
-                  <li key={w.id} className="widget-edit-item">
-                    <button
-                      className={`widget-toggle${w.visible ? " on" : " off"}`}
-                      onClick={() => toggleWidgetVisible(w.id)}
-                      aria-label={w.visible ? "Hide" : "Show"}
-                    >
-                      <span className="widget-toggle-knob" />
-                    </button>
-                    <span
-                      className={`widget-edit-label${!w.visible ? " muted" : ""}`}
-                    >
-                      {w.label}
-                    </span>
-                    <button
-                      className={`widget-size-btn${w.size === "half" ? " is-half" : ""}`}
-                      onClick={() => toggleWidgetSize(w.id)}
-                      title={w.size === "half" ? "Half width" : "Full width"}
-                      aria-label="Toggle width"
-                    >
-                      <span className="size-icon-block" />
-                      <span className="size-icon-block" />
-                    </button>
-                    <div className="widget-edit-arrows">
-                      <button
-                        className="widget-arrow-btn"
-                        disabled={i === 0}
-                        onClick={() => moveWidget(i, -1)}
-                        aria-label="Move up"
+              <div className="widget-edit-sections">
+                <section
+                  className="widget-edit-section"
+                  aria-label="Visible widgets"
+                >
+                  <div className="widget-edit-section-head">
+                    <h3>Visible</h3>
+                    <span>{visibleWidgets.length}</span>
+                  </div>
+                  <ul className="widget-edit-list widget-edit-list-visible">
+                    {visibleWidgets.map((w, index) => (
+                      <li
+                        key={w.id}
+                        className={`widget-edit-item draggable${draggedWidgetId === w.id ? " dragging" : ""}${dragOverWidgetId === w.id ? " drag-over" : ""}`}
+                        draggable
+                        onDragStart={() => onWidgetDragStart(w.id)}
+                        onDragOver={(e) => onWidgetDragOver(e, w.id)}
+                        onDrop={(e) => onWidgetDrop(e, w.id)}
+                        onDragEnd={onWidgetDragEnd}
                       >
-                        ▲
-                      </button>
-                      <button
-                        className="widget-arrow-btn"
-                        disabled={i === widgetConfig.length - 1}
-                        onClick={() => moveWidget(i, 1)}
-                        aria-label="Move down"
-                      >
-                        ▼
-                      </button>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-              <button
-                className="widget-edit-done"
-                onClick={() => setIsEditingWidgets(false)}
-              >
-                Done
-              </button>
+                        <div className="widget-edit-main">
+                          <span
+                            className="widget-drag-handle"
+                            aria-hidden="true"
+                          >
+                            ≡
+                          </span>
+                          <span className="widget-edit-label">{w.label}</span>
+                        </div>
+                        <div className="widget-edit-controls">
+                          <div
+                            className="widget-size-group"
+                            role="group"
+                            aria-label="Widget size"
+                          >
+                            {(["small", "medium", "large"] as const).map(
+                              (size) => {
+                                const blocked =
+                                  (LARGE_ONLY_WIDGETS.has(w.id) &&
+                                    size !== "large") ||
+                                  (NON_SMALL_WIDGETS.has(w.id) &&
+                                    size === "small");
+                                return (
+                                  <button
+                                    key={size}
+                                    className={`widget-size-pill${w.size === size ? " active" : ""}`}
+                                    onClick={() => setWidgetSize(w.id, size)}
+                                    disabled={blocked}
+                                    aria-label={`Set size to ${size}`}
+                                  >
+                                    {size[0]?.toUpperCase()}
+                                  </button>
+                                );
+                              },
+                            )}
+                          </div>
+                          <div className="widget-edit-arrows">
+                            <button
+                              className="widget-arrow-btn"
+                              disabled={index === 0}
+                              onClick={() => moveVisibleWidget(w.id, -1)}
+                              aria-label="Move up"
+                            >
+                              ▲
+                            </button>
+                            <button
+                              className="widget-arrow-btn"
+                              disabled={index === visibleWidgets.length - 1}
+                              onClick={() => moveVisibleWidget(w.id, 1)}
+                              aria-label="Move down"
+                            >
+                              ▼
+                            </button>
+                          </div>
+                          <button
+                            className="widget-visibility-btn"
+                            onClick={() => toggleWidgetVisible(w.id)}
+                            aria-label="Hide widget"
+                          >
+                            Hide
+                          </button>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+
+                <section
+                  className="widget-edit-section"
+                  aria-label="Hidden widgets"
+                >
+                  <div className="widget-edit-section-head">
+                    <h3>Hidden</h3>
+                    <span>{hiddenWidgets.length}</span>
+                  </div>
+                  <ul className="widget-edit-list">
+                    {hiddenWidgets.map((w) => (
+                      <li key={w.id} className="widget-edit-item hidden-item">
+                        <span className="widget-edit-label muted">
+                          {w.label}
+                        </span>
+                        <button
+                          className="widget-visibility-btn show"
+                          onClick={() => toggleWidgetVisible(w.id)}
+                          aria-label="Show widget"
+                        >
+                          Show
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+              </div>
+              <div className="widget-edit-footer">
+                <button
+                  className="widget-edit-reset"
+                  onClick={resetWidgetLayout}
+                >
+                  Reset Layout to Default
+                </button>
+                <button
+                  className="widget-edit-done"
+                  onClick={() => setIsEditingWidgets(false)}
+                >
+                  Done
+                </button>
+              </div>
             </div>
           </div>
         )}
