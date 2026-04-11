@@ -1516,7 +1516,19 @@ export default function Home({
 
     countdowns: (
       <div key="countdowns" className="home-countdowns">
-        <h2>Countdowns</h2>
+        <div className="countdown-header">
+          <h2>Countdowns</h2>
+          {!showAddCountdown && (
+            <button
+              className="countdown-top-add-btn"
+              onClick={() => setShowAddCountdown(true)}
+              aria-label="Add countdown"
+              title="Add countdown"
+            >
+              +
+            </button>
+          )}
+        </div>
         {countdowns.length > 0 && (
           <div className="countdown-list">
             {countdowns.map((cd) => {
@@ -1645,14 +1657,7 @@ export default function Home({
               </button>
             </div>
           </form>
-        ) : (
-          <button
-            className="countdown-add-btn"
-            onClick={() => setShowAddCountdown(true)}
-          >
-            + Add Countdown
-          </button>
-        )}
+        ) : null}
       </div>
     ),
 

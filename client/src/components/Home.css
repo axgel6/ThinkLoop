@@ -711,17 +711,41 @@
   font-size: 12px;
 }
 
-/* Medium countdown widget: empty state and add button should stay in view. */
-.widget-cell-countdowns.widget-cell-medium .home-empty-state {
-  padding-top: 8px;
-  padding-bottom: 8px;
+/* Medium countdown widget: keep controls visible without clipping. */
+.widget-cell-countdowns.widget-cell-medium .home-countdowns {
+  padding-bottom: 12px;
 }
 
-.widget-cell-countdowns.widget-cell-medium .countdown-add-btn {
-  margin-top: 8px;
-  padding: 8px 14px;
-  border-radius: 10px;
-  font-size: 0.95rem;
+.widget-cell-countdowns.widget-cell-medium .home-empty-state {
+  justify-content: center;
+  flex: 1;
+  padding: 10px 8px;
+}
+
+.widget-cell-countdowns.widget-cell-medium .countdown-header {
+  margin-bottom: 8px;
+}
+
+.widget-cell-countdowns.widget-cell-medium .countdown-top-add-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  font-size: 1.15rem;
+}
+
+.widget-cell-countdowns.widget-cell-medium .countdown-row {
+  padding: 10px;
+  gap: 10px;
+}
+
+.widget-cell-countdowns.widget-cell-medium .countdown-list {
+  gap: 8px;
+  padding-bottom: 2px;
+}
+
+.widget-cell-countdowns.widget-cell-medium .countdown-add-form {
+  gap: 7px;
+  margin-top: 2px;
 }
 
 /* Recent Notes Widget */
@@ -2184,7 +2208,7 @@
 /* Countdowns Widget */
 .home-countdowns {
   --title-accent: var(--accent-countdown);
-  padding: 16px 16px 18px;
+  padding: 14px 14px 14px;
   border-radius: 18px;
   border: 1px solid var(--panel-border, rgba(255, 255, 255, 0.08));
   background: var(--panel-bg, rgba(25, 25, 25, 0.4));
@@ -2195,7 +2219,43 @@
 }
 
 .home-countdowns h2 {
-  margin: 2px 0 14px;
+  margin: 0;
+}
+
+.countdown-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 2px 0 10px;
+}
+
+.countdown-top-add-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  border: 1px solid
+    color-mix(in srgb, var(--accent-countdown) 48%, var(--panel-border));
+  background: color-mix(in srgb, var(--accent-countdown) 14%, transparent);
+  color: var(--accent-countdown);
+  font-size: 1.35rem;
+  line-height: 1;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.countdown-top-add-btn:hover {
+  background: color-mix(in srgb, var(--accent-countdown) 24%, transparent);
+  border-color: color-mix(in srgb, var(--accent-countdown) 68%, var(--fg));
+  color: color-mix(in srgb, var(--accent-countdown) 86%, var(--fg));
 }
 
 .home-info h2,
@@ -2233,7 +2293,7 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
-  margin-bottom: 14px;
+  margin-bottom: 0;
 }
 
 .countdown-row {
