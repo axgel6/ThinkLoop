@@ -95,11 +95,11 @@ const DEFAULT_WIDGET_CONFIG: WidgetConfig[] = [
   { id: "quick-actions", label: "Quick Actions", visible: true, size: "large" },
   { id: "pomodoro", label: "Pomodoro Timer", visible: true, size: "large" },
   { id: "focus-stats", label: "Focus Stats", visible: true, size: "large" },
-  { id: "countdowns", label: "Countdowns", visible: true, size: "large" },
-  { id: "tasks", label: "Tasks", visible: true, size: "medium" },
+  { id: "recent", label: "Recent Notes", visible: true, size: "large" },
+  { id: "recent-code", label: "Recent Code", visible: true, size: "large" },
   { id: "pinned", label: "Pinned Notes", visible: true, size: "medium" },
-  { id: "recent", label: "Recent Notes", visible: true, size: "medium" },
-  { id: "recent-code", label: "Recent Code", visible: true, size: "medium" },
+  { id: "countdowns", label: "Countdowns", visible: true, size: "medium" },
+  { id: "tasks", label: "Tasks", visible: true, size: "medium" },
   { id: "quick-note", label: "Capture Note", visible: true, size: "medium" },
 ];
 
@@ -107,7 +107,11 @@ const WIDGET_CONFIG_KEY = "home:widget-config-v4";
 const COUNTDOWNS_KEY = "countdowns:items";
 const FOCUS_SESSIONS_KEY = "focusStats:sessions";
 const NON_SMALL_WIDGETS = new Set<WidgetId>(["quick-actions", "pomodoro"]);
-const LARGE_ONLY_WIDGETS = new Set<WidgetId>(["focus-stats"]);
+const LARGE_ONLY_WIDGETS = new Set<WidgetId>([
+  "focus-stats",
+  "recent",
+  "recent-code",
+]);
 
 const cloneDefaultWidgetConfig = (): WidgetConfig[] =>
   DEFAULT_WIDGET_CONFIG.map((w) => ({ ...w }));
@@ -1726,17 +1730,26 @@ export default function Home({
         ))}
 
         {/* Edit widgets button */}
-        <div className="widget-cell widget-cell-row">
-          <button
-            className="home-edit-btn"
-            onClick={() => setIsEditingWidgets(true)}
-            aria-label="Customize widgets"
-            title="Customize widgets"
-          >
-            <PencilIcon />
-            <span>Edit Widgets</span>
-          </button>
-        </div>
+        {!isEditingWidgets && (
+          <div className="widget-cell widget-cell-row">
+            <button
+              className="home-edit-btn"
+              onClick={() => setIsEditingWidgets(true)}
+              aria-label="Customize widgets"
+              title="Customize widgets"
+            >
+              <span className="home-edit-btn-icon" aria-hidden="true">
+                <PencilIcon />
+              </span>
+              <span className="home-edit-btn-copy">
+                <span className="home-edit-btn-title">Edit widgets</span>
+                <span className="home-edit-btn-subtitle">
+                  Arrange, hide, and resize
+                </span>
+              </span>
+            </button>
+          </div>
+        )}
 
         {/* --- Widget Edit Modal --- */}
         {isEditingWidgets && (
@@ -1748,16 +1761,8 @@ export default function Home({
               className="widget-edit-popup"
               onClick={(e) => e.stopPropagation()}
             >
-              <button
-                className="modal-close-btn"
-                onClick={() => setIsEditingWidgets(false)}
-                aria-label="Close"
-              >
-                ←
-              </button>
               <div className="widget-edit-header">
                 <h2>Customize Widgets</h2>
-                <p>Drag to reorder, tune sizes, hide what you do not need.</p>
               </div>
               <div className="widget-edit-sections">
                 <section
@@ -1786,7 +1791,9 @@ export default function Home({
                           >
                             ≡
                           </span>
-                          <span className="widget-edit-label">{w.label}</span>
+                          <div className="widget-edit-copy">
+                            <span className="widget-edit-label">{w.label}</span>
+                          </div>
                         </div>
                         <div className="widget-edit-controls">
                           <div
@@ -1797,10 +1804,8 @@ export default function Home({
                             {(["small", "medium", "large"] as const).map(
                               (size) => {
                                 const blocked =
-                                  (LARGE_ONLY_WIDGETS.has(w.id) &&
-                                    size !== "large") ||
-                                  (NON_SMALL_WIDGETS.has(w.id) &&
-                                    size === "small");
+                                  LARGE_ONLY_WIDGETS.has(w.id) &&
+                                  size !== "large";
                                 return (
                                   <button
                                     key={size}
@@ -1857,9 +1862,14 @@ export default function Home({
                   <ul className="widget-edit-list">
                     {hiddenWidgets.map((w) => (
                       <li key={w.id} className="widget-edit-item hidden-item">
-                        <span className="widget-edit-label muted">
-                          {w.label}
-                        </span>
+                        <div className="widget-edit-main">
+                          <div className="widget-edit-copy">
+                            <span className="widget-edit-label muted">
+                              {w.label}
+                            </span>
+                            <span className="widget-edit-meta">Hidden</span>
+                          </div>
+                        </div>
                         <button
                           className="widget-visibility-btn show"
                           onClick={() => toggleWidgetVisible(w.id)}
