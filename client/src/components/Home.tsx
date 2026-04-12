@@ -1754,7 +1754,7 @@ export default function Home({
         {/* --- Widget Edit Modal --- */}
         {isEditingWidgets && (
           <div
-            className="note-modal-overlay"
+            className="note-modal-overlay widget-edit-overlay"
             onClick={() => setIsEditingWidgets(false)}
           >
             <div
@@ -2001,7 +2001,7 @@ export default function Home({
         {/* --- Full Screen Pomodoro Modal --- */}
         {fullScreenPomodoro && (
           <div
-            className="note-modal-overlay"
+            className="note-modal-overlay widget-fullscreen-overlay"
             onClick={() => setFullScreenPomodoro(false)}
           >
             <div
@@ -2130,7 +2130,7 @@ export default function Home({
         {/* --- Expanded Today Modal --- */}
         {expandedToday && (
           <div
-            className="note-modal-overlay"
+            className="note-modal-overlay widget-fullscreen-overlay"
             onClick={() => setExpandedToday(false)}
           >
             <div
