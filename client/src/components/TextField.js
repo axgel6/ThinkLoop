@@ -17,7 +17,8 @@ import useCodeUndo from "../hooks/useCodeUndo";
 
 // ── Checklist paste helper ───────────────────────────────────────────────────
 // Markdown-style: "- [ ]", "- [x]", "* [ ]", "[ ]", "[x]", etc.
-const MD_CHECKBOX_RE = /^[-*\u2022]\s*\[[ xXvV\u2713]\]\s*|^\[[ xXvV\u2713]\]\s*/;
+const MD_CHECKBOX_RE =
+  /^[-*\u2022]\s*\[[ xXvV\u2713]\]\s*|^\[[ xXvV\u2713]\]\s*/;
 const MD_CHECKED_RE = /^[-*\u2022]\s*\[[xXvV\u2713]\]\s*|^\[[xXvV\u2713]\]\s*/;
 
 // Returns true if the Unicode code point looks like a box/check/ballot glyph
@@ -26,9 +27,11 @@ function isBoxCodePoint(cp) {
     (cp >= 0x2610 && cp <= 0x2612) || // ☐ ☑ ☒ ballot boxes
     (cp >= 0x25a0 && cp <= 0x25ff) || // geometric shapes (□ ■ ▢ ▣ ◻ ◼ ◽ ◾ …)
     (cp >= 0x2600 && cp <= 0x27bf) || // misc symbols + dingbats (✓ ✔ ✗ ✘ ✅ …)
-    cp === 0x2b1b || cp === 0x2b1c || // ⬛ ⬜
+    cp === 0x2b1b ||
+    cp === 0x2b1c || // ⬛ ⬜
     cp === 0x1f532 || // 🔲
-    cp === 0x2705 || cp === 0x274c   // ✅ ❌
+    cp === 0x2705 ||
+    cp === 0x274c // ✅ ❌
   );
 }
 
@@ -37,7 +40,8 @@ function isCheckedCodePoint(cp) {
   return (
     cp === 0x2611 || // ☑
     cp === 0x2612 || // ☒
-    cp === 0x2713 || cp === 0x2714 || // ✓ ✔
+    cp === 0x2713 ||
+    cp === 0x2714 || // ✓ ✔
     cp === 0x2705 // ✅
   );
 }
@@ -107,13 +111,7 @@ function parseChecklistLines(raw) {
   return fallback.length >= 2 ? fallback : null;
 }
 
-function escapeHtml(str) {
-  return str
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
-}
+
 // ────────────────────────────────────────────────────────────────────────────
 
 const LANGUAGE_OPTIONS = [
@@ -1619,10 +1617,7 @@ const TextField = ({
       8,
       Math.max(1, parseInt(draftColumns, 10) || 3),
     );
-    const rowCount = Math.min(
-      20,
-      Math.max(1, parseInt(draftRows, 10) || 3),
-    );
+    const rowCount = Math.min(20, Math.max(1, parseInt(draftRows, 10) || 3));
 
     const headerCells = Array.from(
       { length: columnCount },
@@ -2726,7 +2721,11 @@ const TextField = ({
         // Insert at current cursor position, or append to editor
         const sel = window.getSelection();
         const editor = editorRef.current;
-        if (sel && sel.rangeCount > 0 && editor?.contains(sel.getRangeAt(0).commonAncestorContainer)) {
+        if (
+          sel &&
+          sel.rangeCount > 0 &&
+          editor?.contains(sel.getRangeAt(0).commonAncestorContainer)
+        ) {
           const range = sel.getRangeAt(0);
           range.deleteContents();
           const lastNode = frag.lastChild;
@@ -3171,7 +3170,9 @@ const TextField = ({
             aria-atomic="true"
           >
             {lastModified ? (
-              <span>Last modified: <RelativeTimestamp timestamp={lastModified} /></span>
+              <span>
+                Last modified: <RelativeTimestamp timestamp={lastModified} />
+              </span>
             ) : null}
           </div>
           <div className="note-footer-actions">
@@ -3328,7 +3329,8 @@ const TextField = ({
                 </div>
                 {lastModified && (
                   <div className="note-last-modified-header">
-                    Last modified: <RelativeTimestamp timestamp={lastModified} />
+                    Last modified:{" "}
+                    <RelativeTimestamp timestamp={lastModified} />
                   </div>
                 )}
               </div>
@@ -4183,7 +4185,9 @@ const TextField = ({
               aria-atomic="true"
             >
               {lastModified && (
-                <span>Last modified: <RelativeTimestamp timestamp={lastModified} /></span>
+                <span>
+                  Last modified: <RelativeTimestamp timestamp={lastModified} />
+                </span>
               )}
             </div>
             <span id="editor-char-count" className="char-count">

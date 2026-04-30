@@ -5,10 +5,13 @@ import NotesHandler from "./components/NotesHandler";
 import Settings from "./components/settings-page";
 import NotFound from "./components/NotFound";
 import LoginModal from "./components/Login";
+import ShutdownPage from "./components/ShutdownPage";
 import { applyTheme } from "./utils/themes";
 import { applyFont } from "./utils/fonts";
 import { applyUIFontSize, normalizeUIFontSize } from "./utils/fontSize";
 import Home from "./components/Home";
+
+const IS_SHUTDOWN = process.env.REACT_APP_SHUTDOWN === "true";
 
 const API_URL = process.env.REACT_APP_API_URL || "http://localhost:3001";
 
@@ -300,6 +303,8 @@ function App() {
       window.removeEventListener("weatherCityChanged", handleCityChanged);
     };
   }, []);
+
+  if (IS_SHUTDOWN) return <ShutdownPage />;
 
   return (
     <div className="App">

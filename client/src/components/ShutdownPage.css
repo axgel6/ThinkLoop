@@ -1,0 +1,75 @@
+.shutdown-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  box-sizing: border-box;
+}
+
+.shutdown-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  max-width: 400px;
+  width: 100%;
+  padding: 40px 36px;
+  background: var(--panel-bg, rgba(20, 20, 20, 0.7));
+  border: 1px solid var(--panel-border, rgba(255, 255, 255, 0.08));
+  border-radius: 22px;
+  backdrop-filter: blur(12px) saturate(160%);
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.3);
+  text-align: center;
+  animation: shutdownFadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+@keyframes shutdownFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.shutdown-wordmark {
+  margin: 0;
+  font-size: 2rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  color: var(--fg, #f0f0f0);
+  line-height: 1;
+}
+
+.shutdown-message {
+  margin: 0;
+  font-size: 14px;
+  color: var(--muted, #9a9a9a);
+  line-height: 1.6;
+}
+
+.shutdown-github-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 4px;
+  padding: 9px 18px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--panel-border, rgba(255, 255, 255, 0.08));
+  border-radius: 10px;
+  color: var(--fg, #f0f0f0);
+  font-size: 13px;
+  font-weight: 500;
+  text-decoration: none;
+  transition:
+    background 0.15s,
+    border-color 0.15s;
+}
+
+.shutdown-github-link:hover {
+  background: rgba(255, 255, 255, 0.09);
+  border-color: rgba(255, 255, 255, 0.16);
+}
