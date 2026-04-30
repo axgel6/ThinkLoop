@@ -477,6 +477,16 @@ const Settings = ({
             <p className="settings-page-subtitle">Customize your workspace</p>
           </div>
 
+          {/* ── Shutdown Banner ──────────────────────────────── */}
+          <div className="settings-shutdown-banner" role="alert">
+            <div className="settings-shutdown-banner-icon" aria-hidden="true">!</div>
+            <div className="settings-shutdown-banner-body">
+              <span className="settings-shutdown-banner-label">Notice</span>
+              <span className="settings-shutdown-banner-text">ThinkLoop is ending development. Please export any data you wish to keep before servers shut down.</span>
+              <span className="settings-shutdown-banner-date">Shutdown date: May 15, 2026</span>
+            </div>
+          </div>
+
           {/* ── Appearance Card ──────────────────────────────── */}
           <div className="settings-card" style={{ animationDelay: "0ms" }}>
             <div className="settings-card-header">

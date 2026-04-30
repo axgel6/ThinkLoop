@@ -11,6 +11,27 @@ type Item = {
   completedAt?: number;
 };
 
+// Patterns that mark a line as a checklist item
+const CHECKBOX_RE = /^(?:[☐□▢▣☑☒✅✓✔✗✘]|[-*•]\s*\[[ xXvV✓]\]|\[[ xXvV✓]\])\s*/u;
+const CHECKED_RE = /^(?:[☑☒✅✓✔]|[-*•]\s*\[[xXvV✓]\]|\[[xXvV✓]\])\s*/u;
+
+function parseChecklistText(
+  raw: string,
+): Array<{ text: string; completed: boolean }> | null {
+  const lines = raw.split(/\r?\n/);
+  const result: Array<{ text: string; completed: boolean }> = [];
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (!trimmed) continue;
+    if (CHECKBOX_RE.test(trimmed)) {
+      const completed = CHECKED_RE.test(trimmed);
+      const text = trimmed.replace(CHECKBOX_RE, "").trim();
+      if (text) result.push({ text, completed });
+    }
+  }
+  return result.length > 0 ? result : null;
+}
+
 const STORAGE_KEY = "checklist:items";
 const API_URL = process.env.REACT_APP_API_URL || "http://localhost:3001";
 
@@ -160,6 +181,59 @@ const Tasks: React.FC<TasksProps> = ({ currentUser }) => {
     }
   };
 
+  const addItems = async (
+    newTasks: Array<{ text: string; completed: boolean }>,
+  ) => {
+    const now = Date.now();
+    const newItems: Item[] = newTasks.map((t, i) => {
+      const id = `${now + i}-${Math.random().toString(36).slice(2)}`;
+      return {
+        id,
+        _clientId: id,
+        text: t.text,
+        completed: t.completed,
+        createdAt: now + i,
+        ...(t.completed ? { completedAt: now + i } : {}),
+      };
+    });
+
+    setItems((prev) => [...newItems, ...prev]);
+
+    if (!currentUser) return;
+    for (const item of newItems) {
+      try {
+        const response = await fetch(`${API_URL}/tasks`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            text: item.text,
+            completed: item.completed,
+            userId: currentUser.id,
+            ...(item.completedAt ? { completedAt: item.completedAt } : {}),
+          }),
+        });
+        if (response.ok) {
+          const created = await response.json();
+          setItems((prev) =>
+            prev.map((i) =>
+              i._clientId === item._clientId ? { ...i, id: created.id } : i,
+            ),
+          );
+        }
+      } catch (error) {
+        console.error("Failed to create task:", error);
+      }
+    }
+  };
+
+  const onPaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    const raw = e.clipboardData.getData("text");
+    const parsed = parseChecklistText(raw);
+    if (!parsed || parsed.length < 2) return; // let default paste handle single items
+    e.preventDefault();
+    addItems(parsed);
+  };
+
   const toggleItem = async (id: string) => {
     const item = items.find((i) => i.id === id);
     if (!item) return;
@@ -246,6 +320,7 @@ const Tasks: React.FC<TasksProps> = ({ currentUser }) => {
             onChange={(e) => setText(e.target.value)}
             placeholder="Add a task..."
             aria-label="New task"
+            onPaste={onPaste}
           />
           <button type="submit" className="tasks-add-btn" aria-label="Add task">
             <svg

@@ -15,6 +15,107 @@ import FindReplacePanel from "./panels/FindReplacePanel";
 import SnippetPanel from "./panels/SnippetPanel";
 import useCodeUndo from "../hooks/useCodeUndo";
 
+// ── Checklist paste helper ───────────────────────────────────────────────────
+// Markdown-style: "- [ ]", "- [x]", "* [ ]", "[ ]", "[x]", etc.
+const MD_CHECKBOX_RE = /^[-*\u2022]\s*\[[ xXvV\u2713]\]\s*|^\[[ xXvV\u2713]\]\s*/;
+const MD_CHECKED_RE = /^[-*\u2022]\s*\[[xXvV\u2713]\]\s*|^\[[xXvV\u2713]\]\s*/;
+
+// Returns true if the Unicode code point looks like a box/check/ballot glyph
+function isBoxCodePoint(cp) {
+  return (
+    (cp >= 0x2610 && cp <= 0x2612) || // ☐ ☑ ☒ ballot boxes
+    (cp >= 0x25a0 && cp <= 0x25ff) || // geometric shapes (□ ■ ▢ ▣ ◻ ◼ ◽ ◾ …)
+    (cp >= 0x2600 && cp <= 0x27bf) || // misc symbols + dingbats (✓ ✔ ✗ ✘ ✅ …)
+    cp === 0x2b1b || cp === 0x2b1c || // ⬛ ⬜
+    cp === 0x1f532 || // 🔲
+    cp === 0x2705 || cp === 0x274c   // ✅ ❌
+  );
+}
+
+// Returns true if the code point marks a *completed* item
+function isCheckedCodePoint(cp) {
+  return (
+    cp === 0x2611 || // ☑
+    cp === 0x2612 || // ☒
+    cp === 0x2713 || cp === 0x2714 || // ✓ ✔
+    cp === 0x2705 // ✅
+  );
+}
+
+function parseChecklistLines(raw) {
+  const lines = raw.split(/\r?\n/);
+  const result = [];
+
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (!trimmed) continue;
+
+    const cp = trimmed.codePointAt(0);
+    const firstCharLen = cp > 0xffff ? 2 : 1;
+
+    if (isBoxCodePoint(cp)) {
+      const completed = isCheckedCodePoint(cp);
+      const text = trimmed.slice(firstCharLen).trim();
+      if (text) result.push({ text, completed });
+      continue;
+    }
+
+    if (MD_CHECKBOX_RE.test(trimmed)) {
+      const completed = MD_CHECKED_RE.test(trimmed);
+      const text = trimmed.replace(MD_CHECKBOX_RE, "").trim();
+      if (text) result.push({ text, completed });
+    }
+  }
+
+  if (result.length >= 2) return result;
+
+  // ── Heuristic fallback ────────────────────────────────────────────────────
+  // If 50 %+ of non-empty lines share the same leading non-word Unicode char,
+  // treat those lines as checklist items (handles unknown box glyphs).
+  const nonEmpty = lines.map((l) => l.trim()).filter(Boolean);
+  if (nonEmpty.length < 3) return null;
+
+  const freq = new Map();
+  for (const l of nonEmpty) {
+    const lcp = l.codePointAt(0);
+    if (lcp < 128 && /\w/.test(l[0])) continue; // skip ASCII word chars
+    const key = lcp;
+    freq.set(key, (freq.get(key) || 0) + 1);
+  }
+
+  let bestCp = null;
+  let bestCount = 0;
+  for (const [k, n] of freq) {
+    if (n > bestCount) {
+      bestCount = n;
+      bestCp = k;
+    }
+  }
+
+  const threshold = Math.max(2, Math.ceil(nonEmpty.length * 0.4));
+  if (!bestCp || bestCount < threshold) return null;
+
+  const fallback = [];
+  for (const l of nonEmpty) {
+    if (l.codePointAt(0) === bestCp) {
+      const charLen = bestCp > 0xffff ? 2 : 1;
+      const text = l.slice(charLen).trim();
+      if (text) fallback.push({ text, completed: false });
+    }
+  }
+
+  return fallback.length >= 2 ? fallback : null;
+}
+
+function escapeHtml(str) {
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+// ────────────────────────────────────────────────────────────────────────────
+
 const LANGUAGE_OPTIONS = [
   { id: "javascript", label: "JavaScript" },
   { id: "typescript", label: "TypeScript" },
@@ -2581,14 +2682,69 @@ const TextField = ({
 
   const handleEditorPaste = (e) => {
     if (!isEditMode) return;
+
+    // Image paste
     const files = e.clipboardData?.files;
-    if (!files || files.length === 0) return;
-    const hasImage = Array.from(files).some((f) =>
-      String(f.type || "").startsWith("image/"),
-    );
-    if (!hasImage) return;
-    e.preventDefault();
-    insertImageFiles(files);
+    if (files && files.length > 0) {
+      const hasImage = Array.from(files).some((f) =>
+        String(f.type || "").startsWith("image/"),
+      );
+      if (hasImage) {
+        e.preventDefault();
+        insertImageFiles(files);
+        return;
+      }
+    }
+
+    // Checklist paste — convert lines with checkbox markers to interactive items
+    const raw = e.clipboardData?.getData("text/plain");
+    if (raw) {
+      const parsed = parseChecklistLines(raw);
+      if (parsed && parsed.length >= 2) {
+        e.preventDefault();
+
+        // Build DOM fragment directly (avoids deprecated execCommand)
+        const frag = document.createDocumentFragment();
+        for (const item of parsed) {
+          const row = document.createElement("div");
+          row.className = "note-check-item";
+          row.setAttribute("data-checked", String(item.completed));
+
+          const box = document.createElement("span");
+          box.className = "note-check-box";
+          box.setAttribute("contenteditable", "false");
+
+          const label = document.createElement("span");
+          label.className = "note-check-label";
+          label.textContent = item.text;
+
+          row.appendChild(box);
+          row.appendChild(label);
+          frag.appendChild(row);
+        }
+
+        // Insert at current cursor position, or append to editor
+        const sel = window.getSelection();
+        const editor = editorRef.current;
+        if (sel && sel.rangeCount > 0 && editor?.contains(sel.getRangeAt(0).commonAncestorContainer)) {
+          const range = sel.getRangeAt(0);
+          range.deleteContents();
+          const lastNode = frag.lastChild;
+          range.insertNode(frag);
+          if (lastNode) {
+            const after = document.createRange();
+            after.setStartAfter(lastNode);
+            after.collapse(true);
+            sel.removeAllRanges();
+            sel.addRange(after);
+          }
+        } else if (editor) {
+          editor.appendChild(frag);
+        }
+
+        handleInput();
+      }
+    }
   };
 
   const handleCodeViewScroll = useCallback((e) => {
@@ -4178,6 +4334,22 @@ const TextField = ({
         onDrop={handleEditorDrop}
         onWheel={handleTextAreaWheel}
         onClick={(e) => {
+          // Checkbox toggle — works in both view and edit mode
+          const checkBox = e.target?.closest?.(".note-check-box");
+          if (checkBox) {
+            const item = checkBox.closest(".note-check-item");
+            if (item) {
+              e.preventDefault();
+              e.stopPropagation();
+              const checked = item.getAttribute("data-checked") === "true";
+              item.setAttribute("data-checked", String(!checked));
+              const newHtml = editorRef.current.innerHTML;
+              setValue(newHtml);
+              hasPendingEditRef.current = true;
+              if (onChange) onChange(newHtml);
+              return;
+            }
+          }
           if (isEditMode) return;
           const linkEl = e.target?.closest?.("a[href]");
           if (linkEl) return;
